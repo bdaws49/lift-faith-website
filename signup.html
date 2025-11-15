@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Your 7-Day Free Trial - Lift Faith</title>
+    <meta name="description" content="Begin your personalized faith journey with a 7-day free trial. No credit card required.">
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        .signup-container {
+            max-width: 800px;
+            margin: 100px auto 50px;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .signup-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .signup-header h1 {
+            color: #8B1538;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .trial-badge {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #8B1538;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .verse-count-selector {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .verse-count-btn {
+            padding: 15px 30px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .verse-count-btn:hover {
+            border-color: #8B1538;
+        }
+
+        .verse-count-btn.selected {
+            background: #8B1538;
+            color: white;
+            border-color: #8B1538;
+        }
+
+        .plan-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .plan-card {
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .plan-card:hover {
+            border-color: #8B1538;
+            transform: translateY(-5px);
+        }
+
+        .plan-card.selected {
+            border-color: #8B1538;
+            background: #f8f9ff;
+        }
+
+        .plan-card h3 {
+            color: #8B1538;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .plan-trial {
+            color: #4CAF50;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .plan-features {
+            text-align: left;
+            line-height: 2;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 20px;
+            background: #8B1538;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 30px;
+        }
+
+        .submit-btn:hover {
+            background: #5C0F28;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-screen {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .success-screen.show {
+            display: block;
+        }
+
+        .success-screen h2 {
+            color: #4CAF50;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-logo">
+            <div class="logo-placeholder">L</div>
+            <span class="nav-logo-text">Lift</span>
+        </a>
+        <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle navigation">
+            ☰
+        </button>
+        <div class="nav-links" id="navLinks">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="explanation.html" class="nav-link">How It Works</a>
+            <a href="signup.html" class="nav-cta active">Get Started</a>
+        </div>
+    </nav>
+
+    <div class="signup-container">
+        <div class="signup-header">
+            <div class="trial-badge">✨ 7 Days Free Trial</div>
+            <h1>Start Your Faith Journey</h1>
+            <p>Personalized Scripture delivered daily. Cancel anytime.</p>
+        </div>
+
+        <form id="signupForm">
+            <!-- Basic Info -->
+            <div class="form-group">
+                <label for="name">Your Name *</label>
+                <input type="text" id="name" name="name" required placeholder="John Doe">
+                <div class="error-message" id="nameError">Please enter your name</div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required placeholder="john@example.com">
+                <div class="error-message" id="emailError">Please enter a valid email</div>
+            </div>
+
+            <!-- Struggles -->
+            <div class="form-group">
+                <label>What are you struggling with? * <small>(Select all that apply)</small></label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="anxiety" value="anxiety" name="struggles">
+                        <label for="anxiety">Anxiety/Worry</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="depression" value="depression" name="struggles">
+                        <label for="depression">Depression/Sadness</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="temptation" value="temptation" name="struggles">
+                        <label for="temptation">Temptation/Sin</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="anger" value="anger" name="struggles">
+                        <label for="anger">Anger/Bitterness</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="loneliness" value="loneliness" name="struggles">
+                        <label for="loneliness">Loneliness</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="doubt" value="doubt" name="struggles">
+                        <label for="doubt">Doubt/Faith Questions</label>
+                    </div>
+                </div>
+                <div class="error-message" id="strugglesError">Please select at least one struggle</div>
+            </div>
+
+            <!-- Goals -->
+            <div class="form-group">
+                <label>Your Spiritual Goals * <small>(Select all that apply)</small></label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="prayer" value="prayer" name="goals">
+                        <label for="prayer">Deepen Prayer Life</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="scripture" value="scripture" name="goals">
+                        <label for="scripture">Study Scripture More</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="evangelism" value="evangelism" name="goals">
+                        <label for="evangelism">Share My Faith</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="service" value="service" name="goals">
+                        <label for="service">Serve Others</label>
+                    </div>
+                </div>
+                <div class="error-message" id="goalsError">Please select at least one goal</div>
+            </div>
+
+            <!-- Verse Count -->
+            <div class="form-group">
+                <label>How many verses per day? *</label>
+                <div class="verse-count-selector">
+                    <div class="verse-count-btn" data-count="2">2</div>
+                    <div class="verse-count-btn" data-count="3">3</div>
+                    <div class="verse-count-btn" data-count="4">4</div>
+                    <div class="verse-count-btn" data-count="5">5</div>
+                    <div class="verse-count-btn" data-count="6">6</div>
+                </div>
+                <input type="hidden" id="verseCount" name="verseCount">
+                <div class="error-message" id="verseCountError">Please select how many verses per day</div>
+            </div>
+
+            <!-- Plan Selection -->
+            <div class="form-group">
+                <label>Choose Your Plan *</label>
+                <div class="plan-cards">
+                    <div class="plan-card" data-plan="basic">
+                        <h3>Basic</h3>
+                        <div class="plan-price">$5<small>/mo</small></div>
+                        <div class="plan-trial">7 days free, then $5/month</div>
+                        <div class="plan-features">
+                            ✓ Email delivery<br>
+                            ✓ Personalized verses<br>
+                            ✓ Prayer community<br>
+                            ✓ Cancel anytime
+                        </div>
+                    </div>
+                    <div class="plan-card" data-plan="premium">
+                        <h3>Premium</h3>
+                        <div class="plan-price">$10<small>/mo</small></div>
+                        <div class="plan-trial">7 days free, then $10/month</div>
+                        <div class="plan-features">
+                            ✓ All Basic features<br>
+                            ✓ SMS delivery<br>
+                            ✓ Pastor Q&A access<br>
+                            ✓ Priority support
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="plan" name="plan">
+                <div class="error-message" id="planError">Please select a plan</div>
+            </div>
+
+            <button type="submit" class="submit-btn">Start My 7-Day Free Trial</button>
+            <p style="text-align: center; color: #999; margin-top: 15px; font-size: 0.9rem;">
+                No credit card required for trial. Cancel anytime.
+            </p>
+        </form>
+
+        <div class="success-screen" id="successScreen">
+            <h2>🎉 Welcome to Lift!</h2>
+            <p style="font-size: 1.2rem; margin-bottom: 30px;">
+                Your 7-day free trial has started!
+            </p>
+            <p style="color: #666; line-height: 1.8;">
+                Check your email for:<br>
+                ✓ Welcome message<br>
+                ✓ Your first personalized verses<br>
+                ✓ Instructions to set up payment (billed after 7 days)
+            </p>
+            <p style="margin-top: 40px; color: #8B1538; font-style: italic;">
+                "I will lift up my eyes to the hills—From whence comes my help?"<br>
+                — Psalm 121:1
+            </p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#" class="footer-link">Privacy Policy</a>
+                <a href="#" class="footer-link">Terms of Service</a>
+                <a href="#" class="footer-link">Contact</a>
+            </div>
+        </div>
+        <p class="footer-text">&copy; 2024 Lift Faith. All rights reserved.</p>
+    </footer>
+
+    <!-- Convex Client -->
+    <script src="https://cdn.jsdelivr.net/npm/convex@1.16.2/dist/browser.min.js"></script>
+
+    <script>
+        // Initialize Convex client
+        const convex = new Convex('https://tame-fennec-574.convex.cloud');
+
+        function toggleNav() {
+            document.getElementById('navLinks').classList.toggle('active');
+        }
+
+        // Verse count selection
+        document.querySelectorAll('.verse-count-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.verse-count-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                document.getElementById('verseCount').value = btn.dataset.count;
+                document.getElementById('verseCountError').classList.remove('show');
+            });
+        });
+
+        // Plan selection
+        document.querySelectorAll('.plan-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                document.getElementById('plan').value = card.dataset.plan;
+                document.getElementById('planError').classList.remove('show');
+            });
+        });
+
+        // Form submission
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Hide all errors
+            document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
+
+            // Get form values
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const struggles = Array.from(document.querySelectorAll('input[name="struggles"]:checked')).map(cb => cb.value);
+            const goals = Array.from(document.querySelectorAll('input[name="goals"]:checked')).map(cb => cb.value);
+            const verseCount = document.getElementById('verseCount').value;
+            const plan = document.getElementById('plan').value;
+
+            // Validation
+            let hasError = false;
+
+            if (!name) {
+                document.getElementById('nameError').classList.add('show');
+                hasError = true;
+            }
+
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                document.getElementById('emailError').classList.add('show');
+                hasError = true;
+            }
+
+            if (struggles.length === 0) {
+                document.getElementById('strugglesError').classList.add('show');
+                hasError = true;
+            }
+
+            if (goals.length === 0) {
+                document.getElementById('goalsError').classList.add('show');
+                hasError = true;
+            }
+
+            if (!verseCount) {
+                document.getElementById('verseCountError').classList.add('show');
+                hasError = true;
+            }
+
+            if (!plan) {
+                document.getElementById('planError').classList.add('show');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            // Disable button
+            const submitBtn = e.target.querySelector('.submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating your account...';
+
+            try {
+                // Create user in Convex
+                const userId = await convex.mutation('users:createUser', {
+                    email: email,
+                    name: name,
+                    versesPerDay: parseInt(verseCount),
+                    deliveryTime: 'morning', // Default
+                    deliveryMethod: plan === 'premium' ? 'sms' : 'email',
+                    struggles: struggles,
+                    goals: goals,
+                    subscriptionTier: plan,
+                });
+
+                console.log('User created:', userId);
+
+                // Show success screen
+                document.getElementById('signupForm').style.display = 'none';
+                document.getElementById('successScreen').classList.add('show');
+
+                // TODO: Send welcome email
+                // TODO: Redirect to Stripe checkout (after 3 seconds)
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('There was an error creating your account. Please try again or contact support.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Start My 7-Day Free Trial';
+            }
+        });
+
+        // Clear errors on input
+        document.querySelectorAll('input[name="struggles"]').forEach(input => {
+            input.addEventListener('change', () => {
+                if (document.querySelectorAll('input[name="struggles"]:checked').length > 0) {
+                    document.getElementById('strugglesError').classList.remove('show');
+                }
+            });
+        });
+
+        document.querySelectorAll('input[name="goals"]').forEach(input => {
+            input.addEventListener('change', () => {
+                if (document.querySelectorAll('input[name="goals"]:checked').length > 0) {
+                    document.getElementById('goalsError').classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
