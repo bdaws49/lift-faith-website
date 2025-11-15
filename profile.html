@@ -29,6 +29,12 @@
 
     <!-- Stylesheet -->
     <link rel="stylesheet" href="styles.css">
+
+    <!-- Convex Client -->
+    <script type="module">
+        import { ConvexHttpClient } from "https://esm.sh/convex@1.16.4/browser";
+        window.convexClient = new ConvexHttpClient("https://tame-fennec-574.convex.cloud");
+    </script>
 </head>
 <body>
     <!-- Navigation -->
@@ -194,11 +200,13 @@
                 <p id="planError" style="display: none; color: #d32f2f; margin-top: 10px; font-weight: bold;">Please select a plan (Basic or Premium).</p>
             </div>
 
-            <!-- Email Section -->
+            <!-- Contact Information Section -->
             <div class="form-section">
-                <h2>Your Email Address <span class="required">*</span></h2>
-                <p>Where should we send your daily encouragement?</p>
+                <h2>Your Information <span class="required">*</span></h2>
+                <p>How should we address you and where should we send your daily encouragement?</p>
+                <input type="text" class="email-input" id="name" name="name" placeholder="Your name" required aria-label="Your name" style="margin-bottom: 15px;">
                 <input type="email" class="email-input" id="email" name="email" placeholder="your@email.com" required aria-label="Email address">
+                <p id="nameError" style="display: none; color: #d32f2f; margin-top: 10px; font-weight: bold;">Please enter your name.</p>
                 <p id="emailError" style="display: none; color: #d32f2f; margin-top: 10px; font-weight: bold;">Please enter a valid email address.</p>
             </div>
 
@@ -274,6 +282,7 @@
             document.querySelectorAll('[id$="Error"]').forEach(el => el.style.display = 'none');
 
             // Validate required fields
+            const name = document.getElementById('name').value.trim();
             const struggles = Array.from(document.querySelectorAll('input[name="struggles"]:checked')).map(cb => cb.value);
             const goals = Array.from(document.querySelectorAll('input[name="goals"]:checked')).map(cb => cb.value);
             const notifications = notificationInput.value;
@@ -282,10 +291,19 @@
 
             let hasError = false;
 
+            // Validate name
+            if (!name) {
+                document.getElementById('nameError').style.display = 'block';
+                document.getElementById('nameError').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                hasError = true;
+            }
+
             // Validate struggles
             if (struggles.length === 0) {
                 document.getElementById('strugglesError').style.display = 'block';
-                document.getElementById('strugglesError').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (!hasError) {
+                    document.getElementById('strugglesError').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
                 hasError = true;
             }
 
@@ -330,47 +348,38 @@
                 return;
             }
 
-            // Gather all form data
-            const formData = {
-                email: email,
-                struggles: struggles.join(', '),
-                strugglesOther: document.getElementById('strugglesOther').value,
-                goals: goals.join(', '),
-                goalsOther: document.getElementById('goalsOther').value,
-                notificationsPerDay: notifications,
-                plan: plan,
-                timestamp: new Date().toISOString()
-            };
-
             // Disable submit button
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creating Your Profile...';
 
             try {
-                // TODO: Replace with Airtable API endpoint
-                // Instructions for Airtable integration are in NEXT_STEPS.md
-
-                // Using existing Google Sheets endpoint (not working currently)
-                await fetch('https://script.google.com/macros/s/AKfycbwa4ViqgRLVoGh5ISs-rTJiYkV6FF4CvM9gxDTxrJ7OXud96nmPrVoO4XWgeoLwrQZO/exec', {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
+                // Create user in Convex database
+                const userId = await window.convexClient.mutation("users:createUser", {
+                    email: email,
+                    name: name,
+                    versesPerDay: parseInt(notifications),
+                    deliveryTime: "08:00", // Default to 8 AM
+                    deliveryMethod: "email",
+                    struggles: struggles,
+                    goals: goals,
+                    customStruggles: document.getElementById('strugglesOther').value || undefined,
+                    customGoals: document.getElementById('goalsOther').value || undefined,
+                    subscriptionTier: plan,
                 });
+
+                console.log('User created with ID:', userId);
 
                 // Show success message
                 form.style.display = 'none';
                 document.getElementById('successMessage').style.display = 'block';
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                // TODO: Redirect to Stripe payment page
-                // Instructions in NEXT_STEPS.md
+                // TODO: Redirect to Stripe Checkout
+                // Will implement after Stripe is configured
 
             } catch (error) {
                 console.error('Error:', error);
-                alert('There was an error creating your profile. Please try again.');
+                alert('There was an error creating your profile. ' + (error.message || 'Please try again.'));
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Start My Journey with Lift';
             }
@@ -393,6 +402,12 @@
                     document.getElementById('goalsError').style.display = 'none';
                 }
             });
+        });
+
+        document.getElementById('name').addEventListener('input', () => {
+            if (document.getElementById('name').value.trim()) {
+                document.getElementById('nameError').style.display = 'none';
+            }
         });
 
         document.getElementById('email').addEventListener('input', () => {
