@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Lift Works - Daily Strength for Your Faith Journey</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #8B1538 0%, #5C0F28 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .app-name {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #8B1538;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            color: #555;
+            font-style: italic;
+        }
+
+        .foundation {
+            background: #f8f9ff;
+            border-left: 5px solid #8B1538;
+            padding: 30px;
+            margin: 40px 0;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .foundation h2 {
+            color: #8B1538;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .foundation p {
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .foundation .verse {
+            font-style: italic;
+            color: #555;
+            margin-top: 20px;
+            font-size: 1.1rem;
+        }
+
+        .section {
+            margin: 50px 0;
+        }
+
+        .section h2 {
+            color: #8B1538;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .feature-card {
+            background: #f8f9ff;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-card h3 {
+            color: #8B1538;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .pricing {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .plan {
+            background: #f8f9ff;
+            padding: 40px 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .plan:hover {
+            border-color: #8B1538;
+            transform: scale(1.05);
+        }
+
+        .plan.premium {
+            background: linear-gradient(135deg, #8B1538 0%, #5C0F28 100%);
+            color: white;
+        }
+
+        .plan h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #8B1538;
+        }
+
+        .plan.premium h3 {
+            color: white;
+        }
+
+        .plan .price {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #8B1538;
+        }
+
+        .plan.premium .price {
+            color: white;
+        }
+
+        .plan .price span {
+            font-size: 1.2rem;
+            font-weight: normal;
+        }
+
+        .plan ul {
+            list-style: none;
+            text-align: left;
+            margin: 30px 0;
+        }
+
+        .plan ul li {
+            padding: 10px 0;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .plan.premium ul li {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .plan ul li:before {
+            content: "✓ ";
+            color: #8B1538;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .plan.premium ul li:before {
+            color: white;
+        }
+
+        .testimonials {
+            margin-top: 30px;
+        }
+
+        .testimonial-card {
+            background: #f8f9ff;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 5px solid #8B1538;
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .testimonial-author {
+            color: #8B1538;
+            font-weight: bold;
+        }
+
+        .coming-soon-note {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            margin-top: 20px;
+        }
+
+        .faq {
+            margin-top: 30px;
+        }
+
+        .faq-item {
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .faq-question {
+            color: #8B1538;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .faq-answer {
+            color: #666;
+            line-height: 1.7;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: #8B1538;
+            color: white;
+            padding: 20px 50px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-decoration: none;
+            margin-top: 40px;
+            transition: background 0.3s;
+            text-align: center;
+        }
+
+        .cta-button:hover {
+            background: #5C0F28;
+        }
+
+        .cta-section {
+            text-align: center;
+            margin-top: 60px;
+            padding: 40px;
+            background: #f8f9ff;
+            border-radius: 15px;
+        }
+
+        .cta-section h2 {
+            color: #8B1538;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .app-name {
+                font-size: 2.5rem;
+            }
+
+            .container {
+                padding: 40px 25px;
+            }
+
+            .features,
+            .pricing {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="app-name">Lift</h1>
+            <p class="tagline">Lift your eyes to the hills! Daily strength for your faith journey.</p>
+        </div>
+
+        <div class="foundation">
+            <h2>Our Foundation</h2>
+            <p>Scripture tells us that God desires to build our faith. The Apostle Paul reminds us that <strong>"faith comes by hearing, and hearing by the word of God."</strong></p>
+            <p>Lift exists to bring God's Word directly into your daily life, speaking truth and hope into your struggles, goals, and journey with Christ.</p>
+            <p class="verse">"So then faith comes by hearing, and hearing by the word of God." — Romans 10:17 (NKJV)</p>
+        </div>
+
+        <div class="section">
+            <h2>How Lift Works</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">📖</div>
+                    <h3>Daily Biblical Encouragement</h3>
+                    <p>Receive carefully selected Scripture verses matched to your personal struggles and spiritual goals throughout your day.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💪</div>
+                    <h3>Personalized Journey</h3>
+                    <p>Tell us what you're facing, and we'll guide you with God's Word tailored to your unique walk with Christ.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🙏</div>
+                    <h3>Community Support</h3>
+                    <p>Submit anonymous prayer requests and receive genuine encouragement from fellow believers in a safe space.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <h3>Spiritual Growth Tools</h3>
+                    <p>Access curated devotions, Scripture memory aids, and discover your spiritual gifts through biblical resources.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">✝️</div>
+                    <h3>Walk in Freedom</h3>
+                    <p>Navigate life not under law or license, but in the freedom Christ offers through His grace and truth.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Set Biblical Goals</h3>
+                    <p>Establish spiritual goals and receive consistent encouragement to help you grow closer to God daily.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Choose Your Plan</h2>
+            <div class="pricing">
+                <div class="plan">
+                    <h3>Basic</h3>
+                    <div class="price">$5<span>/month</span></div>
+                    <ul>
+                        <li>Email notifications (2-6 per day)</li>
+                        <li>Personalized Bible verses</li>
+                        <li>Scripture memory tools</li>
+                        <li>Access to devotions</li>
+                        <li>Community prayer requests</li>
+                        <li>Spiritual gifts assessment</li>
+                    </ul>
+                </div>
+
+                <div class="plan premium">
+                    <h3>Premium</h3>
+                    <div class="price">$10<span>/month</span></div>
+                    <ul>
+                        <li>Everything in Basic, PLUS:</li>
+                        <li>Text message notifications</li>
+                        <li>Priority support</li>
+                        <li>Exclusive content</li>
+                        <li>Book recommendations</li>
+                        <li>Access to pastor Q&A</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>What People Are Saying</h2>
+            <div class="testimonials">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Testimonials will appear here once Lift launches. Your story could be next!"</p>
+                    <p class="testimonial-author">— Coming Soon</p>
+                </div>
+            </div>
+            <p class="coming-soon-note">We can't wait to hear how Lift impacts your faith journey!</p>
+        </div>
+
+        <div class="section">
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq">
+                <div class="faq-item">
+                    <div class="faq-question">How often will I receive verses?</div>
+                    <div class="faq-answer">You choose! Select between 2-6 notifications per day based on what works best for your schedule and spiritual rhythm.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">How long does the program last?</div>
+                    <div class="faq-answer">Your initial subscription is for one month. After 30 days, you'll have the option to continue receiving encouragement for as long as you'd like.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Is my information private?</div>
+                    <div class="faq-answer">Absolutely. Your struggles, goals, and prayer requests are completely confidential. Prayer requests shared with the community are anonymous.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Can I change my plan later?</div>
+                    <div class="faq-answer">Yes! You can upgrade from Basic to Premium or adjust your notification preferences at any time.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">What translation of the Bible do you use?</div>
+                    <div class="faq-answer">We primarily use the NKJV (New King James Version), but may include other trusted translations as well.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <h2>Ready to Begin Your Journey?</h2>
+            <p style="font-size: 1.1rem; color: #666; margin-bottom: 20px;">Create your personalized profile and start receiving daily encouragement from God's Word.</p>
+            <a href="profile.html" class="cta-button">Get Started Now</a>
+        </div>
+    </div>
+</body>
+</html>

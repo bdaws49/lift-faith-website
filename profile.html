@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Profile - Lift</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #8B1538 0%, #5C0F28 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .app-name {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #8B1538;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .intro-text {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: #f8f9ff;
+            border-radius: 15px;
+            border-left: 5px solid #8B1538;
+        }
+
+        .form-section h2 {
+            color: #8B1538;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        .form-section p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .checkbox-item:hover {
+            background: #e8e9ff;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #8B1538;
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .text-input,
+        .email-input,
+        .select-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Georgia', serif;
+            margin-top: 10px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .text-input:focus,
+        .email-input:focus,
+        .select-input:focus {
+            border-color: #8B1538;
+        }
+
+        textarea.text-input {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .notification-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .notification-btn {
+            padding: 15px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .notification-btn:hover {
+            border-color: #8B1538;
+            background: #f8f9ff;
+        }
+
+        .notification-btn.selected {
+            background: #8B1538;
+            color: white;
+            border-color: #8B1538;
+        }
+
+        .submit-section {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .submit-btn {
+            background: #8B1538;
+            color: white;
+            padding: 20px 60px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Georgia', serif;
+        }
+
+        .submit-btn:hover {
+            background: #5C0F28;
+            transform: scale(1.05);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: #f8f9ff;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .success-message h2 {
+            color: #8B1538;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .success-message p {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .plan-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .plan-card {
+            padding: 25px;
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .plan-card:hover {
+            border-color: #8B1538;
+            transform: translateY(-5px);
+        }
+
+        .plan-card.selected {
+            border-color: #8B1538;
+            background: #f8f9ff;
+        }
+
+        .plan-card h3 {
+            color: #8B1538;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .plan-card .price {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #8B1538;
+            margin: 15px 0;
+        }
+
+        .plan-card .features {
+            text-align: left;
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .required {
+            color: #8B1538;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 25px;
+            }
+
+            .app-name {
+                font-size: 2.5rem;
+            }
+
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .notification-options {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="app-name">Lift</h1>
+            <p class="subtitle">Create Your Personal Profile</p>
+            <p class="intro-text">Help us personalize your faith journey by sharing what you're facing and where you want to grow. All information is private and confidential.</p>
+        </div>
+
+        <form id="profileForm">
+            <!-- Struggles Section -->
+            <div class="form-section">
+                <h2>What are you struggling with? <span class="required">*</span></h2>
+                <p>Select all that apply. Be honest - God meets us where we are.</p>
+                <div class="checkbox-grid">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="anxiety" name="struggles" value="Anxiety/Worry">
+                        <label for="anxiety">Anxiety/Worry</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="depression" name="struggles" value="Depression/Sadness">
+                        <label for="depression">Depression/Sadness</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="anger" name="struggles" value="Anger/Bitterness">
+                        <label for="anger">Anger/Bitterness</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="addiction" name="struggles" value="Addiction">
+                        <label for="addiction">Addiction</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="relationships" name="struggles" value="Relationship Issues">
+                        <label for="relationships">Relationship Issues</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="financial" name="struggles" value="Financial Stress">
+                        <label for="financial">Financial Stress</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="temptation" name="struggles" value="Temptation">
+                        <label for="temptation">Temptation</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="doubt" name="struggles" value="Doubt/Faith Questions">
+                        <label for="doubt">Doubt/Faith Questions</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="grief" name="struggles" value="Grief/Loss">
+                        <label for="grief">Grief/Loss</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="loneliness" name="struggles" value="Loneliness">
+                        <label for="loneliness">Loneliness</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="fear" name="struggles" value="Fear">
+                        <label for="fear">Fear</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="guilt" name="struggles" value="Guilt/Shame">
+                        <label for="guilt">Guilt/Shame</label>
+                    </div>
+                </div>
+                <textarea class="text-input" id="strugglesOther" placeholder="Describe any other struggles in your own words (optional)..." rows="4"></textarea>
+            </div>
+
+            <!-- Goals Section -->
+            <div class="form-section">
+                <h2>What are your spiritual goals? <span class="required">*</span></h2>
+                <p>Select the goals you want to work toward with God's help.</p>
+                <div class="checkbox-grid">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="memorize" name="goals" value="Memorize Scripture weekly">
+                        <label for="memorize">Memorize Scripture weekly</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="pray" name="goals" value="Pray daily">
+                        <label for="pray">Pray daily</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="readBible" name="goals" value="Read Bible daily">
+                        <label for="readBible">Read Bible daily</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="overcome" name="goals" value="Overcome specific temptation">
+                        <label for="overcome">Overcome specific temptation</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="grow" name="goals" value="Grow closer to God">
+                        <label for="grow">Grow closer to God</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="serve" name="goals" value="Serve others">
+                        <label for="serve">Serve others</label>
+                    </div>
+                </div>
+                <textarea class="text-input" id="goalsOther" placeholder="Describe any other spiritual goals (optional)..." rows="4"></textarea>
+            </div>
+
+            <!-- Notifications Section -->
+            <div class="form-section">
+                <h2>How many daily encouragements? <span class="required">*</span></h2>
+                <p>Choose how many times per day you'd like to receive Scripture verses via email (2-6 notifications).</p>
+                <div class="notification-options">
+                    <div class="notification-btn" data-value="2">2</div>
+                    <div class="notification-btn" data-value="3">3</div>
+                    <div class="notification-btn" data-value="4">4</div>
+                    <div class="notification-btn" data-value="5">5</div>
+                    <div class="notification-btn" data-value="6">6</div>
+                </div>
+                <input type="hidden" id="notificationCount" name="notifications" required>
+            </div>
+
+            <!-- Plan Selection -->
+            <div class="form-section">
+                <h2>Choose Your Plan <span class="required">*</span></h2>
+                <div class="plan-selection">
+                    <div class="plan-card" data-plan="basic">
+                        <h3>Basic</h3>
+                        <div class="price">$5/mo</div>
+                        <div class="features">
+                            ✓ Email notifications<br>
+                            ✓ Personalized verses<br>
+                            ✓ Scripture memory<br>
+                            ✓ Prayer community
+                        </div>
+                    </div>
+                    <div class="plan-card" data-plan="premium">
+                        <h3>Premium</h3>
+                        <div class="price">$10/mo</div>
+                        <div class="features">
+                            ✓ All Basic features<br>
+                            ✓ Text notifications<br>
+                            ✓ Pastor Q&A access<br>
+                            ✓ Exclusive content
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="selectedPlan" name="plan" required>
+            </div>
+
+            <!-- Email Section -->
+            <div class="form-section">
+                <h2>Your Email Address <span class="required">*</span></h2>
+                <p>Where should we send your daily encouragement?</p>
+                <input type="email" class="email-input" id="email" name="email" placeholder="your@email.com" required>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="submit-section">
+                <button type="submit" class="submit-btn">Start My Journey with Lift</button>
+                <p style="color: #999; margin-top: 20px; font-size: 0.9rem;">Your information is private and will never be shared.</p>
+            </div>
+        </form>
+
+        <!-- Success Message -->
+        <div class="success-message" id="successMessage">
+            <h2>🎉 Welcome to Lift!</h2>
+            <p>Your profile has been created successfully. You'll start receiving personalized Scripture encouragement tailored to your journey.</p>
+            <p style="margin-top: 20px;">Check your email for next steps and your first encouragement!</p>
+            <p style="margin-top: 30px; color: #8B1538; font-weight: bold;">"I will lift up my eyes to the hills—From whence comes my help?"<br>— Psalm 121:1</p>
+        </div>
+    </div>
+
+    <script>
+        // Notification count selection
+        const notificationBtns = document.querySelectorAll('.notification-btn');
+        const notificationInput = document.getElementById('notificationCount');
+
+        notificationBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                notificationBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                notificationInput.value = btn.dataset.value;
+            });
+        });
+
+        // Plan selection
+        const planCards = document.querySelectorAll('.plan-card');
+        const planInput = document.getElementById('selectedPlan');
+
+        planCards.forEach(card => {
+            card.addEventListener('click', () => {
+                planCards.forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                planInput.value = card.dataset.plan;
+            });
+        });
+
+        // Form submission
+        const form = document.getElementById('profileForm');
+        const submitBtn = form.querySelector('.submit-btn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Validate required fields
+            const struggles = Array.from(document.querySelectorAll('input[name="struggles"]:checked')).map(cb => cb.value);
+            const goals = Array.from(document.querySelectorAll('input[name="goals"]:checked')).map(cb => cb.value);
+            const notifications = notificationInput.value;
+            const plan = planInput.value;
+            const email = document.getElementById('email').value;
+
+            if (struggles.length === 0) {
+                alert('Please select at least one struggle.');
+                return;
+            }
+
+            if (goals.length === 0) {
+                alert('Please select at least one spiritual goal.');
+                return;
+            }
+
+            if (!notifications) {
+                alert('Please select how many daily notifications you want.');
+                return;
+            }
+
+            if (!plan) {
+                alert('Please select a plan (Basic or Premium).');
+                return;
+            }
+
+            // Gather all form data
+            const formData = {
+                email: email,
+                struggles: struggles.join(', '),
+                strugglesOther: document.getElementById('strugglesOther').value,
+                goals: goals.join(', '),
+                goalsOther: document.getElementById('goalsOther').value,
+                notificationsPerDay: notifications,
+                plan: plan,
+                timestamp: new Date().toISOString()
+            };
+
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating Your Profile...';
+
+            try {
+                // Send to Google Sheets
+                await fetch('https://script.google.com/macros/s/AKfycbwa4ViqgRLVoGh5ISs-rTJiYkV6FF4CvM9gxDTxrJ7OXud96nmPrVoO4XWgeoLwrQZO/exec', {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                // Show success message
+                form.style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('There was an error creating your profile. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Start My Journey with Lift';
+            }
+        });
+    </script>
+</body>
+</html>
