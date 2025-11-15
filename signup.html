@@ -496,12 +496,20 @@
 
                 console.log('User created:', userId);
 
+                // Send welcome email (async - don't wait for it)
+                try {
+                    await convex.action('emails:sendWelcomeEmail', { userId: userId });
+                    console.log('Welcome email sent successfully');
+                } catch (emailError) {
+                    console.error('Failed to send welcome email:', emailError);
+                    // Don't fail the signup if email fails
+                }
+
                 // Show success screen
                 document.getElementById('signupForm').style.display = 'none';
                 document.getElementById('successScreen').classList.add('show');
 
-                // TODO: Send welcome email
-                // TODO: Redirect to Stripe checkout (after 3 seconds)
+                // TODO: Redirect to Stripe checkout for payment setup (after trial)
 
             } catch (error) {
                 console.error('Error:', error);

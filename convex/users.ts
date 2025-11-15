@@ -71,6 +71,14 @@ export const getUser = query({
   },
 });
 
+// Get user by ID (internal version for use in actions)
+export const getUserInternal = internalQuery({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.userId);
+  },
+});
+
 // Update user subscription status (called by Stripe webhook)
 export const updateSubscription = mutation({
   args: {
@@ -123,6 +131,7 @@ export const updateUser = mutation({
     versesPerDay: v.optional(v.number()),
     deliveryTime: v.optional(v.string()),
     deliveryMethod: v.optional(v.string()),
+    subscriptionStatus: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { userId, ...updates } = args;
