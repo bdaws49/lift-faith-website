@@ -230,7 +230,7 @@ export const sendWelcomeEmail = action({
   },
   handler: async (ctx, args) => {
     // Get user from database
-    const user = await ctx.runQuery("users:getUser", { userId: args.userId });
+    const user = await ctx.runQuery("users:getUserInternal", { userId: args.userId });
 
     if (!user) {
       throw new Error("User not found");
@@ -263,7 +263,7 @@ export const sendDailyVersesEmail = action({
   },
   handler: async (ctx, args) => {
     // Get user from database
-    const user = await ctx.runQuery("users:getUser", { userId: args.userId });
+    const user = await ctx.runQuery("users:getUserInternal", { userId: args.userId });
 
     if (!user) {
       throw new Error("User not found");

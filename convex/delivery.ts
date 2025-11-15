@@ -102,7 +102,7 @@ export const deliverVersesToUser = action({
   },
   handler: async (ctx, args) => {
     // Get user
-    const user = await ctx.runQuery("users:getUser", { userId: args.userId });
+    const user = await ctx.runQuery("users:getUserInternal", { userId: args.userId });
 
     if (!user) {
       throw new Error("User not found");
