@@ -24,17 +24,433 @@
     <meta property="twitter:description" content="Navigate life's struggles with personalized Scripture verses delivered daily. Join Lift for biblical encouragement and spiritual growth.">
     <meta property="twitter:image" content="https://liftfaith.com/logo.png">
 
-    <!-- Favicon - Replace with your actual favicon -->
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="favicon.png">
 
     <!-- Stylesheet -->
     <link rel="stylesheet" href="styles.css">
+
+    <style>
+        /* Hero Section Styles */
+        .hero-section {
+            background: linear-gradient(135deg, #8B1538 0%, #5C0F28 100%);
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" opacity="0.1"><circle cx="200" cy="200" r="150" fill="white"/><circle cx="1000" cy="600" r="200" fill="white"/><circle cx="600" cy="100" r="100" fill="white"/></svg>');
+            background-size: cover;
+            opacity: 0.1;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            text-align: center;
+            color: white;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-eyebrow {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .hero-headline {
+            font-size: 4rem;
+            font-weight: bold;
+            line-height: 1.2;
+            margin-bottom: 25px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .hero-subheadline {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-cta-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 50px;
+        }
+
+        .hero-cta-primary {
+            background: white;
+            color: #8B1538;
+            padding: 20px 50px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .hero-cta-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .hero-cta-secondary {
+            background: transparent;
+            color: white;
+            padding: 20px 50px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-decoration: none;
+            border: 2px solid white;
+            transition: all 0.3s;
+        }
+
+        .hero-cta-secondary:hover {
+            background: white;
+            color: #8B1538;
+        }
+
+        .hero-trust-badge {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-top: 20px;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            background: white;
+            padding: 60px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stats-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            text-align: center;
+        }
+
+        .stat-item {
+            padding: 20px;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #8B1538;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        /* Problem/Solution Section */
+        .problem-section {
+            background: #f8f9ff;
+            padding: 80px 20px;
+        }
+
+        .problem-content {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .section-heading {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #8B1538;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .section-subheading {
+            text-align: center;
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 60px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .problem-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .problem-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .problem-title {
+            font-size: 1.5rem;
+            color: #8B1538;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .problem-description {
+            color: #666;
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+
+        /* Features Section */
+        .features-section {
+            background: white;
+            padding: 80px 20px;
+        }
+
+        .features-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9ff;
+            border-radius: 15px;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(139, 21, 56, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-title {
+            font-size: 1.4rem;
+            color: #8B1538;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .feature-description {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Verse Highlight Section */
+        .verse-highlight-section {
+            background: linear-gradient(135deg, #8B1538 0%, #5C0F28 100%);
+            padding: 80px 20px;
+            color: white;
+        }
+
+        .verse-highlight-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .verse-quote {
+            font-size: 2rem;
+            line-height: 1.8;
+            font-style: italic;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .verse-ref {
+            font-size: 1.3rem;
+            font-weight: bold;
+            opacity: 0.9;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: #f8f9ff;
+            padding: 80px 20px;
+        }
+
+        .cta-content {
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .cta-heading {
+            font-size: 2.5rem;
+            color: #8B1538;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .cta-subheading {
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .email-signup-inline {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+
+        .signup-form-inline {
+            display: flex;
+            gap: 15px;
+            max-width: 550px;
+            margin: 0 auto 20px;
+            flex-wrap: wrap;
+        }
+
+        .signup-form-inline input[type="email"] {
+            flex: 1;
+            min-width: 250px;
+            padding: 18px 25px;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .signup-form-inline input[type="email"]:focus {
+            border-color: #8B1538;
+        }
+
+        .signup-form-inline button {
+            padding: 18px 40px;
+            background: #8B1538;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .signup-form-inline button:hover {
+            background: #5C0F28;
+            transform: translateY(-2px);
+        }
+
+        .privacy-note {
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 15px;
+        }
+
+        .urgency-badge {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hero-headline {
+                font-size: 2.5rem;
+            }
+
+            .hero-subheadline {
+                font-size: 1.2rem;
+            }
+
+            .hero-cta-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .hero-cta-primary,
+            .hero-cta-secondary {
+                padding: 18px 40px;
+                font-size: 1.1rem;
+            }
+
+            .section-heading {
+                font-size: 2rem;
+            }
+
+            .problem-grid,
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .signup-form-inline {
+                flex-direction: column;
+            }
+
+            .signup-form-inline input[type="email"] {
+                min-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
     <nav class="nav-bar">
         <a href="index.html" class="nav-logo">
-            <!-- Replace this div with your actual logo image -->
             <div class="logo-placeholder">L</div>
             <span class="nav-logo-text">Lift</span>
         </a>
@@ -50,43 +466,165 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="container landing">
-        <h1 class="app-name large">Lift</h1>
-        <p class="tagline large">Lift your eyes to the hills! Daily strength for your faith journey.</p>
-
-        <div class="verse-container">
-            <p class="verse-text">
-                "I will lift up my eyes to the hills—<br>
-                From whence comes my help?<br>
-                My help comes from the <span style="font-variant: small-caps;">Lord</span>,<br>
-                Who made heaven and earth."
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="hero-eyebrow">✨ Early Access Now Open</div>
+            <h1 class="hero-headline">
+                Daily Biblical Strength.<br>
+                Personalized for You.
+            </h1>
+            <p class="hero-subheadline">
+                Struggling with anxiety, temptation, or feeling distant from God? Get personalized Scripture verses delivered to your inbox daily—tailored to your unique spiritual journey.
             </p>
-            <p class="verse-reference">— Psalm 121:1-2 (NKJV)</p>
+            <div class="hero-cta-group">
+                <a href="profile.html" class="hero-cta-primary">Start Your Free Journey</a>
+                <a href="explanation.html" class="hero-cta-secondary">See How It Works</a>
+            </div>
+            <div class="hero-trust-badge">
+                🔒 100% Private & Confidential  •  Cancel Anytime  •  Starting at $5/month
+            </div>
         </div>
+    </section>
 
-        <div class="description">
-            <p>Navigate life's struggles, temptations, and goals with biblical wisdom, daily encouragement, and a supportive community of believers. Walk in freedom with Christ.</p>
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-number">2-6</div>
+                <div class="stat-label">Daily Verses Delivered</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Personalized to You</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Community Support</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">$5</div>
+                <div class="stat-label">Starting Price/Month</div>
+            </div>
         </div>
+    </section>
 
-        <!-- Call to Action -->
-        <div style="margin-top: 30px;">
-            <a href="explanation.html" class="cta-button" style="margin-right: 15px;">Learn More</a>
-            <a href="profile.html" class="cta-button">Get Started</a>
+    <!-- Problem/Solution Section -->
+    <section class="problem-section">
+        <div class="problem-content">
+            <h2 class="section-heading">You're Not Alone in Your Struggles</h2>
+            <p class="section-subheading">
+                Life throws challenges at us daily. But God's Word has the answers you need, exactly when you need them.
+            </p>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <div class="problem-icon">😰</div>
+                    <h3 class="problem-title">Feeling Overwhelmed?</h3>
+                    <p class="problem-description">
+                        Anxiety, stress, and fear can paralyze us. Get biblical wisdom delivered right to your phone to fight back with Scripture.
+                    </p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon">💔</div>
+                    <h3 class="problem-title">Struggling with Sin?</h3>
+                    <p class="problem-description">
+                        Temptation is real. Receive targeted verses that strengthen your resolve and remind you of Christ's power to overcome.
+                    </p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon">🙏</div>
+                    <h3 class="problem-title">Want to Grow Deeper?</h3>
+                    <p class="problem-description">
+                        Set spiritual goals and receive daily encouragement to help you draw closer to God and live out your faith boldly.
+                    </p>
+                </div>
+            </div>
         </div>
+    </section>
 
-        <!-- Email Signup -->
-        <div class="email-signup">
-            <h3>Join the Waitlist</h3>
-            <p style="color: #666; margin-bottom: 20px;">Be the first to know when Lift launches. Get updates and early access.</p>
-            <form class="signup-form" onsubmit="handleSubmit(event)">
-                <input type="email" id="emailInput" placeholder="Enter your email address" required aria-label="Email address">
-                <button type="submit">Notify Me</button>
-            </form>
-            <p class="success-message" id="successMessage">Thank you! We'll keep you updated.</p>
-            <p class="error-message" id="errorMessage" style="display: none; color: #d32f2f; margin-top: 10px; font-weight: bold;">Please enter a valid email address.</p>
+    <!-- Features Section -->
+    <section class="features-section">
+        <h2 class="section-heading">How Lift Strengthens Your Faith</h2>
+        <p class="section-subheading">
+            More than just daily devotionals—Lift is your personal spiritual companion.
+        </p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📖</div>
+                <h3 class="feature-title">Personalized Verses</h3>
+                <p class="feature-description">
+                    Tell us your struggles and goals. Receive Scripture handpicked to speak directly to your situation.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⏰</div>
+                <h3 class="feature-title">Perfect Timing</h3>
+                <p class="feature-description">
+                    Choose 2-6 verses daily, delivered when you need them most—morning motivation or evening peace.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤝</div>
+                <h3 class="feature-title">Anonymous Prayer</h3>
+                <p class="feature-description">
+                    Submit prayer requests anonymously and receive genuine support from a community of believers.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3 class="feature-title">Track Your Growth</h3>
+                <p class="feature-description">
+                    Set spiritual goals and see your progress as you develop deeper intimacy with Christ.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3 class="feature-title">Ask a Pastor</h3>
+                <p class="feature-description">
+                    Premium members get access to Q&A with real pastors for biblical guidance on tough questions.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3 class="feature-title">Email & SMS</h3>
+                <p class="feature-description">
+                    Receive verses via email (Basic) or text messages (Premium) for instant spiritual encouragement.
+                </p>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- Verse Highlight -->
+    <section class="verse-highlight-section">
+        <div class="verse-highlight-content">
+            <div class="verse-quote">
+                "I will lift up my eyes to the hills—From whence comes my help? My help comes from the LORD, Who made heaven and earth."
+            </div>
+            <div class="verse-ref">— Psalm 121:1-2 (NKJV)</div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <div class="urgency-badge">⚡ Limited Early Access Spots Available</div>
+            <h2 class="cta-heading">Ready to Transform Your Faith Journey?</h2>
+            <p class="cta-subheading">
+                Join the waitlist and be the first to receive daily biblical strength personalized just for you. Start walking in freedom with Christ today.
+            </p>
+            <div class="email-signup-inline">
+                <form class="signup-form-inline" onsubmit="handleSubmit(event)">
+                    <input type="email" id="emailInput" placeholder="Enter your email address" required aria-label="Email address">
+                    <button type="submit">Get Early Access</button>
+                </form>
+                <p class="success-message" id="successMessage" style="display: none; color: #8B1538; font-weight: bold; margin-top: 15px;">🎉 You're on the list! Check your email for next steps.</p>
+                <p class="error-message" id="errorMessage" style="display: none; color: #d32f2f; font-weight: bold; margin-top: 10px;">Please enter a valid email address.</p>
+                <p class="privacy-note">
+                    🔒 Your information is 100% private. We'll never share your email. Cancel anytime.
+                </p>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer class="footer">
@@ -128,11 +666,7 @@
 
             // Disable button and show loading state
             button.disabled = true;
-            button.textContent = 'Submitting...';
-
-            // TODO: Replace with Airtable API endpoint
-            // For now, using the existing Google Sheets endpoint (not working)
-            // Instructions for Airtable integration are in NEXT_STEPS.md
+            button.textContent = 'Joining...';
 
             fetch('https://script.google.com/macros/s/AKfycbwa4ViqgRLVoGh5ISs-rTJiYkV6FF4CvM9gxDTxrJ7OXud96nmPrVoO4XWgeoLwrQZO/exec', {
                 method: 'POST',
@@ -143,7 +677,7 @@
                 body: JSON.stringify({
                     email: email,
                     timestamp: new Date().toISOString(),
-                    source: 'landing-page'
+                    source: 'landing-page-v2'
                 })
             })
             .then(() => {
@@ -151,20 +685,21 @@
                 form.style.display = 'none';
                 successMessage.style.display = 'block';
 
-                // Reset after 3 seconds
+                // Reset after 5 seconds
                 setTimeout(() => {
                     form.style.display = 'flex';
                     successMessage.style.display = 'none';
                     form.reset();
                     button.disabled = false;
-                    button.textContent = 'Notify Me';
-                }, 3000);
+                    button.textContent = 'Get Early Access';
+                }, 5000);
             })
             .catch((error) => {
                 console.error('Error:', error);
-                alert('There was an error submitting your email. Please try again.');
+                errorMessage.textContent = 'There was an error. Please try again.';
+                errorMessage.style.display = 'block';
                 button.disabled = false;
-                button.textContent = 'Notify Me';
+                button.textContent = 'Get Early Access';
             });
         }
     </script>
