@@ -3,311 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>How Lift Works - Daily Strength for Your Faith Journey</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            font-family: 'Georgia', serif;
-            background: linear-gradient(135deg, #8B1538 0%, #5C0F28 100%);
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
+    <!-- SEO Meta Tags -->
+    <title>How Lift Works - Biblical Encouragement for Your Faith Journey</title>
+    <meta name="description" content="Discover how Lift delivers personalized Scripture verses matched to your struggles and spiritual goals. Daily biblical encouragement via email or text.">
+    <meta name="keywords" content="bible app features, scripture delivery, faith app, Christian encouragement, spiritual growth tools, daily bible verses">
+    <meta name="author" content="Lift Faith">
 
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 60px 40px;
-        }
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://liftfaith.com/explanation.html">
+    <meta property="og:title" content="How Lift Works - Biblical Encouragement for Your Faith Journey">
+    <meta property="og:description" content="Discover how Lift delivers personalized Scripture verses matched to your struggles and spiritual goals. Daily biblical encouragement.">
+    <meta property="og:image" content="https://liftfaith.com/logo.png">
 
-        .header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://liftfaith.com/explanation.html">
+    <meta property="twitter:title" content="How Lift Works - Biblical Encouragement">
+    <meta property="twitter:description" content="Discover how Lift delivers personalized Scripture verses matched to your struggles and spiritual goals.">
+    <meta property="twitter:image" content="https://liftfaith.com/logo.png">
 
-        .app-name {
-            font-size: 3.5rem;
-            font-weight: bold;
-            color: #8B1538;
-            margin-bottom: 10px;
-            letter-spacing: 2px;
-        }
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
 
-        .tagline {
-            font-size: 1.2rem;
-            color: #555;
-            font-style: italic;
-        }
-
-        .foundation {
-            background: #f8f9ff;
-            border-left: 5px solid #8B1538;
-            padding: 30px;
-            margin: 40px 0;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .foundation h2 {
-            color: #8B1538;
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-        }
-
-        .foundation p {
-            font-size: 1.15rem;
-            line-height: 1.8;
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .foundation .verse {
-            font-style: italic;
-            color: #555;
-            margin-top: 20px;
-            font-size: 1.1rem;
-        }
-
-        .section {
-            margin: 50px 0;
-        }
-
-        .section h2 {
-            color: #8B1538;
-            font-size: 2rem;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        .feature-card {
-            background: #f8f9ff;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            transition: transform 0.3s;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-
-        .feature-card h3 {
-            color: #8B1538;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
-
-        .feature-card p {
-            color: #666;
-            line-height: 1.6;
-        }
-
-        .pricing {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        .plan {
-            background: #f8f9ff;
-            padding: 40px 30px;
-            border-radius: 15px;
-            text-align: center;
-            border: 3px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .plan:hover {
-            border-color: #8B1538;
-            transform: scale(1.05);
-        }
-
-        .plan.premium {
-            background: linear-gradient(135deg, #8B1538 0%, #5C0F28 100%);
-            color: white;
-        }
-
-        .plan h3 {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            color: #8B1538;
-        }
-
-        .plan.premium h3 {
-            color: white;
-        }
-
-        .plan .price {
-            font-size: 3rem;
-            font-weight: bold;
-            margin: 20px 0;
-            color: #8B1538;
-        }
-
-        .plan.premium .price {
-            color: white;
-        }
-
-        .plan .price span {
-            font-size: 1.2rem;
-            font-weight: normal;
-        }
-
-        .plan ul {
-            list-style: none;
-            text-align: left;
-            margin: 30px 0;
-        }
-
-        .plan ul li {
-            padding: 10px 0;
-            color: #666;
-            line-height: 1.6;
-        }
-
-        .plan.premium ul li {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .plan ul li:before {
-            content: "✓ ";
-            color: #8B1538;
-            font-weight: bold;
-            margin-right: 10px;
-        }
-
-        .plan.premium ul li:before {
-            color: white;
-        }
-
-        .testimonials {
-            margin-top: 30px;
-        }
-
-        .testimonial-card {
-            background: #f8f9ff;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            border-left: 5px solid #8B1538;
-        }
-
-        .testimonial-text {
-            font-style: italic;
-            color: #555;
-            line-height: 1.8;
-            margin-bottom: 15px;
-        }
-
-        .testimonial-author {
-            color: #8B1538;
-            font-weight: bold;
-        }
-
-        .coming-soon-note {
-            text-align: center;
-            color: #999;
-            font-style: italic;
-            margin-top: 20px;
-        }
-
-        .faq {
-            margin-top: 30px;
-        }
-
-        .faq-item {
-            background: #f8f9ff;
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .faq-question {
-            color: #8B1538;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-        }
-
-        .faq-answer {
-            color: #666;
-            line-height: 1.7;
-        }
-
-        .cta-button {
-            display: inline-block;
-            background: #8B1538;
-            color: white;
-            padding: 20px 50px;
-            border-radius: 50px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            text-decoration: none;
-            margin-top: 40px;
-            transition: background 0.3s;
-            text-align: center;
-        }
-
-        .cta-button:hover {
-            background: #5C0F28;
-        }
-
-        .cta-section {
-            text-align: center;
-            margin-top: 60px;
-            padding: 40px;
-            background: #f8f9ff;
-            border-radius: 15px;
-        }
-
-        .cta-section h2 {
-            color: #8B1538;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 600px) {
-            .app-name {
-                font-size: 2.5rem;
-            }
-
-            .container {
-                padding: 40px 25px;
-            }
-
-            .features,
-            .pricing {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-logo">
+            <div class="logo-placeholder">L</div>
+            <span class="nav-logo-text">Lift</span>
+        </a>
+
+        <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle navigation">
+            ☰
+        </button>
+
+        <div class="nav-links" id="navLinks">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="explanation.html" class="nav-link active">How It Works</a>
+            <a href="profile.html" class="nav-cta">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
     <div class="container">
         <div class="header">
             <h1 class="app-name">Lift</h1>
             <p class="tagline">Lift your eyes to the hills! Daily strength for your faith journey.</p>
         </div>
 
+        <!-- Foundation Section -->
         <div class="foundation">
             <h2>Our Foundation</h2>
             <p>Scripture tells us that God desires to build our faith. The Apostle Paul reminds us that <strong>"faith comes by hearing, and hearing by the word of God."</strong></p>
@@ -315,6 +64,7 @@
             <p class="verse">"So then faith comes by hearing, and hearing by the word of God." — Romans 10:17 (NKJV)</p>
         </div>
 
+        <!-- How Lift Works -->
         <div class="section">
             <h2>How Lift Works</h2>
             <div class="features">
@@ -356,6 +106,7 @@
             </div>
         </div>
 
+        <!-- Pricing Section -->
         <div class="section">
             <h2>Choose Your Plan</h2>
             <div class="pricing">
@@ -387,6 +138,7 @@
             </div>
         </div>
 
+        <!-- Testimonials Section -->
         <div class="section">
             <h2>What People Are Saying</h2>
             <div class="testimonials">
@@ -398,6 +150,7 @@
             <p class="coming-soon-note">We can't wait to hear how Lift impacts your faith journey!</p>
         </div>
 
+        <!-- FAQ Section -->
         <div class="section">
             <h2>Frequently Asked Questions</h2>
             <div class="faq">
@@ -425,14 +178,40 @@
                     <div class="faq-question">What translation of the Bible do you use?</div>
                     <div class="faq-answer">We primarily use the NKJV (New King James Version), but may include other trusted translations as well.</div>
                 </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Can I cancel anytime?</div>
+                    <div class="faq-answer">Absolutely. You can cancel your subscription at any time with no penalties or fees. Your access continues through the end of your billing period.</div>
+                </div>
             </div>
         </div>
 
+        <!-- Call to Action -->
         <div class="cta-section">
             <h2>Ready to Begin Your Journey?</h2>
             <p style="font-size: 1.1rem; color: #666; margin-bottom: 20px;">Create your personalized profile and start receiving daily encouragement from God's Word.</p>
             <a href="profile.html" class="cta-button">Get Started Now</a>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#" class="footer-link">Privacy Policy</a>
+                <a href="#" class="footer-link">Terms of Service</a>
+                <a href="#" class="footer-link">Contact</a>
+            </div>
+        </div>
+        <p class="footer-text">&copy; 2024 Lift Faith. All rights reserved. | "I will lift up my eyes to the hills."</p>
+    </footer>
+
+    <script>
+        // Mobile Navigation Toggle
+        function toggleNav() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+    </script>
 </body>
 </html>

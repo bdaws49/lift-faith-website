@@ -3,290 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Your Profile - Lift</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            font-family: 'Georgia', serif;
-            background: linear-gradient(135deg, #8B1538 0%, #5C0F28 100%);
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
+    <!-- SEO Meta Tags -->
+    <title>Create Your Profile - Lift Faith Journey</title>
+    <meta name="description" content="Create your personalized Lift profile. Share your struggles and spiritual goals to receive customized Scripture verses and biblical encouragement.">
+    <meta name="keywords" content="faith profile, spiritual assessment, Christian goals, biblical guidance, personalized faith journey">
+    <meta name="author" content="Lift Faith">
 
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 60px 40px;
-        }
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://liftfaith.com/profile.html">
+    <meta property="og:title" content="Create Your Lift Profile - Personalized Faith Journey">
+    <meta property="og:description" content="Create your personalized profile to receive biblical encouragement matched to your struggles and spiritual goals.">
+    <meta property="og:image" content="https://liftfaith.com/logo.png">
 
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://liftfaith.com/profile.html">
+    <meta property="twitter:title" content="Create Your Lift Profile">
+    <meta property="twitter:description" content="Create your personalized profile to receive biblical encouragement matched to your struggles and goals.">
+    <meta property="twitter:image" content="https://liftfaith.com/logo.png">
 
-        .app-name {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #8B1538;
-            margin-bottom: 10px;
-            letter-spacing: 2px;
-        }
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
 
-        .subtitle {
-            font-size: 1.3rem;
-            color: #555;
-            margin-bottom: 10px;
-        }
-
-        .intro-text {
-            font-size: 1rem;
-            color: #666;
-            line-height: 1.6;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .form-section {
-            margin: 40px 0;
-            padding: 30px;
-            background: #f8f9ff;
-            border-radius: 15px;
-            border-left: 5px solid #8B1538;
-        }
-
-        .form-section h2 {
-            color: #8B1538;
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-        }
-
-        .form-section p {
-            color: #666;
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
-
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            background: white;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-
-        .checkbox-item:hover {
-            background: #e8e9ff;
-        }
-
-        .checkbox-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
-            cursor: pointer;
-            accent-color: #8B1538;
-        }
-
-        .checkbox-item label {
-            cursor: pointer;
-            color: #333;
-            font-size: 1rem;
-        }
-
-        .text-input,
-        .email-input,
-        .select-input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-family: 'Georgia', serif;
-            margin-top: 10px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        .text-input:focus,
-        .email-input:focus,
-        .select-input:focus {
-            border-color: #8B1538;
-        }
-
-        textarea.text-input {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .notification-options {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .notification-btn {
-            padding: 15px;
-            background: white;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #333;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-        }
-
-        .notification-btn:hover {
-            border-color: #8B1538;
-            background: #f8f9ff;
-        }
-
-        .notification-btn.selected {
-            background: #8B1538;
-            color: white;
-            border-color: #8B1538;
-        }
-
-        .submit-section {
-            text-align: center;
-            margin-top: 50px;
-        }
-
-        .submit-btn {
-            background: #8B1538;
-            color: white;
-            padding: 20px 60px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Georgia', serif;
-        }
-
-        .submit-btn:hover {
-            background: #5C0F28;
-            transform: scale(1.05);
-        }
-
-        .submit-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: scale(1);
-        }
-
-        .success-message {
-            display: none;
-            text-align: center;
-            padding: 40px;
-            background: #f8f9ff;
-            border-radius: 15px;
-            margin-top: 30px;
-        }
-
-        .success-message h2 {
-            color: #8B1538;
-            margin-bottom: 20px;
-            font-size: 2rem;
-        }
-
-        .success-message p {
-            color: #666;
-            font-size: 1.1rem;
-            line-height: 1.8;
-        }
-
-        .plan-selection {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .plan-card {
-            padding: 25px;
-            background: white;
-            border: 3px solid #ddd;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-        }
-
-        .plan-card:hover {
-            border-color: #8B1538;
-            transform: translateY(-5px);
-        }
-
-        .plan-card.selected {
-            border-color: #8B1538;
-            background: #f8f9ff;
-        }
-
-        .plan-card h3 {
-            color: #8B1538;
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-
-        .plan-card .price {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #8B1538;
-            margin: 15px 0;
-        }
-
-        .plan-card .features {
-            text-align: left;
-            color: #666;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        .required {
-            color: #8B1538;
-            font-weight: bold;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 40px 25px;
-            }
-
-            .app-name {
-                font-size: 2.5rem;
-            }
-
-            .checkbox-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .notification-options {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-    </style>
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-logo">
+            <div class="logo-placeholder">L</div>
+            <span class="nav-logo-text">Lift</span>
+        </a>
+
+        <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle navigation">
+            ☰
+        </button>
+
+        <div class="nav-links" id="navLinks">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="explanation.html" class="nav-link">How It Works</a>
+            <a href="profile.html" class="nav-cta active">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container profile">
         <div class="header">
             <h1 class="app-name">Lift</h1>
             <p class="subtitle">Create Your Personal Profile</p>
@@ -349,6 +113,7 @@
                     </div>
                 </div>
                 <textarea class="text-input" id="strugglesOther" placeholder="Describe any other struggles in your own words (optional)..." rows="4"></textarea>
+                <p id="strugglesError" style="display: none; color: #d32f2f; margin-top: 10px; font-weight: bold;">Please select at least one struggle.</p>
             </div>
 
             <!-- Goals Section -->
@@ -382,6 +147,7 @@
                     </div>
                 </div>
                 <textarea class="text-input" id="goalsOther" placeholder="Describe any other spiritual goals (optional)..." rows="4"></textarea>
+                <p id="goalsError" style="display: none; color: #d32f2f; margin-top: 10px; font-weight: bold;">Please select at least one spiritual goal.</p>
             </div>
 
             <!-- Notifications Section -->
@@ -396,6 +162,7 @@
                     <div class="notification-btn" data-value="6">6</div>
                 </div>
                 <input type="hidden" id="notificationCount" name="notifications" required>
+                <p id="notificationsError" style="display: none; color: #d32f2f; margin-top: 10px; font-weight: bold;">Please select how many daily notifications you want.</p>
             </div>
 
             <!-- Plan Selection -->
@@ -424,13 +191,15 @@
                     </div>
                 </div>
                 <input type="hidden" id="selectedPlan" name="plan" required>
+                <p id="planError" style="display: none; color: #d32f2f; margin-top: 10px; font-weight: bold;">Please select a plan (Basic or Premium).</p>
             </div>
 
             <!-- Email Section -->
             <div class="form-section">
                 <h2>Your Email Address <span class="required">*</span></h2>
                 <p>Where should we send your daily encouragement?</p>
-                <input type="email" class="email-input" id="email" name="email" placeholder="your@email.com" required>
+                <input type="email" class="email-input" id="email" name="email" placeholder="your@email.com" required aria-label="Email address">
+                <p id="emailError" style="display: none; color: #d32f2f; margin-top: 10px; font-weight: bold;">Please enter a valid email address.</p>
             </div>
 
             <!-- Submit Button -->
@@ -441,7 +210,7 @@
         </form>
 
         <!-- Success Message -->
-        <div class="success-message" id="successMessage">
+        <div class="success-message profile" id="successMessage">
             <h2>🎉 Welcome to Lift!</h2>
             <p>Your profile has been created successfully. You'll start receiving personalized Scripture encouragement tailored to your journey.</p>
             <p style="margin-top: 20px;">Check your email for next steps and your first encouragement!</p>
@@ -449,7 +218,25 @@
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#" class="footer-link">Privacy Policy</a>
+                <a href="#" class="footer-link">Terms of Service</a>
+                <a href="#" class="footer-link">Contact</a>
+            </div>
+        </div>
+        <p class="footer-text">&copy; 2024 Lift Faith. All rights reserved. | "I will lift up my eyes to the hills."</p>
+    </footer>
+
     <script>
+        // Mobile Navigation Toggle
+        function toggleNav() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+
         // Notification count selection
         const notificationBtns = document.querySelectorAll('.notification-btn');
         const notificationInput = document.getElementById('notificationCount');
@@ -459,6 +246,7 @@
                 notificationBtns.forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
                 notificationInput.value = btn.dataset.value;
+                document.getElementById('notificationsError').style.display = 'none';
             });
         });
 
@@ -471,6 +259,7 @@
                 planCards.forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
                 planInput.value = card.dataset.plan;
+                document.getElementById('planError').style.display = 'none';
             });
         });
 
@@ -481,6 +270,9 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            // Hide all error messages
+            document.querySelectorAll('[id$="Error"]').forEach(el => el.style.display = 'none');
+
             // Validate required fields
             const struggles = Array.from(document.querySelectorAll('input[name="struggles"]:checked')).map(cb => cb.value);
             const goals = Array.from(document.querySelectorAll('input[name="goals"]:checked')).map(cb => cb.value);
@@ -488,23 +280,53 @@
             const plan = planInput.value;
             const email = document.getElementById('email').value;
 
+            let hasError = false;
+
+            // Validate struggles
             if (struggles.length === 0) {
-                alert('Please select at least one struggle.');
-                return;
+                document.getElementById('strugglesError').style.display = 'block';
+                document.getElementById('strugglesError').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                hasError = true;
             }
 
+            // Validate goals
             if (goals.length === 0) {
-                alert('Please select at least one spiritual goal.');
-                return;
+                document.getElementById('goalsError').style.display = 'block';
+                if (!hasError) {
+                    document.getElementById('goalsError').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                hasError = true;
             }
 
+            // Validate notifications
             if (!notifications) {
-                alert('Please select how many daily notifications you want.');
-                return;
+                document.getElementById('notificationsError').style.display = 'block';
+                if (!hasError) {
+                    document.getElementById('notificationsError').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                hasError = true;
             }
 
+            // Validate plan
             if (!plan) {
-                alert('Please select a plan (Basic or Premium).');
+                document.getElementById('planError').style.display = 'block';
+                if (!hasError) {
+                    document.getElementById('planError').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                hasError = true;
+            }
+
+            // Validate email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                document.getElementById('emailError').style.display = 'block';
+                if (!hasError) {
+                    document.getElementById('emailError').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                hasError = true;
+            }
+
+            if (hasError) {
                 return;
             }
 
@@ -525,7 +347,10 @@
             submitBtn.textContent = 'Creating Your Profile...';
 
             try {
-                // Send to Google Sheets
+                // TODO: Replace with Airtable API endpoint
+                // Instructions for Airtable integration are in NEXT_STEPS.md
+
+                // Using existing Google Sheets endpoint (not working currently)
                 await fetch('https://script.google.com/macros/s/AKfycbwa4ViqgRLVoGh5ISs-rTJiYkV6FF4CvM9gxDTxrJ7OXud96nmPrVoO4XWgeoLwrQZO/exec', {
                     method: 'POST',
                     mode: 'no-cors',
@@ -538,12 +363,42 @@
                 // Show success message
                 form.style.display = 'none';
                 document.getElementById('successMessage').style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                // TODO: Redirect to Stripe payment page
+                // Instructions in NEXT_STEPS.md
 
             } catch (error) {
                 console.error('Error:', error);
                 alert('There was an error creating your profile. Please try again.');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Start My Journey with Lift';
+            }
+        });
+
+        // Clear errors on input change
+        document.querySelectorAll('input[name="struggles"]').forEach(input => {
+            input.addEventListener('change', () => {
+                const struggles = Array.from(document.querySelectorAll('input[name="struggles"]:checked'));
+                if (struggles.length > 0) {
+                    document.getElementById('strugglesError').style.display = 'none';
+                }
+            });
+        });
+
+        document.querySelectorAll('input[name="goals"]').forEach(input => {
+            input.addEventListener('change', () => {
+                const goals = Array.from(document.querySelectorAll('input[name="goals"]:checked'));
+                if (goals.length > 0) {
+                    document.getElementById('goalsError').style.display = 'none';
+                }
+            });
+        });
+
+        document.getElementById('email').addEventListener('input', () => {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailRegex.test(document.getElementById('email').value)) {
+                document.getElementById('emailError').style.display = 'none';
             }
         });
     </script>
