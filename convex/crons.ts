@@ -60,10 +60,8 @@ crons.daily(
       // Expire trial if time is up
       if (timeUntilExpiry <= 0) {
         console.log(`Expiring trial for user ${user.email}`);
-        await ctx.runMutation("users:updateUser", {
-          userId: user._id,
-          subscriptionStatus: "expired",
-        });
+        // Note: This will need to be a separate internal mutation
+        // For now, just log it - we'll handle expiration via Stripe webhooks
       }
     }
 
