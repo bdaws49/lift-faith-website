@@ -18,6 +18,46 @@
             padding: 40px 20px;
         }
 
+        nav {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            margin: 0 auto 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #8B1538;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: color 0.3s;
+            padding: 5px 15px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+
+        nav ul li a:hover {
+            background: #8B1538;
+            color: white;
+        }
+
+        nav ul li a.active {
+            background: #8B1538;
+            color: white;
+        }
+
         .container {
             background: white;
             border-radius: 20px;
@@ -286,6 +326,14 @@
     </style>
 </head>
 <body>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="explanation.html">How It Works</a></li>
+            <li><a href="profile.html" class="active">Get Started</a></li>
+        </ul>
+    </nav>
+
     <div class="container">
         <div class="header">
             <h1 class="app-name">Lift</h1>
