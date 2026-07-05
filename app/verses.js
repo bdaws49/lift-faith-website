@@ -1,0 +1,73 @@
+/**
+ * Lift Faith — Scripture database
+ *
+ * Each verse is tagged with the struggles and goals it speaks to, so the
+ * matching engine can build a personalized daily feed. All verses NKJV.
+ *
+ * Tag vocabulary:
+ *   struggles: anxiety, depression, anger, addiction, relationships,
+ *              finances, temptation, doubt, grief, loneliness, fear, guilt
+ *   goals:     memorize, pray, read, overcome, closer, serve
+ */
+window.LIFT_VERSES = [
+  { ref: "Philippians 4:6-7", text: "Be anxious for nothing, but in everything by prayer and supplication, with thanksgiving, let your requests be made known to God; and the peace of God, which surpasses all understanding, will guard your hearts and minds through Christ Jesus.", tags: ["anxiety", "fear", "pray"] },
+  { ref: "1 Peter 5:7", text: "Casting all your care upon Him, for He cares for you.", tags: ["anxiety", "loneliness", "fear"] },
+  { ref: "Matthew 6:34", text: "Therefore do not worry about tomorrow, for tomorrow will worry about its own things. Sufficient for the day is its own trouble.", tags: ["anxiety", "fear"] },
+  { ref: "Isaiah 41:10", text: "Fear not, for I am with you; be not dismayed, for I am your God. I will strengthen you, yes, I will help you, I will uphold you with My righteous right hand.", tags: ["fear", "anxiety", "loneliness"] },
+  { ref: "Psalm 34:18", text: "The Lord is near to those who have a broken heart, and saves such as have a contrite spirit.", tags: ["depression", "grief", "loneliness"] },
+  { ref: "Psalm 42:11", text: "Why are you cast down, O my soul? And why are you disquieted within me? Hope in God; for I shall yet praise Him, the help of my countenance and my God.", tags: ["depression", "doubt"] },
+  { ref: "Psalm 30:5", text: "Weeping may endure for a night, but joy comes in the morning.", tags: ["depression", "grief"] },
+  { ref: "Isaiah 43:2", text: "When you pass through the waters, I will be with you; and through the rivers, they shall not overflow you. When you walk through the fire, you shall not be burned, nor shall the flame scorch you.", tags: ["depression", "fear", "grief"] },
+  { ref: "James 1:19-20", text: "So then, my beloved brethren, let every man be swift to hear, slow to speak, slow to wrath; for the wrath of man does not produce the righteousness of God.", tags: ["anger", "relationships"] },
+  { ref: "Ephesians 4:31-32", text: "Let all bitterness, wrath, anger, clamor, and evil speaking be put away from you, with all malice. And be kind to one another, tenderhearted, forgiving one another, even as God in Christ forgave you.", tags: ["anger", "relationships", "guilt"] },
+  { ref: "Proverbs 15:1", text: "A soft answer turns away wrath, but a harsh word stirs up anger.", tags: ["anger", "relationships"] },
+  { ref: "1 Corinthians 10:13", text: "No temptation has overtaken you except such as is common to man; but God is faithful, who will not allow you to be tempted beyond what you are able, but with the temptation will also make the way of escape, that you may be able to bear it.", tags: ["temptation", "addiction", "overcome"] },
+  { ref: "James 4:7", text: "Therefore submit to God. Resist the devil and he will flee from you.", tags: ["temptation", "addiction", "overcome"] },
+  { ref: "Galatians 5:1", text: "Stand fast therefore in the liberty by which Christ has made us free, and do not be entangled again with a yoke of bondage.", tags: ["addiction", "overcome", "temptation"] },
+  { ref: "2 Corinthians 5:17", text: "Therefore, if anyone is in Christ, he is a new creation; old things have passed away; behold, all things have become new.", tags: ["addiction", "guilt", "overcome"] },
+  { ref: "Philippians 4:19", text: "And my God shall supply all your need according to His riches in glory by Christ Jesus.", tags: ["finances", "anxiety"] },
+  { ref: "Matthew 6:33", text: "But seek first the kingdom of God and His righteousness, and all these things shall be added to you.", tags: ["finances", "closer"] },
+  { ref: "Hebrews 13:5", text: "Let your conduct be without covetousness; be content with such things as you have. For He Himself has said, “I will never leave you nor forsake you.”", tags: ["finances", "loneliness", "anxiety"] },
+  { ref: "Proverbs 3:5-6", text: "Trust in the Lord with all your heart, and lean not on your own understanding; in all your ways acknowledge Him, and He shall direct your paths.", tags: ["doubt", "fear", "closer"] },
+  { ref: "Mark 9:24", text: "Lord, I believe; help my unbelief!", tags: ["doubt"] },
+  { ref: "Hebrews 11:1", text: "Now faith is the substance of things hoped for, the evidence of things not seen.", tags: ["doubt", "read"] },
+  { ref: "John 20:29", text: "Thomas, because you have seen Me, you have believed. Blessed are those who have not seen and yet have believed.", tags: ["doubt"] },
+  { ref: "Revelation 21:4", text: "And God will wipe away every tear from their eyes; there shall be no more death, nor sorrow, nor crying. There shall be no more pain, for the former things have passed away.", tags: ["grief", "depression"] },
+  { ref: "Matthew 5:4", text: "Blessed are those who mourn, for they shall be comforted.", tags: ["grief"] },
+  { ref: "Psalm 147:3", text: "He heals the brokenhearted and binds up their wounds.", tags: ["grief", "depression"] },
+  { ref: "Deuteronomy 31:6", text: "Be strong and of good courage, do not fear nor be afraid of them; for the Lord your God, He is the One who goes with you. He will not leave you nor forsake you.", tags: ["loneliness", "fear"] },
+  { ref: "Psalm 68:6", text: "God sets the solitary in families; He brings out those who are bound into prosperity.", tags: ["loneliness"] },
+  { ref: "Joshua 1:9", text: "Have I not commanded you? Be strong and of good courage; do not be afraid, nor be dismayed, for the Lord your God is with you wherever you go.", tags: ["fear", "loneliness", "doubt"] },
+  { ref: "2 Timothy 1:7", text: "For God has not given us a spirit of fear, but of power and of love and of a sound mind.", tags: ["fear", "anxiety"] },
+  { ref: "Psalm 23:4", text: "Yea, though I walk through the valley of the shadow of death, I will fear no evil; for You are with me; Your rod and Your staff, they comfort me.", tags: ["fear", "grief"] },
+  { ref: "1 John 1:9", text: "If we confess our sins, He is faithful and just to forgive us our sins and to cleanse us from all unrighteousness.", tags: ["guilt", "temptation"] },
+  { ref: "Romans 8:1", text: "There is therefore now no condemnation to those who are in Christ Jesus, who do not walk according to the flesh, but according to the Spirit.", tags: ["guilt", "addiction"] },
+  { ref: "Psalm 103:12", text: "As far as the east is from the west, so far has He removed our transgressions from us.", tags: ["guilt"] },
+  { ref: "Colossians 3:13", text: "Bearing with one another, and forgiving one another, if anyone has a complaint against another; even as Christ forgave you, so you also must do.", tags: ["relationships", "anger"] },
+  { ref: "1 Corinthians 13:4-5", text: "Love suffers long and is kind; love does not envy; love does not parade itself, is not puffed up; does not behave rudely, does not seek its own, is not provoked, thinks no evil.", tags: ["relationships"] },
+  { ref: "Ephesians 4:2-3", text: "With all lowliness and gentleness, with longsuffering, bearing with one another in love, endeavoring to keep the unity of the Spirit in the bond of peace.", tags: ["relationships", "anger"] },
+  { ref: "Psalm 119:11", text: "Your word I have hidden in my heart, that I might not sin against You.", tags: ["memorize", "temptation", "read"] },
+  { ref: "Joshua 1:8", text: "This Book of the Law shall not depart from your mouth, but you shall meditate in it day and night, that you may observe to do according to all that is written in it. For then you will make your way prosperous, and then you will have good success.", tags: ["memorize", "read"] },
+  { ref: "Colossians 3:16", text: "Let the word of Christ dwell in you richly in all wisdom, teaching and admonishing one another in psalms and hymns and spiritual songs, singing with grace in your hearts to the Lord.", tags: ["memorize", "read"] },
+  { ref: "1 Thessalonians 5:17", text: "Pray without ceasing.", tags: ["pray"] },
+  { ref: "Matthew 6:6", text: "But you, when you pray, go into your room, and when you have shut your door, pray to your Father who is in the secret place; and your Father who sees in secret will reward you openly.", tags: ["pray", "closer"] },
+  { ref: "James 5:16", text: "Confess your trespasses to one another, and pray for one another, that you may be healed. The effective, fervent prayer of a righteous man avails much.", tags: ["pray", "relationships", "guilt"] },
+  { ref: "2 Timothy 3:16-17", text: "All Scripture is given by inspiration of God, and is profitable for doctrine, for reproof, for correction, for instruction in righteousness, that the man of God may be complete, thoroughly equipped for every good work.", tags: ["read", "memorize"] },
+  { ref: "Psalm 1:2-3", text: "But his delight is in the law of the Lord, and in His law he meditates day and night. He shall be like a tree planted by the rivers of water, that brings forth its fruit in its season.", tags: ["read", "closer"] },
+  { ref: "Romans 12:1-2", text: "Present your bodies a living sacrifice, holy, acceptable to God, which is your reasonable service. And do not be conformed to this world, but be transformed by the renewing of your mind.", tags: ["overcome", "closer", "temptation"] },
+  { ref: "Philippians 4:13", text: "I can do all things through Christ who strengthens me.", tags: ["overcome", "addiction", "fear"] },
+  { ref: "James 4:8", text: "Draw near to God and He will draw near to you. Cleanse your hands, you sinners; and purify your hearts, you double-minded.", tags: ["closer", "pray"] },
+  { ref: "Jeremiah 29:13", text: "And you will seek Me and find Me, when you search for Me with all your heart.", tags: ["closer", "doubt"] },
+  { ref: "John 15:5", text: "I am the vine, you are the branches. He who abides in Me, and I in him, bears much fruit; for without Me you can do nothing.", tags: ["closer", "serve"] },
+  { ref: "Galatians 5:13", text: "For you, brethren, have been called to liberty; only do not use liberty as an opportunity for the flesh, but through love serve one another.", tags: ["serve", "relationships"] },
+  { ref: "Mark 10:45", text: "For even the Son of Man did not come to be served, but to serve, and to give His life a ransom for many.", tags: ["serve"] },
+  { ref: "1 Peter 4:10", text: "As each one has received a gift, minister it to one another, as good stewards of the manifold grace of God.", tags: ["serve"] },
+  { ref: "Galatians 6:9", text: "And let us not grow weary while doing good, for in due season we shall reap if we do not lose heart.", tags: ["serve", "depression", "overcome"] },
+  { ref: "Psalm 121:1-2", text: "I will lift up my eyes to the hills—from whence comes my help? My help comes from the Lord, who made heaven and earth.", tags: ["anxiety", "fear", "closer", "doubt"] },
+  { ref: "Lamentations 3:22-23", text: "Through the Lord's mercies we are not consumed, because His compassions fail not. They are new every morning; great is Your faithfulness.", tags: ["depression", "guilt", "grief"] },
+  { ref: "Romans 8:28", text: "And we know that all things work together for good to those who love God, to those who are the called according to His purpose.", tags: ["grief", "doubt", "anxiety"] },
+  { ref: "Psalm 46:1", text: "God is our refuge and strength, a very present help in trouble.", tags: ["fear", "anxiety", "loneliness"] },
+  { ref: "Nehemiah 8:10", text: "Do not sorrow, for the joy of the Lord is your strength.", tags: ["depression", "grief"] },
+  { ref: "Matthew 11:28", text: "Come to Me, all you who labor and are heavy laden, and I will give you rest.", tags: ["anxiety", "depression", "loneliness"] },
+  { ref: "Proverbs 18:24", text: "A man who has friends must himself be friendly, but there is a friend who sticks closer than a brother.", tags: ["loneliness", "relationships"] }
+];
