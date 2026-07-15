@@ -205,6 +205,165 @@
             text-align: center;
         }
 
+        /* Delete control on custom (user-added) panels */
+        .panel-delete {
+            margin-top: 14px;
+            width: 100%;
+            padding: 10px;
+            background: none;
+            border: 1px dashed #d9b3bf;
+            border-radius: 10px;
+            color: #8B1538;
+            font-family: 'Georgia', serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .panel-delete:hover {
+            background: #fbeef1;
+            border-style: solid;
+        }
+
+        /* "Add a new area" tile */
+        .add-panel {
+            background: rgba(255, 255, 255, 0.12);
+            border: 2px dashed rgba(255, 255, 255, 0.55);
+            border-radius: 18px;
+            overflow: hidden;
+            transition: background 0.25s;
+        }
+
+        .add-panel:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .add-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            width: 100%;
+            padding: 26px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+            font-family: 'Georgia', serif;
+            color: white;
+        }
+
+        .add-panel-header .panel-icon {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: none;
+        }
+
+        .add-panel-header h2 {
+            font-size: 1.35rem;
+            margin-bottom: 4px;
+        }
+
+        .add-panel-header p {
+            font-size: 0.95rem;
+            opacity: 0.85;
+        }
+
+        .add-form {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .add-form-inner {
+            padding: 0 24px 24px;
+        }
+
+        .add-form label {
+            display: block;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin: 14px 0 6px;
+        }
+
+        .add-form input {
+            width: 100%;
+            padding: 12px 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Georgia', serif;
+            outline: none;
+        }
+
+        .add-link-row {
+            display: grid;
+            grid-template-columns: 52px 1fr 1.3fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .add-link-row input {
+            padding: 10px;
+        }
+
+        .add-form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .add-btn {
+            flex: 1;
+            min-width: 130px;
+            padding: 14px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            font-family: 'Georgia', serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-btn.primary {
+            background: white;
+            color: #8B1538;
+        }
+
+        .add-btn.primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .add-btn.ghost {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .add-btn.ghost:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .add-link-more {
+            background: none;
+            border: none;
+            color: white;
+            font-family: 'Georgia', serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 6px 0;
+            opacity: 0.9;
+            text-decoration: underline;
+        }
+
+        .add-form-error {
+            color: #ffd7d7;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            min-height: 1.1em;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .workshop-title {
@@ -393,6 +552,50 @@
             </div>
         </section>
 
+        <!-- Custom (user-added) panels get rendered here on load -->
+        <div id="customPanels" style="display: contents;"></div>
+
+        <!-- Add a new area -->
+        <section class="add-panel" id="addPanel">
+            <button class="add-panel-header" onclick="toggleAddForm()" aria-expanded="false">
+                <span class="panel-icon">➕</span>
+                <span class="panel-heading">
+                    <h2>Add a new area</h2>
+                    <p>Create your own workshop tile</p>
+                </span>
+                <span class="panel-chevron">⌄</span>
+            </button>
+            <div class="add-form" id="addForm">
+                <div class="add-form-inner">
+                    <label for="newTitle">Area name</label>
+                    <input type="text" id="newTitle" placeholder="e.g. Fitness, Travel, Family…" maxlength="60">
+
+                    <label for="newIcon">Emoji (optional)</label>
+                    <input type="text" id="newIcon" placeholder="🎯" maxlength="4">
+
+                    <label for="newSubtitle">Short description (optional)</label>
+                    <input type="text" id="newSubtitle" placeholder="A line about this area" maxlength="80">
+
+                    <label>Links <span style="font-weight: normal; opacity: 0.8;">(name + web address)</span></label>
+                    <div id="newLinks">
+                        <div class="add-link-row">
+                            <input type="text" class="link-in-emoji" placeholder="🔗" maxlength="4">
+                            <input type="text" class="link-in-label" placeholder="Link name">
+                            <input type="text" class="link-in-url" placeholder="https://...">
+                        </div>
+                    </div>
+                    <button type="button" class="add-link-more" onclick="addLinkRow()">+ add another link</button>
+
+                    <div class="add-form-error" id="addError"></div>
+
+                    <div class="add-form-actions">
+                        <button type="button" class="add-btn primary" onclick="saveNewPanel()">Save area</button>
+                        <button type="button" class="add-btn ghost" onclick="toggleAddForm()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Footer -->
@@ -434,6 +637,142 @@
                 body.style.maxHeight = body.scrollHeight + 'px';
             });
         });
+
+        /* ==================== */
+        /* Add-your-own areas   */
+        /* (saved in this browser via localStorage) */
+        /* ==================== */
+
+        const STORAGE_KEY = 'billyWorkshopCustomPanels';
+
+        function loadPanels() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function savePanels(panels) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(panels));
+        }
+
+        function esc(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Only allow safe link targets (http/https or same-page anchors)
+        function safeUrl(url) {
+            const u = String(url || '').trim();
+            if (!u) return '#';
+            if (/^https?:\/\//i.test(u)) return u;
+            if (u.charAt(0) === '#' || u.charAt(0) === '/') return u;
+            return 'https://' + u; // assume they typed a bare domain
+        }
+
+        function renderCustomPanels() {
+            const panels = loadPanels();
+            const container = document.getElementById('customPanels');
+            container.innerHTML = panels.map(function (p) {
+                const links = (p.links || []).map(function (l) {
+                    return '<li><a href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' +
+                        '<span class="link-emoji">' + esc(l.emoji || '🔗') + '</span>' +
+                        '<span class="link-label">' + esc(l.label || 'Link') + '</span>' +
+                        '</a></li>';
+                }).join('');
+                return '<section class="workshop-panel" data-id="' + esc(p.id) + '">' +
+                    '<button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">' +
+                        '<span class="panel-icon">' + esc(p.icon || '🎯') + '</span>' +
+                        '<span class="panel-heading"><h2>' + esc(p.title) + '</h2>' +
+                        '<p>' + esc(p.subtitle || 'Your custom area') + '</p></span>' +
+                        '<span class="panel-chevron">⌄</span>' +
+                    '</button>' +
+                    '<div class="panel-body"><div class="panel-body-inner">' +
+                        '<ul class="panel-links">' + (links || '<li style="color:#999;font-style:italic;list-style:none;">No links yet.</li>') + '</ul>' +
+                        '<button type="button" class="panel-delete" onclick="deletePanel(\'' + esc(p.id) + '\')">Remove this area</button>' +
+                    '</div></div>' +
+                '</section>';
+            }).join('');
+        }
+
+        function toggleAddForm() {
+            const panel = document.getElementById('addPanel');
+            const form = document.getElementById('addForm');
+            const header = panel.querySelector('.add-panel-header');
+            const isOpen = panel.classList.toggle('open');
+            header.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            const chevron = header.querySelector('.panel-chevron');
+            chevron.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+            chevron.style.transition = 'transform 0.3s';
+            form.style.maxHeight = isOpen ? form.scrollHeight + 'px' : '0';
+        }
+
+        function addLinkRow() {
+            const row = document.createElement('div');
+            row.className = 'add-link-row';
+            row.innerHTML =
+                '<input type="text" class="link-in-emoji" placeholder="🔗" maxlength="4">' +
+                '<input type="text" class="link-in-label" placeholder="Link name">' +
+                '<input type="text" class="link-in-url" placeholder="https://...">';
+            document.getElementById('newLinks').appendChild(row);
+            // grow the open form to fit the new row
+            const form = document.getElementById('addForm');
+            form.style.maxHeight = form.scrollHeight + 'px';
+        }
+
+        function saveNewPanel() {
+            const title = document.getElementById('newTitle').value.trim();
+            const error = document.getElementById('addError');
+            if (!title) {
+                error.textContent = 'Please give your new area a name.';
+                return;
+            }
+            error.textContent = '';
+
+            const links = [];
+            document.querySelectorAll('#newLinks .add-link-row').forEach(function (row) {
+                const label = row.querySelector('.link-in-label').value.trim();
+                const url = row.querySelector('.link-in-url').value.trim();
+                const emoji = row.querySelector('.link-in-emoji').value.trim();
+                if (label || url) {
+                    links.push({ emoji: emoji || '🔗', label: label || url, url: url });
+                }
+            });
+
+            const panels = loadPanels();
+            panels.push({
+                id: 'p' + panels.length + '_' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                icon: document.getElementById('newIcon').value.trim() || '🎯',
+                title: title,
+                subtitle: document.getElementById('newSubtitle').value.trim(),
+                links: links
+            });
+            savePanels(panels);
+            renderCustomPanels();
+
+            // reset the form
+            document.getElementById('newTitle').value = '';
+            document.getElementById('newIcon').value = '';
+            document.getElementById('newSubtitle').value = '';
+            document.getElementById('newLinks').innerHTML =
+                '<div class="add-link-row">' +
+                '<input type="text" class="link-in-emoji" placeholder="🔗" maxlength="4">' +
+                '<input type="text" class="link-in-label" placeholder="Link name">' +
+                '<input type="text" class="link-in-url" placeholder="https://...">' +
+                '</div>';
+            toggleAddForm();
+        }
+
+        function deletePanel(id) {
+            if (!confirm('Remove this area? This only affects your browser.')) return;
+            savePanels(loadPanels().filter(function (p) { return p.id !== id; }));
+            renderCustomPanels();
+        }
+
+        // Render any saved areas when the page loads
+        renderCustomPanels();
     </script>
 </body>
 </html>
