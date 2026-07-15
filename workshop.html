@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Workshop — Billy Daws</title>
+    <meta name="description" content="Billy Daws' personal workshop dashboard — podcast, budget, AI, sermon study, news, and trends, all in one place.">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ==================== */
+        /* Workshop Dashboard */
+        /* ==================== */
+
+        .workshop-header {
+            text-align: center;
+            color: white;
+            max-width: 1100px;
+            margin: 10px auto 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .workshop-eyebrow {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 22px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .workshop-title {
+            font-size: 3.2rem;
+            font-weight: bold;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .workshop-subtitle {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            font-style: italic;
+        }
+
+        /* Grid of workshop panels */
+        .workshop-grid {
+            max-width: 1100px;
+            margin: 0 auto 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+            gap: 25px;
+            align-items: start;
+        }
+
+        .workshop-panel {
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .workshop-panel:hover {
+            box-shadow: 0 14px 38px rgba(0, 0, 0, 0.28);
+        }
+
+        .workshop-panel.open {
+            transform: translateY(-2px);
+        }
+
+        /* Panel header (the clickable tile face) */
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            width: 100%;
+            padding: 26px 26px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+            font-family: 'Georgia', serif;
+            transition: background 0.25s;
+        }
+
+        .panel-header:hover {
+            background: #f8f9ff;
+        }
+
+        .panel-icon {
+            flex-shrink: 0;
+            width: 62px;
+            height: 62px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #8B1538 0%, #5C0F28 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 4px 12px rgba(139, 21, 56, 0.3);
+        }
+
+        .panel-heading {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .panel-heading h2 {
+            color: #8B1538;
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+            line-height: 1.25;
+        }
+
+        .panel-heading p {
+            color: #888;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .panel-chevron {
+            flex-shrink: 0;
+            color: #8B1538;
+            font-size: 1.3rem;
+            transition: transform 0.3s;
+        }
+
+        .workshop-panel.open .panel-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Panel body — the part that "unfolds" */
+        .panel-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .panel-body-inner {
+            padding: 0 26px 26px;
+        }
+
+        .panel-body-inner::before {
+            content: '';
+            display: block;
+            height: 1px;
+            background: #eee;
+            margin-bottom: 20px;
+        }
+
+        /* Links inside a panel */
+        .panel-links {
+            list-style: none;
+            display: grid;
+            gap: 10px;
+        }
+
+        .panel-links li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #333;
+            font-size: 1.02rem;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .panel-links li a:hover {
+            background: #f0f1ff;
+            border-left-color: #8B1538;
+            transform: translateX(4px);
+        }
+
+        .panel-links .link-emoji {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .panel-links .link-label {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .panel-links .link-note {
+            color: #999;
+            font-size: 0.85rem;
+            font-style: italic;
+        }
+
+        .panel-add-note {
+            margin-top: 16px;
+            font-size: 0.85rem;
+            color: #aaa;
+            font-style: italic;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .workshop-title {
+                font-size: 2.2rem;
+            }
+            .workshop-subtitle {
+                font-size: 1.1rem;
+            }
+            .workshop-grid {
+                grid-template-columns: 1fr;
+            }
+            .panel-header {
+                padding: 22px 20px;
+            }
+            .panel-body-inner {
+                padding: 0 20px 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-logo">
+            <div class="logo-placeholder">L</div>
+            <span class="nav-logo-text">Lift</span>
+        </a>
+
+        <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle navigation">
+            ☰
+        </button>
+
+        <div class="nav-links" id="navLinks">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="explanation.html" class="nav-link">How It Works</a>
+            <a href="workshop.html" class="nav-link active">Workshop</a>
+            <a href="signup.html" class="nav-cta">Start Free Trial</a>
+        </div>
+    </nav>
+
+    <!-- Workshop Header -->
+    <header class="workshop-header">
+        <div class="workshop-eyebrow">🛠️ Your Command Center</div>
+        <h1 class="workshop-title">Billy Daws' Main Workshop</h1>
+        <p class="workshop-subtitle">Everything you're working on — one click away.</p>
+    </header>
+
+    <!-- Workshop Grid -->
+    <main class="workshop-grid">
+
+        <!-- 1. Podcast -->
+        <section class="workshop-panel">
+            <button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">
+                <span class="panel-icon">🎙️</span>
+                <span class="panel-heading">
+                    <h2>Billy Daws Workshop</h2>
+                    <p>Your podcast — record, edit, publish</p>
+                </span>
+                <span class="panel-chevron">⌄</span>
+            </button>
+            <div class="panel-body">
+                <div class="panel-body-inner">
+                    <ul class="panel-links">
+                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">🎧</span><span class="link-label">Spotify for Creators</span><span class="link-note">host &amp; publish</span></a></li>
+                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">🎚️</span><span class="link-label">Recording &amp; Editing</span><span class="link-note">Riverside / Descript</span></a></li>
+                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">📝</span><span class="link-label">Show Notes &amp; Scripts</span><span class="link-note">episode docs</span></a></li>
+                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">📅</span><span class="link-label">Episode Calendar</span><span class="link-note">guests &amp; schedule</span></a></li>
+                    </ul>
+                    <p class="panel-add-note">Swap these links for your own tools anytime.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Budget -->
+        <section class="workshop-panel">
+            <button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">
+                <span class="panel-icon">💰</span>
+                <span class="panel-heading">
+                    <h2>Budget &amp; Finances</h2>
+                    <p>All your financial elements, unfolded</p>
+                </span>
+                <span class="panel-chevron">⌄</span>
+            </button>
+            <div class="panel-body">
+                <div class="panel-body-inner">
+                    <ul class="panel-links">
+                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">📊</span><span class="link-label">Budget Spreadsheet</span><span class="link-note">monthly plan</span></a></li>
+                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">🏦</span><span class="link-label">Bank Dashboard</span><span class="link-note">accounts</span></a></li>
+                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">📈</span><span class="link-label">Investments</span><span class="link-note">portfolio</span></a></li>
+                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">🧾</span><span class="link-label">Bills &amp; Subscriptions</span><span class="link-note">recurring</span></a></li>
+                    </ul>
+                    <p class="panel-add-note">Swap these links for your own tools anytime.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Explore AI -->
+        <section class="workshop-panel">
+            <button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">
+                <span class="panel-icon">🤖</span>
+                <span class="panel-heading">
+                    <h2>Explore AI</h2>
+                    <p>Every AI tool you subscribe to</p>
+                </span>
+                <span class="panel-chevron">⌄</span>
+            </button>
+            <div class="panel-body">
+                <div class="panel-body-inner">
+                    <ul class="panel-links">
+                        <li><a href="https://claude.ai" target="_blank" rel="noopener"><span class="link-emoji">🧠</span><span class="link-label">Claude</span><span class="link-note">Anthropic</span></a></li>
+                        <li><a href="https://chatgpt.com" target="_blank" rel="noopener"><span class="link-emoji">💬</span><span class="link-label">ChatGPT</span><span class="link-note">OpenAI</span></a></li>
+                        <li><a href="https://gemini.google.com" target="_blank" rel="noopener"><span class="link-emoji">✨</span><span class="link-label">Gemini</span><span class="link-note">Google</span></a></li>
+                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">🎨</span><span class="link-label">Image &amp; Video AI</span><span class="link-note">Midjourney / etc.</span></a></li>
+                    </ul>
+                    <p class="panel-add-note">Swap these links for your own tools anytime.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Sermon Study -->
+        <section class="workshop-panel">
+            <button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">
+                <span class="panel-icon">📖</span>
+                <span class="panel-heading">
+                    <h2>Sermon Study</h2>
+                    <p>Scripture, commentary &amp; prep</p>
+                </span>
+                <span class="panel-chevron">⌄</span>
+            </button>
+            <div class="panel-body">
+                <div class="panel-body-inner">
+                    <ul class="panel-links">
+                        <li><a href="https://www.biblegateway.com" target="_blank" rel="noopener"><span class="link-emoji">📕</span><span class="link-label">Bible Gateway</span><span class="link-note">read &amp; compare</span></a></li>
+                        <li><a href="https://www.blueletterbible.org" target="_blank" rel="noopener"><span class="link-emoji">🔎</span><span class="link-label">Blue Letter Bible</span><span class="link-note">original languages</span></a></li>
+                        <li><a href="https://www.biblehub.com" target="_blank" rel="noopener"><span class="link-emoji">📚</span><span class="link-label">Bible Hub</span><span class="link-note">commentaries</span></a></li>
+                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">✍️</span><span class="link-label">Sermon Notes</span><span class="link-note">your outlines</span></a></li>
+                    </ul>
+                    <p class="panel-add-note">Swap these links for your own tools anytime.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. News -->
+        <section class="workshop-panel">
+            <button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">
+                <span class="panel-icon">📰</span>
+                <span class="panel-heading">
+                    <h2>Favorite News Agencies</h2>
+                    <p>Your trusted sources in one place</p>
+                </span>
+                <span class="panel-chevron">⌄</span>
+            </button>
+            <div class="panel-body">
+                <div class="panel-body-inner">
+                    <ul class="panel-links">
+                        <li><a href="https://apnews.com" target="_blank" rel="noopener"><span class="link-emoji">🌐</span><span class="link-label">Associated Press</span><span class="link-note">apnews.com</span></a></li>
+                        <li><a href="https://www.reuters.com" target="_blank" rel="noopener"><span class="link-emoji">📡</span><span class="link-label">Reuters</span><span class="link-note">reuters.com</span></a></li>
+                        <li><a href="https://www.bbc.com/news" target="_blank" rel="noopener"><span class="link-emoji">🇬🇧</span><span class="link-label">BBC News</span><span class="link-note">bbc.com</span></a></li>
+                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">⭐</span><span class="link-label">Add Your Own</span><span class="link-note">favorite outlet</span></a></li>
+                    </ul>
+                    <p class="panel-add-note">Swap these links for your own sources anytime.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Trends -->
+        <section class="workshop-panel">
+            <button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">
+                <span class="panel-icon">📈</span>
+                <span class="panel-heading">
+                    <h2>Trends</h2>
+                    <p>What's rising on YouTube &amp; Spotify</p>
+                </span>
+                <span class="panel-chevron">⌄</span>
+            </button>
+            <div class="panel-body">
+                <div class="panel-body-inner">
+                    <ul class="panel-links">
+                        <li><a href="https://www.youtube.com/feed/trending" target="_blank" rel="noopener"><span class="link-emoji">▶️</span><span class="link-label">YouTube Trending</span><span class="link-note">what's hot now</span></a></li>
+                        <li><a href="https://charts.youtube.com" target="_blank" rel="noopener"><span class="link-emoji">🎬</span><span class="link-label">YouTube Charts</span><span class="link-note">top videos &amp; music</span></a></li>
+                        <li><a href="https://charts.spotify.com" target="_blank" rel="noopener"><span class="link-emoji">🎵</span><span class="link-label">Spotify Charts</span><span class="link-note">top songs &amp; podcasts</span></a></li>
+                        <li><a href="https://podcastcharts.byspotify.com" target="_blank" rel="noopener"><span class="link-emoji">🎙️</span><span class="link-label">Spotify Podcast Charts</span><span class="link-note">trending shows</span></a></li>
+                    </ul>
+                    <p class="panel-add-note">Swap these links for your own sources anytime.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="index.html" class="footer-link">Home</a>
+                <a href="workshop.html" class="footer-link">Workshop</a>
+                <a href="#" class="footer-link">Contact</a>
+            </div>
+        </div>
+        <p class="footer-text">&copy; 2026 Billy Daws. | "I will lift up my eyes to the hills."</p>
+    </footer>
+
+    <script>
+        // Mobile Navigation Toggle
+        function toggleNav() {
+            document.getElementById('navLinks').classList.toggle('active');
+        }
+
+        // Unfold / fold a workshop panel
+        function togglePanel(button) {
+            const panel = button.closest('.workshop-panel');
+            const body = panel.querySelector('.panel-body');
+            const isOpen = panel.classList.toggle('open');
+
+            button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+            if (isOpen) {
+                body.style.maxHeight = body.scrollHeight + 'px';
+            } else {
+                body.style.maxHeight = '0';
+            }
+        }
+
+        // Keep an open panel sized correctly if the window resizes
+        window.addEventListener('resize', function () {
+            document.querySelectorAll('.workshop-panel.open .panel-body').forEach(function (body) {
+                body.style.maxHeight = body.scrollHeight + 'px';
+            });
+        });
+    </script>
+</body>
+</html>
