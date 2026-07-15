@@ -174,6 +174,50 @@
 
         .workshop-panel:hover {
             box-shadow: 0 14px 38px rgba(0, 0, 0, 0.28);
+            transform: translateY(-3px);
+        }
+
+        /* ==================== */
+        /* Snazzy entrance      */
+        /* ==================== */
+
+        @keyframes riseIn {
+            from { opacity: 0; transform: translateY(22px) scale(0.98); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-14px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        /* Header elements ease in on load */
+        .workshop-eyebrow { animation: fadeDown 0.6s ease both; }
+        .workshop-title   { animation: fadeDown 0.6s ease 0.08s both; }
+        .workshop-subtitle{ animation: fadeDown 0.6s ease 0.16s both; }
+        .sync-bar         { animation: fadeDown 0.6s ease 0.24s both; }
+
+        /* Tiles rise in, staggered (delay set inline per tile on first render) */
+        .workshop-panel.rise { animation: riseIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .add-panel.rise      { animation: riseIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both; }
+
+        /* A soft glow pulse on the eyebrow badge for a touch of polish */
+        .workshop-eyebrow {
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.0);
+            animation: fadeDown 0.6s ease both, badgeGlow 3.5s ease-in-out 0.8s infinite;
+        }
+
+        @keyframes badgeGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.0); }
+            50%      { box-shadow: 0 0 22px 2px rgba(255, 255, 255, 0.28); }
+        }
+
+        /* Respect users who prefer reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            .workshop-eyebrow, .workshop-title, .workshop-subtitle, .sync-bar,
+            .workshop-panel.rise, .add-panel.rise {
+                animation: none !important;
+            }
         }
 
         .workshop-panel.open {
@@ -753,6 +797,13 @@
                 { emoji: '✨', label: 'Gemini', url: 'https://gemini.google.com', note: 'Google' },
                 { emoji: '🎨', label: 'Image & Video AI', url: '#', note: 'Midjourney / etc.' }
             ]},
+            { id: 'artificial-intelligence', icon: '🧠', title: 'Artificial Intelligence', subtitle: 'Explore, learn & keep up with AI', links: [
+                { emoji: '📰', label: 'The Batch', url: 'https://www.deeplearning.ai/the-batch/', note: 'weekly AI news' },
+                { emoji: '🎓', label: 'DeepLearning.AI', url: 'https://www.deeplearning.ai', note: 'courses' },
+                { emoji: '🤗', label: 'Hugging Face', url: 'https://huggingface.co', note: 'models & datasets' },
+                { emoji: '📄', label: 'arXiv (cs.AI)', url: 'https://arxiv.org/list/cs.AI/recent', note: 'latest research' },
+                { emoji: '💬', label: 'r/artificial', url: 'https://www.reddit.com/r/artificial/', note: 'community' }
+            ]},
             { id: 'sermon', icon: '📖', title: 'Sermon Study', subtitle: 'Scripture, commentary & prep', links: [
                 { emoji: '📕', label: 'Bible Gateway', url: 'https://www.biblegateway.com', note: 'read & compare' },
                 { emoji: '🔎', label: 'Blue Letter Bible', url: 'https://www.blueletterbible.org', note: 'original languages' },
@@ -820,14 +871,62 @@
             return seed;
         }
 
+        // Track which default sections have already been offered to this
+        // browser, so a NEW default (e.g. Artificial Intelligence added in a
+        // later update) appears once for existing users — but a default the
+        // user deliberately deleted never comes back.
+        const SEEDED_KEY = 'billyWorkshopSeededDefaults';
+        let backfillAdded = false;
+
+        function getSeededDefaults() {
+            try {
+                const a = JSON.parse(localStorage.getItem(SEEDED_KEY));
+                if (Array.isArray(a)) return a;
+            } catch (e) {}
+            return null;
+        }
+
+        // Add any brand-new default sections that this browser hasn't seen yet.
+        function backfillDefaults(sections) {
+            backfillAdded = false;
+            let seeded = getSeededDefaults();
+            if (seeded === null) {
+                // First run of this version on pre-existing data: treat the
+                // defaults already present as "seen" so we don't duplicate them.
+                const present = {};
+                sections.forEach(function (x) { present[x.id] = true; });
+                seeded = DEFAULT_SECTIONS.filter(function (d) { return present[d.id]; })
+                    .map(function (d) { return d.id; });
+            }
+            const seededSet = {};
+            seeded.forEach(function (id) { seededSet[id] = true; });
+            const existing = {};
+            sections.forEach(function (x) { existing[x.id] = true; });
+
+            DEFAULT_SECTIONS.forEach(function (d) {
+                if (!seededSet[d.id] && !existing[d.id]) {
+                    sections.push(clone(d));
+                    backfillAdded = true;
+                }
+                seededSet[d.id] = true;
+            });
+
+            localStorage.setItem(SEEDED_KEY, JSON.stringify(Object.keys(seededSet)));
+            if (backfillAdded) persistLocal(sections);
+            return sections;
+        }
+
         // Always returns a usable array, seeding + saving on the very first run.
         function getSections() {
             let s = readSaved();
             if (s === null) {
                 s = seedSections();
                 persistLocal(s);
+                localStorage.setItem(SEEDED_KEY, JSON.stringify(DEFAULT_SECTIONS.map(function (d) { return d.id; })));
+                backfillAdded = false;
+                return s;
             }
-            return s;
+            return backfillDefaults(s);
         }
 
         function persistLocal(sections) {
@@ -870,11 +969,18 @@
         /* Rendering            */
         /* ==================== */
 
+        let hasAnimatedIn = false;
+
         function renderSections(openId) {
             const container = document.getElementById('sections');
             const sections = getSections();
+            // Only play the staggered entrance on the very first render, not on
+            // every edit-triggered re-render.
+            const animate = !hasAnimatedIn;
 
-            container.innerHTML = sections.map(function (p) {
+            container.innerHTML = sections.map(function (p, idx) {
+                const riseClass = animate ? ' rise' : '';
+                const riseStyle = animate ? ' style="animation-delay:' + (idx * 70) + 'ms"' : '';
                 const links = (p.links || []).map(function (l, i) {
                     const note = l.note ? '<span class="link-note">' + esc(l.note) + '</span>' : '';
                     return '<li>' +
@@ -890,7 +996,7 @@
                 const emptyNote = links ? '' :
                     '<li style="list-style:none;"><span style="color:#999;font-style:italic;padding:4px;">No links yet — add one below.</span></li>';
 
-                return '<section class="workshop-panel" data-id="' + esc(p.id) + '">' +
+                return '<section class="workshop-panel' + riseClass + '" data-id="' + esc(p.id) + '"' + riseStyle + '>' +
                     '<button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">' +
                         '<span class="panel-icon">' + esc(p.icon || '🎯') + '</span>' +
                         '<span class="panel-heading"><h2>' + esc(p.title) + '</h2>' +
@@ -922,6 +1028,13 @@
                     '</div></div>' +
                 '</section>';
             }).join('');
+
+            if (animate) {
+                // Let the add-panel tile ride in after the sections.
+                const addPanel = document.getElementById('addPanel');
+                if (addPanel) addPanel.classList.add('rise');
+                hasAnimatedIn = true;
+            }
 
             if (openId) openPanelById(openId);
         }
@@ -1192,9 +1305,13 @@
                 const cloud = await window.convexClient.query('workshop:getPanels', { syncKey: key });
                 if (Array.isArray(cloud) && cloud.length > 0) {
                     persistLocal(cloud);
-                    renderSections();
                 }
+                // Reconcile: add any brand-new default sections the cloud copy
+                // predates, then push the reconciled set back up if it changed.
+                const reconciled = getSections();
+                renderSections();
                 updateSyncUI();
+                if (backfillAdded) pushToCloud(reconciled);
             } catch (e) {
                 console.warn('Sync refresh failed — showing this device\'s copy.', e);
                 updateSyncUI('⚠️ Offline — showing this device\'s copy');
