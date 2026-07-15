@@ -333,22 +333,27 @@
             border-left: 4px solid transparent;
         }
 
-        /* Remove-a-link ("depopulate") button */
+        /* Remove-a-link ("depopulate") button — a clearly visible red button */
         .link-remove {
             flex-shrink: 0;
-            width: 40px;
-            border: none;
+            width: 48px;
+            border: 1.5px solid #d98ca0;
             border-radius: 10px;
-            background: #f8f9ff;
-            color: #b06; /* muted maroon */
-            font-size: 1rem;
+            background: #fbe4ea; /* light red so it stands out from the link */
+            color: #8B1538;
+            font-size: 1.2rem;
+            font-weight: bold;
+            line-height: 1;
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .link-remove:hover {
+        .link-remove:hover,
+        .link-remove:focus {
             background: #8B1538;
             color: white;
+            border-color: #8B1538;
+            transform: scale(1.06);
         }
 
         /* In-section link editor ("populate") */
