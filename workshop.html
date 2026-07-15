@@ -791,13 +791,11 @@
                 { emoji: '📈', label: 'Investments', url: '#', note: 'portfolio' },
                 { emoji: '🧾', label: 'Bills & Subscriptions', url: '#', note: 'recurring' }
             ]},
-            { id: 'ai', icon: '🤖', title: 'Explore AI', subtitle: 'Every AI tool you subscribe to', links: [
+            { id: 'ai', icon: '🧠', title: 'Artificial Intelligence', subtitle: 'Your AI tools, plus news & learning', links: [
                 { emoji: '🧠', label: 'Claude', url: 'https://claude.ai', note: 'Anthropic' },
                 { emoji: '💬', label: 'ChatGPT', url: 'https://chatgpt.com', note: 'OpenAI' },
                 { emoji: '✨', label: 'Gemini', url: 'https://gemini.google.com', note: 'Google' },
-                { emoji: '🎨', label: 'Image & Video AI', url: '#', note: 'Midjourney / etc.' }
-            ]},
-            { id: 'artificial-intelligence', icon: '🧠', title: 'Artificial Intelligence', subtitle: 'Explore, learn & keep up with AI', links: [
+                { emoji: '🎨', label: 'Image & Video AI', url: '#', note: 'Midjourney / etc.' },
                 { emoji: '📰', label: 'The Batch', url: 'https://www.deeplearning.ai/the-batch/', note: 'weekly AI news' },
                 { emoji: '🎓', label: 'DeepLearning.AI', url: 'https://www.deeplearning.ai', note: 'courses' },
                 { emoji: '🤗', label: 'Hugging Face', url: 'https://huggingface.co', note: 'models & datasets' },
@@ -916,8 +914,46 @@
             return sections;
         }
 
+        // One-time merge of the former "Explore AI" (id 'ai') and
+        // "Artificial Intelligence" (id 'artificial-intelligence') sections
+        // into a single 'ai' section. Idempotent: does nothing once merged.
+        let migrationChanged = false;
+        function migrateMergeAI(sections) {
+            const mlIdx = sections.findIndex(function (s) { return s.id === 'artificial-intelligence'; });
+            if (mlIdx === -1) return sections; // already merged / never existed
+            const ml = sections[mlIdx];
+            const ai = sections.find(function (s) { return s.id === 'ai'; });
+
+            if (!ai) {
+                // No tools section — just fold the AI section into id 'ai'.
+                ml.id = 'ai';
+            } else {
+                ai.links = ai.links || [];
+                const seen = {};
+                ai.links.forEach(function (l) {
+                    seen[(l.label || '').toLowerCase() + '|' + (l.url || '').toLowerCase()] = true;
+                });
+                (ml.links || []).forEach(function (l) {
+                    const k = (l.label || '').toLowerCase() + '|' + (l.url || '').toLowerCase();
+                    if (!seen[k]) { ai.links.push(l); seen[k] = true; }
+                });
+                // Rebrand to the combined identity only if the tools section
+                // still carries its old default title (i.e. user hasn't renamed it).
+                if (ai.title === 'Explore AI') {
+                    ai.title = 'Artificial Intelligence';
+                    ai.subtitle = 'Your AI tools, plus news & learning';
+                    ai.icon = '🧠';
+                }
+                sections.splice(mlIdx, 1);
+            }
+            migrationChanged = true;
+            persistLocal(sections);
+            return sections;
+        }
+
         // Always returns a usable array, seeding + saving on the very first run.
         function getSections() {
+            migrationChanged = false;
             let s = readSaved();
             if (s === null) {
                 s = seedSections();
@@ -926,7 +962,9 @@
                 backfillAdded = false;
                 return s;
             }
-            return backfillDefaults(s);
+            s = backfillDefaults(s);
+            s = migrateMergeAI(s);
+            return s;
         }
 
         function persistLocal(sections) {
@@ -1274,10 +1312,13 @@
                 // Merge cloud + this device's areas so nothing is lost.
                 const cloud = await window.convexClient.query('workshop:getPanels', { syncKey: email });
                 const local = getSections();
-                const merged = Array.isArray(cloud) ? cloud.slice() : [];
+                let merged = Array.isArray(cloud) ? cloud.slice() : [];
                 const ids = {};
                 merged.forEach(function (p) { ids[p.id] = true; });
                 local.forEach(function (p) { if (!ids[p.id]) merged.push(p); });
+                // Apply the AI-section merge to the combined set too, so a
+                // pre-merge cloud copy doesn't reintroduce the split section.
+                merged = migrateMergeAI(merged);
 
                 persistLocal(merged);
                 renderSections();
@@ -1311,7 +1352,7 @@
                 const reconciled = getSections();
                 renderSections();
                 updateSyncUI();
-                if (backfillAdded) pushToCloud(reconciled);
+                if (backfillAdded || migrationChanged) pushToCloud(reconciled);
             } catch (e) {
                 console.warn('Sync refresh failed — showing this device\'s copy.', e);
                 updateSyncUI('⚠️ Offline — showing this device\'s copy');
