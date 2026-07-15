@@ -54,6 +54,30 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_delivered_at", ["deliveredAt"]),
 
+  // Workshop panels - custom "areas" a user adds to their Main Workshop
+  // dashboard, keyed by a personal sync key (their email) so they follow
+  // the user across devices.
+  workshopPanels: defineTable({
+    syncKey: v.string(), // normalized email / personal sync code
+    panels: v.array(
+      v.object({
+        id: v.string(),
+        icon: v.string(),
+        title: v.string(),
+        subtitle: v.string(),
+        links: v.array(
+          v.object({
+            emoji: v.string(),
+            label: v.string(),
+            url: v.string(),
+            note: v.optional(v.string()),
+          })
+        ),
+      })
+    ),
+    updatedAt: v.number(),
+  }).index("by_syncKey", ["syncKey"]),
+
   // Prayer requests (for community feature - future)
   prayerRequests: defineTable({
     userId: v.id("users"),
