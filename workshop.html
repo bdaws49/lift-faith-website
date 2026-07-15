@@ -267,7 +267,15 @@
             gap: 10px;
         }
 
+        .panel-links li {
+            display: flex;
+            align-items: stretch;
+            gap: 6px;
+        }
+
         .panel-links li a {
+            flex: 1;
+            min-width: 0;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -279,6 +287,102 @@
             font-size: 1.02rem;
             transition: all 0.2s;
             border-left: 4px solid transparent;
+        }
+
+        /* Remove-a-link ("depopulate") button */
+        .link-remove {
+            flex-shrink: 0;
+            width: 40px;
+            border: none;
+            border-radius: 10px;
+            background: #f8f9ff;
+            color: #b06; /* muted maroon */
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .link-remove:hover {
+            background: #8B1538;
+            color: white;
+        }
+
+        /* In-section link editor ("populate") */
+        .link-editor {
+            margin-top: 14px;
+        }
+
+        .panel-add-link {
+            width: 100%;
+            padding: 11px;
+            background: none;
+            border: 1px dashed #cbd0f0;
+            border-radius: 10px;
+            color: #5a5f9e;
+            font-family: 'Georgia', serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .panel-add-link:hover {
+            background: #f0f1ff;
+            border-color: #8B1538;
+            color: #8B1538;
+        }
+
+        .link-form {
+            margin-top: 10px;
+            padding: 14px;
+            background: #f8f9ff;
+            border-radius: 10px;
+        }
+
+        .link-form .link-form-row {
+            display: grid;
+            grid-template-columns: 52px 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .link-form input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: 'Georgia', serif;
+            outline: none;
+        }
+
+        .link-form input:focus {
+            border-color: #8B1538;
+        }
+
+        .link-form-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .link-form-actions button {
+            flex: 1;
+            padding: 11px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Georgia', serif;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .link-form-actions .lf-add {
+            background: #8B1538;
+            color: white;
+        }
+
+        .link-form-actions .lf-cancel {
+            background: #eee;
+            color: #666;
         }
 
         .panel-links li a:hover {
@@ -533,146 +637,8 @@
     <!-- Workshop Grid -->
     <main class="workshop-grid">
 
-        <!-- 1. Podcast -->
-        <section class="workshop-panel">
-            <button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">
-                <span class="panel-icon">🎙️</span>
-                <span class="panel-heading">
-                    <h2>Billy Daws Workshop</h2>
-                    <p>Your podcast — record, edit, publish</p>
-                </span>
-                <span class="panel-chevron">⌄</span>
-            </button>
-            <div class="panel-body">
-                <div class="panel-body-inner">
-                    <ul class="panel-links">
-                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">🎧</span><span class="link-label">Spotify for Creators</span><span class="link-note">host &amp; publish</span></a></li>
-                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">🎚️</span><span class="link-label">Recording &amp; Editing</span><span class="link-note">Riverside / Descript</span></a></li>
-                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">📝</span><span class="link-label">Show Notes &amp; Scripts</span><span class="link-note">episode docs</span></a></li>
-                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">📅</span><span class="link-label">Episode Calendar</span><span class="link-note">guests &amp; schedule</span></a></li>
-                    </ul>
-                    <p class="panel-add-note">Swap these links for your own tools anytime.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 2. Budget -->
-        <section class="workshop-panel">
-            <button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">
-                <span class="panel-icon">💰</span>
-                <span class="panel-heading">
-                    <h2>Budget &amp; Finances</h2>
-                    <p>All your financial elements, unfolded</p>
-                </span>
-                <span class="panel-chevron">⌄</span>
-            </button>
-            <div class="panel-body">
-                <div class="panel-body-inner">
-                    <ul class="panel-links">
-                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">📊</span><span class="link-label">Budget Spreadsheet</span><span class="link-note">monthly plan</span></a></li>
-                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">🏦</span><span class="link-label">Bank Dashboard</span><span class="link-note">accounts</span></a></li>
-                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">📈</span><span class="link-label">Investments</span><span class="link-note">portfolio</span></a></li>
-                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">🧾</span><span class="link-label">Bills &amp; Subscriptions</span><span class="link-note">recurring</span></a></li>
-                    </ul>
-                    <p class="panel-add-note">Swap these links for your own tools anytime.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 3. Explore AI -->
-        <section class="workshop-panel">
-            <button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">
-                <span class="panel-icon">🤖</span>
-                <span class="panel-heading">
-                    <h2>Explore AI</h2>
-                    <p>Every AI tool you subscribe to</p>
-                </span>
-                <span class="panel-chevron">⌄</span>
-            </button>
-            <div class="panel-body">
-                <div class="panel-body-inner">
-                    <ul class="panel-links">
-                        <li><a href="https://claude.ai" target="_blank" rel="noopener"><span class="link-emoji">🧠</span><span class="link-label">Claude</span><span class="link-note">Anthropic</span></a></li>
-                        <li><a href="https://chatgpt.com" target="_blank" rel="noopener"><span class="link-emoji">💬</span><span class="link-label">ChatGPT</span><span class="link-note">OpenAI</span></a></li>
-                        <li><a href="https://gemini.google.com" target="_blank" rel="noopener"><span class="link-emoji">✨</span><span class="link-label">Gemini</span><span class="link-note">Google</span></a></li>
-                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">🎨</span><span class="link-label">Image &amp; Video AI</span><span class="link-note">Midjourney / etc.</span></a></li>
-                    </ul>
-                    <p class="panel-add-note">Swap these links for your own tools anytime.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 4. Sermon Study -->
-        <section class="workshop-panel">
-            <button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">
-                <span class="panel-icon">📖</span>
-                <span class="panel-heading">
-                    <h2>Sermon Study</h2>
-                    <p>Scripture, commentary &amp; prep</p>
-                </span>
-                <span class="panel-chevron">⌄</span>
-            </button>
-            <div class="panel-body">
-                <div class="panel-body-inner">
-                    <ul class="panel-links">
-                        <li><a href="https://www.biblegateway.com" target="_blank" rel="noopener"><span class="link-emoji">📕</span><span class="link-label">Bible Gateway</span><span class="link-note">read &amp; compare</span></a></li>
-                        <li><a href="https://www.blueletterbible.org" target="_blank" rel="noopener"><span class="link-emoji">🔎</span><span class="link-label">Blue Letter Bible</span><span class="link-note">original languages</span></a></li>
-                        <li><a href="https://www.biblehub.com" target="_blank" rel="noopener"><span class="link-emoji">📚</span><span class="link-label">Bible Hub</span><span class="link-note">commentaries</span></a></li>
-                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">✍️</span><span class="link-label">Sermon Notes</span><span class="link-note">your outlines</span></a></li>
-                    </ul>
-                    <p class="panel-add-note">Swap these links for your own tools anytime.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 5. News -->
-        <section class="workshop-panel">
-            <button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">
-                <span class="panel-icon">📰</span>
-                <span class="panel-heading">
-                    <h2>Favorite News Agencies</h2>
-                    <p>Your trusted sources in one place</p>
-                </span>
-                <span class="panel-chevron">⌄</span>
-            </button>
-            <div class="panel-body">
-                <div class="panel-body-inner">
-                    <ul class="panel-links">
-                        <li><a href="https://apnews.com" target="_blank" rel="noopener"><span class="link-emoji">🌐</span><span class="link-label">Associated Press</span><span class="link-note">apnews.com</span></a></li>
-                        <li><a href="https://www.reuters.com" target="_blank" rel="noopener"><span class="link-emoji">📡</span><span class="link-label">Reuters</span><span class="link-note">reuters.com</span></a></li>
-                        <li><a href="https://www.bbc.com/news" target="_blank" rel="noopener"><span class="link-emoji">🇬🇧</span><span class="link-label">BBC News</span><span class="link-note">bbc.com</span></a></li>
-                        <li><a href="#" target="_blank" rel="noopener"><span class="link-emoji">⭐</span><span class="link-label">Add Your Own</span><span class="link-note">favorite outlet</span></a></li>
-                    </ul>
-                    <p class="panel-add-note">Swap these links for your own sources anytime.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 6. Trends -->
-        <section class="workshop-panel">
-            <button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">
-                <span class="panel-icon">📈</span>
-                <span class="panel-heading">
-                    <h2>Trends</h2>
-                    <p>What's rising on YouTube &amp; Spotify</p>
-                </span>
-                <span class="panel-chevron">⌄</span>
-            </button>
-            <div class="panel-body">
-                <div class="panel-body-inner">
-                    <ul class="panel-links">
-                        <li><a href="https://www.youtube.com/feed/trending" target="_blank" rel="noopener"><span class="link-emoji">▶️</span><span class="link-label">YouTube Trending</span><span class="link-note">what's hot now</span></a></li>
-                        <li><a href="https://charts.youtube.com" target="_blank" rel="noopener"><span class="link-emoji">🎬</span><span class="link-label">YouTube Charts</span><span class="link-note">top videos &amp; music</span></a></li>
-                        <li><a href="https://charts.spotify.com" target="_blank" rel="noopener"><span class="link-emoji">🎵</span><span class="link-label">Spotify Charts</span><span class="link-note">top songs &amp; podcasts</span></a></li>
-                        <li><a href="https://podcastcharts.byspotify.com" target="_blank" rel="noopener"><span class="link-emoji">🎙️</span><span class="link-label">Spotify Podcast Charts</span><span class="link-note">trending shows</span></a></li>
-                    </ul>
-                    <p class="panel-add-note">Swap these links for your own sources anytime.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Custom (user-added) panels get rendered here on load -->
-        <div id="customPanels" style="display: contents;"></div>
+        <!-- All sections render here (built-in + your own), fully editable -->
+        <div id="sections" style="display: contents;"></div>
 
         <!-- Add a new area -->
         <section class="add-panel" id="addPanel">
@@ -758,69 +724,62 @@
         });
 
         /* ==================== */
-        /* Add-your-own areas   */
-        /* (saved in this browser via localStorage) */
+        /* Sections data model  */
+        /* Every section (built-in + your own) lives here, is editable,     */
+        /* and — when sync is on — follows you across devices.              */
         /* ==================== */
 
-        const STORAGE_KEY = 'billyWorkshopCustomPanels';
+        const STORAGE_KEY = 'billyWorkshopSections';
+        const LEGACY_KEY = 'billyWorkshopCustomPanels';
         const SYNC_KEY_STORAGE = 'billyWorkshopSyncKey';
 
-        function loadPanels() {
-            try {
-                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-            } catch (e) {
-                return [];
-            }
-        }
+        // The starting set of sections, used the first time you open the page.
+        const DEFAULT_SECTIONS = [
+            { id: 'podcast', icon: '🎙️', title: 'Billy Daws Workshop', subtitle: 'Your podcast — record, edit, publish', links: [
+                { emoji: '🎧', label: 'Spotify for Creators', url: '#', note: 'host & publish' },
+                { emoji: '🎚️', label: 'Recording & Editing', url: '#', note: 'Riverside / Descript' },
+                { emoji: '📝', label: 'Show Notes & Scripts', url: '#', note: 'episode docs' },
+                { emoji: '📅', label: 'Episode Calendar', url: '#', note: 'guests & schedule' }
+            ]},
+            { id: 'budget', icon: '💰', title: 'Budget & Finances', subtitle: 'All your financial elements, unfolded', links: [
+                { emoji: '📊', label: 'Budget Spreadsheet', url: '#', note: 'monthly plan' },
+                { emoji: '🏦', label: 'Bank Dashboard', url: '#', note: 'accounts' },
+                { emoji: '📈', label: 'Investments', url: '#', note: 'portfolio' },
+                { emoji: '🧾', label: 'Bills & Subscriptions', url: '#', note: 'recurring' }
+            ]},
+            { id: 'ai', icon: '🤖', title: 'Explore AI', subtitle: 'Every AI tool you subscribe to', links: [
+                { emoji: '🧠', label: 'Claude', url: 'https://claude.ai', note: 'Anthropic' },
+                { emoji: '💬', label: 'ChatGPT', url: 'https://chatgpt.com', note: 'OpenAI' },
+                { emoji: '✨', label: 'Gemini', url: 'https://gemini.google.com', note: 'Google' },
+                { emoji: '🎨', label: 'Image & Video AI', url: '#', note: 'Midjourney / etc.' }
+            ]},
+            { id: 'sermon', icon: '📖', title: 'Sermon Study', subtitle: 'Scripture, commentary & prep', links: [
+                { emoji: '📕', label: 'Bible Gateway', url: 'https://www.biblegateway.com', note: 'read & compare' },
+                { emoji: '🔎', label: 'Blue Letter Bible', url: 'https://www.blueletterbible.org', note: 'original languages' },
+                { emoji: '📚', label: 'Bible Hub', url: 'https://www.biblehub.com', note: 'commentaries' },
+                { emoji: '✍️', label: 'Sermon Notes', url: '#', note: 'your outlines' }
+            ]},
+            { id: 'devotion', icon: '🙏', title: 'Personal Devotion', subtitle: 'Your daily time with God', links: [
+                { emoji: '📖', label: 'YouVersion Bible', url: 'https://www.bible.com', note: 'read & plans' },
+                { emoji: '📅', label: 'Bible in a Year', url: 'https://www.bible.com/reading-plans', note: 'reading plan' },
+                { emoji: '🕊️', label: 'Prayer Journal', url: '#', note: 'your prayers' },
+                { emoji: '🎧', label: 'Worship & Prayer', url: '#', note: 'playlist' }
+            ]},
+            { id: 'news', icon: '📰', title: 'Favorite News Agencies', subtitle: 'Your trusted sources in one place', links: [
+                { emoji: '🌐', label: 'Associated Press', url: 'https://apnews.com', note: 'apnews.com' },
+                { emoji: '📡', label: 'Reuters', url: 'https://www.reuters.com', note: 'reuters.com' },
+                { emoji: '🇬🇧', label: 'BBC News', url: 'https://www.bbc.com/news', note: 'bbc.com' }
+            ]},
+            { id: 'trends', icon: '📈', title: 'Trends', subtitle: "What's rising on YouTube & Spotify", links: [
+                { emoji: '▶️', label: 'YouTube Trending', url: 'https://www.youtube.com/feed/trending', note: "what's hot now" },
+                { emoji: '🎬', label: 'YouTube Charts', url: 'https://charts.youtube.com', note: 'top videos & music' },
+                { emoji: '🎵', label: 'Spotify Charts', url: 'https://charts.spotify.com', note: 'top songs & podcasts' },
+                { emoji: '🎙️', label: 'Spotify Podcast Charts', url: 'https://podcastcharts.byspotify.com', note: 'trending shows' }
+            ]}
+        ];
 
-        function persistLocal(panels) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(panels));
-        }
-
-        // Save locally (instant) and, if sync is on, push to the cloud too.
-        function savePanels(panels) {
-            persistLocal(panels);
-            pushToCloud(panels);
-        }
-
-        function getSyncKey() {
-            return (localStorage.getItem(SYNC_KEY_STORAGE) || '').trim();
-        }
-
-        // Coerce panels to the exact shape the Convex backend expects, so a
-        // stray/missing field never fails the cloud save.
-        function sanitizePanels(panels) {
-            return (panels || []).map(function (p) {
-                return {
-                    id: String(p.id || ''),
-                    icon: String(p.icon || '🎯'),
-                    title: String(p.title || ''),
-                    subtitle: String(p.subtitle || ''),
-                    links: (p.links || []).map(function (l) {
-                        return {
-                            emoji: String(l.emoji || '🔗'),
-                            label: String(l.label || ''),
-                            url: String(l.url || '')
-                        };
-                    })
-                };
-            });
-        }
-
-        // Push the full panel set to Convex (no-op if sync is off or offline).
-        async function pushToCloud(panels) {
-            const key = getSyncKey();
-            if (!key || !window.convexClient) return;
-            try {
-                await window.convexClient.mutation('workshop:savePanels', {
-                    syncKey: key,
-                    panels: sanitizePanels(panels)
-                });
-                flashSyncStatus('☁️ Saved to your account');
-            } catch (e) {
-                console.warn('Cloud save failed — kept on this device.', e);
-                flashSyncStatus('⚠️ Offline — saved on this device');
-            }
+        function clone(obj) {
+            return JSON.parse(JSON.stringify(obj));
         }
 
         function esc(str) {
@@ -838,30 +797,223 @@
             return 'https://' + u; // assume they typed a bare domain
         }
 
-        function renderCustomPanels() {
-            const panels = loadPanels();
-            const container = document.getElementById('customPanels');
-            container.innerHTML = panels.map(function (p) {
-                const links = (p.links || []).map(function (l) {
-                    return '<li><a href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' +
-                        '<span class="link-emoji">' + esc(l.emoji || '🔗') + '</span>' +
-                        '<span class="link-label">' + esc(l.label || 'Link') + '</span>' +
-                        '</a></li>';
+        // Read the saved sections (null if this browser has never saved any).
+        function readSaved() {
+            try {
+                const arr = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                if (Array.isArray(arr)) return arr;
+            } catch (e) {}
+            return null;
+        }
+
+        // Build the first-run set: defaults + any areas saved under the old key.
+        function seedSections() {
+            const seed = clone(DEFAULT_SECTIONS);
+            try {
+                const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY));
+                if (Array.isArray(legacy)) {
+                    const ids = {};
+                    seed.forEach(function (s) { ids[s.id] = true; });
+                    legacy.forEach(function (s) { if (s && !ids[s.id]) seed.push(s); });
+                }
+            } catch (e) {}
+            return seed;
+        }
+
+        // Always returns a usable array, seeding + saving on the very first run.
+        function getSections() {
+            let s = readSaved();
+            if (s === null) {
+                s = seedSections();
+                persistLocal(s);
+            }
+            return s;
+        }
+
+        function persistLocal(sections) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sections));
+        }
+
+        // Save locally (instant) and, if sync is on, push to the cloud too.
+        function saveSections(sections) {
+            persistLocal(sections);
+            pushToCloud(sections);
+        }
+
+        function getSyncKey() {
+            return (localStorage.getItem(SYNC_KEY_STORAGE) || '').trim();
+        }
+
+        // Coerce to the exact shape the backend expects, so a stray/missing
+        // field never fails the cloud save.
+        function sanitizePanels(sections) {
+            return (sections || []).map(function (p) {
+                return {
+                    id: String(p.id || ''),
+                    icon: String(p.icon || '🎯'),
+                    title: String(p.title || ''),
+                    subtitle: String(p.subtitle || ''),
+                    links: (p.links || []).map(function (l) {
+                        const out = {
+                            emoji: String(l.emoji || '🔗'),
+                            label: String(l.label || ''),
+                            url: String(l.url || '')
+                        };
+                        if (l.note) out.note = String(l.note);
+                        return out;
+                    })
+                };
+            });
+        }
+
+        /* ==================== */
+        /* Rendering            */
+        /* ==================== */
+
+        function renderSections(openId) {
+            const container = document.getElementById('sections');
+            const sections = getSections();
+
+            container.innerHTML = sections.map(function (p) {
+                const links = (p.links || []).map(function (l, i) {
+                    const note = l.note ? '<span class="link-note">' + esc(l.note) + '</span>' : '';
+                    return '<li>' +
+                        '<a href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' +
+                            '<span class="link-emoji">' + esc(l.emoji || '🔗') + '</span>' +
+                            '<span class="link-label">' + esc(l.label || 'Link') + '</span>' + note +
+                        '</a>' +
+                        '<button class="link-remove" title="Remove this link" ' +
+                            'onclick="removeLink(\'' + esc(p.id) + '\', ' + i + ')">✕</button>' +
+                    '</li>';
                 }).join('');
+
+                const emptyNote = links ? '' :
+                    '<li style="list-style:none;"><span style="color:#999;font-style:italic;padding:4px;">No links yet — add one below.</span></li>';
+
                 return '<section class="workshop-panel" data-id="' + esc(p.id) + '">' +
                     '<button class="panel-header" onclick="togglePanel(this)" aria-expanded="false">' +
                         '<span class="panel-icon">' + esc(p.icon || '🎯') + '</span>' +
                         '<span class="panel-heading"><h2>' + esc(p.title) + '</h2>' +
-                        '<p>' + esc(p.subtitle || 'Your custom area') + '</p></span>' +
+                        '<p>' + esc(p.subtitle || '') + '</p></span>' +
                         '<span class="panel-chevron">⌄</span>' +
                     '</button>' +
                     '<div class="panel-body"><div class="panel-body-inner">' +
-                        '<ul class="panel-links">' + (links || '<li style="color:#999;font-style:italic;list-style:none;">No links yet.</li>') + '</ul>' +
-                        '<button type="button" class="panel-delete" onclick="deletePanel(\'' + esc(p.id) + '\')">Remove this area</button>' +
+                        '<ul class="panel-links">' + links + emptyNote + '</ul>' +
+                        '<div class="link-editor">' +
+                            '<button class="panel-add-link" onclick="addLinkStart(this)">＋ Add a link to this area</button>' +
+                            '<div class="link-form" style="display:none;">' +
+                                '<div class="link-form-row">' +
+                                    '<input class="lf-emoji" placeholder="🔗" maxlength="4">' +
+                                    '<input class="lf-label" placeholder="Link name">' +
+                                '</div>' +
+                                '<div class="link-form-row" style="grid-template-columns:1fr;">' +
+                                    '<input class="lf-url" placeholder="https://...">' +
+                                '</div>' +
+                                '<div class="link-form-row" style="grid-template-columns:1fr;">' +
+                                    '<input class="lf-note" placeholder="Short note (optional)">' +
+                                '</div>' +
+                                '<div class="link-form-actions">' +
+                                    '<button class="lf-add" onclick="addLinkSave(\'' + esc(p.id) + '\', this)">Add link</button>' +
+                                    '<button class="lf-cancel" onclick="addLinkCancel(this)">Cancel</button>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<button type="button" class="panel-delete" onclick="deleteSection(\'' + esc(p.id) + '\')">Remove this whole area</button>' +
                     '</div></div>' +
                 '</section>';
             }).join('');
+
+            if (openId) openPanelById(openId);
         }
+
+        function openPanelById(id) {
+            const panel = document.querySelector('#sections .workshop-panel[data-id="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
+            if (!panel) return;
+            const body = panel.querySelector('.panel-body');
+            panel.classList.add('open');
+            panel.querySelector('.panel-header').setAttribute('aria-expanded', 'true');
+            body.style.maxHeight = body.scrollHeight + 'px';
+        }
+
+        // Recompute the height of the open panel that contains `el`.
+        function resizeContainingPanel(el) {
+            const body = el.closest('.panel-body');
+            if (body) body.style.maxHeight = body.scrollHeight + 'px';
+        }
+
+        /* ==================== */
+        /* Populate / depopulate */
+        /* ==================== */
+
+        function findSection(sections, id) {
+            for (let i = 0; i < sections.length; i++) {
+                if (sections[i].id === id) return sections[i];
+            }
+            return null;
+        }
+
+        function addLinkStart(button) {
+            const form = button.nextElementSibling;
+            button.style.display = 'none';
+            form.style.display = 'block';
+            const label = form.querySelector('.lf-label');
+            if (label) label.focus();
+            resizeContainingPanel(form);
+        }
+
+        function addLinkCancel(button) {
+            const editor = button.closest('.link-editor');
+            editor.querySelector('.link-form').style.display = 'none';
+            editor.querySelector('.panel-add-link').style.display = 'block';
+            resizeContainingPanel(editor);
+        }
+
+        function addLinkSave(id, button) {
+            const form = button.closest('.link-form');
+            const label = form.querySelector('.lf-label').value.trim();
+            const url = form.querySelector('.lf-url').value.trim();
+            const emoji = form.querySelector('.lf-emoji').value.trim();
+            const note = form.querySelector('.lf-note').value.trim();
+
+            if (!label && !url) {
+                form.querySelector('.lf-label').focus();
+                return;
+            }
+
+            const sections = getSections();
+            const section = findSection(sections, id);
+            if (!section) return;
+            if (!section.links) section.links = [];
+            const link = { emoji: emoji || '🔗', label: label || url, url: url };
+            if (note) link.note = note;
+            section.links.push(link);
+
+            saveSections(sections);
+            renderSections(id); // re-render and re-open this section
+        }
+
+        function removeLink(id, index) {
+            const sections = getSections();
+            const section = findSection(sections, id);
+            if (!section || !section.links) return;
+            section.links.splice(index, 1);
+            saveSections(sections);
+            renderSections(id);
+        }
+
+        function deleteSection(id) {
+            const msg = getSyncKey()
+                ? 'Remove this whole area? It will be removed from all your synced devices.'
+                : 'Remove this whole area? This only affects this browser.';
+            if (!confirm(msg)) return;
+            const sections = getSections().filter(function (p) { return p.id !== id; });
+            saveSections(sections);
+            renderSections();
+        }
+
+        /* ==================== */
+        /* Add a brand-new area */
+        /* ==================== */
 
         function toggleAddForm() {
             const panel = document.getElementById('addPanel');
@@ -883,7 +1035,6 @@
                 '<input type="text" class="link-in-label" placeholder="Link name">' +
                 '<input type="text" class="link-in-url" placeholder="https://...">';
             document.getElementById('newLinks').appendChild(row);
-            // grow the open form to fit the new row
             const form = document.getElementById('addForm');
             form.style.maxHeight = form.scrollHeight + 'px';
         }
@@ -907,18 +1058,18 @@
                 }
             });
 
-            const panels = loadPanels();
-            panels.push({
-                id: 'p' + panels.length + '_' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            const sections = getSections();
+            const newId = 'custom_' + Date.now().toString(36) + '_' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            sections.push({
+                id: newId,
                 icon: document.getElementById('newIcon').value.trim() || '🎯',
                 title: title,
                 subtitle: document.getElementById('newSubtitle').value.trim(),
                 links: links
             });
-            savePanels(panels);
-            renderCustomPanels();
+            saveSections(sections);
+            renderSections(newId);
 
-            // reset the form
             document.getElementById('newTitle').value = '';
             document.getElementById('newIcon').value = '';
             document.getElementById('newSubtitle').value = '';
@@ -931,18 +1082,25 @@
             toggleAddForm();
         }
 
-        function deletePanel(id) {
-            var msg = getSyncKey()
-                ? 'Remove this area? It will be removed from all your synced devices.'
-                : 'Remove this area? This only affects this browser.';
-            if (!confirm(msg)) return;
-            savePanels(loadPanels().filter(function (p) { return p.id !== id; }));
-            renderCustomPanels();
-        }
+        /* ==================== */
+        /* Cross-device sync    */
+        /* ==================== */
 
-        /* ==================== */
-        /* Cross-device sync UI */
-        /* ==================== */
+        // Push the full section set to Convex (no-op if sync is off or offline).
+        async function pushToCloud(sections) {
+            const key = getSyncKey();
+            if (!key || !window.convexClient) return;
+            try {
+                await window.convexClient.mutation('workshop:savePanels', {
+                    syncKey: key,
+                    panels: sanitizePanels(sections)
+                });
+                flashSyncStatus('☁️ Saved to your account');
+            } catch (e) {
+                console.warn('Cloud save failed — kept on this device.', e);
+                flashSyncStatus('⚠️ Offline — saved on this device');
+            }
+        }
 
         function openSyncPrompt() {
             document.getElementById('syncToggle').style.display = 'none';
@@ -956,10 +1114,10 @@
         }
 
         function updateSyncUI(tempMsg) {
-            var key = getSyncKey();
-            var toggle = document.getElementById('syncToggle');
-            var prompt = document.getElementById('syncPrompt');
-            var status = document.getElementById('syncStatus');
+            const key = getSyncKey();
+            const toggle = document.getElementById('syncToggle');
+            const prompt = document.getElementById('syncPrompt');
+            const status = document.getElementById('syncStatus');
 
             if (key) {
                 toggle.style.display = 'none';
@@ -976,8 +1134,7 @@
             }
         }
 
-        // Briefly show a status message, then revert to the steady state.
-        var syncFlashTimer = null;
+        let syncFlashTimer = null;
         function flashSyncStatus(msg) {
             if (!getSyncKey()) return;
             updateSyncUI(msg);
@@ -986,8 +1143,8 @@
         }
 
         async function enableSync() {
-            var email = document.getElementById('syncEmail').value.trim().toLowerCase();
-            var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const email = document.getElementById('syncEmail').value.trim().toLowerCase();
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!re.test(email)) {
                 alert('Please enter a valid email address to sync.');
                 return;
@@ -1001,17 +1158,16 @@
             }
 
             try {
-                // Merge whatever is already in the cloud with this device's areas,
-                // so nothing is lost the first time you connect.
-                var cloud = await window.convexClient.query('workshop:getPanels', { syncKey: email });
-                var local = loadPanels();
-                var merged = Array.isArray(cloud) ? cloud.slice() : [];
-                var ids = {};
+                // Merge cloud + this device's areas so nothing is lost.
+                const cloud = await window.convexClient.query('workshop:getPanels', { syncKey: email });
+                const local = getSections();
+                const merged = Array.isArray(cloud) ? cloud.slice() : [];
+                const ids = {};
                 merged.forEach(function (p) { ids[p.id] = true; });
                 local.forEach(function (p) { if (!ids[p.id]) merged.push(p); });
 
                 persistLocal(merged);
-                renderCustomPanels();
+                renderSections();
                 await window.convexClient.mutation('workshop:savePanels', {
                     syncKey: email,
                     panels: sanitizePanels(merged)
@@ -1029,15 +1185,14 @@
             updateSyncUI();
         }
 
-        // Pull the latest areas from the cloud (used on load when sync is on).
         async function pullFromCloud() {
-            var key = getSyncKey();
+            const key = getSyncKey();
             if (!key || !window.convexClient) return;
             try {
-                var cloud = await window.convexClient.query('workshop:getPanels', { syncKey: key });
-                if (Array.isArray(cloud)) {
+                const cloud = await window.convexClient.query('workshop:getPanels', { syncKey: key });
+                if (Array.isArray(cloud) && cloud.length > 0) {
                     persistLocal(cloud);
-                    renderCustomPanels();
+                    renderSections();
                 }
                 updateSyncUI();
             } catch (e) {
@@ -1047,11 +1202,11 @@
         }
 
         /* ==================== */
-        /* Startup             */
+        /* Startup              */
         /* ==================== */
 
-        // 1) Render instantly from the local cache.
-        renderCustomPanels();
+        // 1) Render instantly from local storage (seeding defaults on first run).
+        renderSections();
         updateSyncUI();
 
         // 2) Once the Convex client has settled, refresh from the cloud.

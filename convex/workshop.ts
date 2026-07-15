@@ -6,6 +6,7 @@ const linkValidator = v.object({
   emoji: v.string(),
   label: v.string(),
   url: v.string(),
+  note: v.optional(v.string()),
 });
 
 // Shape of a single custom workshop panel ("area")
