@@ -7,6 +7,22 @@
     <meta name="description" content="Billy Daws' personal workshop dashboard — podcast, budget, AI, sermon study, news, and trends, all in one place.">
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="styles.css">
+
+    <!-- Convex client (optional): powers cross-device sync of custom areas.
+         If it fails to load or the backend isn't reachable, the workshop
+         falls back to browser-only storage and keeps working. -->
+    <script type="module">
+        try {
+            const { ConvexHttpClient } = await import("https://esm.sh/convex@1.16.4/browser");
+            window.convexClient = new ConvexHttpClient("https://tame-fennec-574.convex.cloud");
+        } catch (e) {
+            console.warn("Convex client unavailable — using local storage only.", e);
+        } finally {
+            // Signal the main script that the client has settled (loaded or not).
+            window.dispatchEvent(new Event("convex-ready"));
+        }
+    </script>
+
     <style>
         /* ==================== */
         /* Workshop Dashboard */
@@ -46,6 +62,96 @@
             font-size: 1.25rem;
             opacity: 0.95;
             font-style: italic;
+        }
+
+        /* Cross-device sync bar */
+        .sync-bar {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            min-height: 44px;
+        }
+
+        .sync-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            font-family: 'Georgia', serif;
+            font-size: 0.95rem;
+            padding: 10px 22px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sync-toggle:hover {
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        .sync-prompt {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sync-prompt input {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-family: 'Georgia', serif;
+            outline: none;
+            min-width: 240px;
+        }
+
+        .sync-prompt button {
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: none;
+            font-family: 'Georgia', serif;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .sync-prompt .sync-go {
+            background: white;
+            color: #8B1538;
+        }
+
+        .sync-prompt .sync-cancel {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .sync-status {
+            color: white;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .sync-status .sync-off {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: underline;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            font-size: 0.9rem;
+        }
+
+        .sync-note {
+            font-size: 0.82rem;
+            opacity: 0.75;
         }
 
         /* Grid of workshop panels */
@@ -409,6 +515,19 @@
         <div class="workshop-eyebrow">🛠️ Your Command Center</div>
         <h1 class="workshop-title">Billy Daws' Main Workshop</h1>
         <p class="workshop-subtitle">Everything you're working on — one click away.</p>
+
+        <!-- Cross-device sync -->
+        <div class="sync-bar" id="syncBar">
+            <button class="sync-toggle" id="syncToggle" onclick="openSyncPrompt()">☁️ Sync my areas across devices</button>
+
+            <div class="sync-prompt" id="syncPrompt" style="display: none;">
+                <input type="email" id="syncEmail" placeholder="you@email.com" autocomplete="email">
+                <button class="sync-go" onclick="enableSync()">Turn on sync</button>
+                <button class="sync-cancel" onclick="closeSyncPrompt()">Cancel</button>
+            </div>
+
+            <div class="sync-status" id="syncStatus" style="display: none;"></div>
+        </div>
     </header>
 
     <!-- Workshop Grid -->
@@ -644,6 +763,7 @@
         /* ==================== */
 
         const STORAGE_KEY = 'billyWorkshopCustomPanels';
+        const SYNC_KEY_STORAGE = 'billyWorkshopSyncKey';
 
         function loadPanels() {
             try {
@@ -653,8 +773,54 @@
             }
         }
 
-        function savePanels(panels) {
+        function persistLocal(panels) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(panels));
+        }
+
+        // Save locally (instant) and, if sync is on, push to the cloud too.
+        function savePanels(panels) {
+            persistLocal(panels);
+            pushToCloud(panels);
+        }
+
+        function getSyncKey() {
+            return (localStorage.getItem(SYNC_KEY_STORAGE) || '').trim();
+        }
+
+        // Coerce panels to the exact shape the Convex backend expects, so a
+        // stray/missing field never fails the cloud save.
+        function sanitizePanels(panels) {
+            return (panels || []).map(function (p) {
+                return {
+                    id: String(p.id || ''),
+                    icon: String(p.icon || '🎯'),
+                    title: String(p.title || ''),
+                    subtitle: String(p.subtitle || ''),
+                    links: (p.links || []).map(function (l) {
+                        return {
+                            emoji: String(l.emoji || '🔗'),
+                            label: String(l.label || ''),
+                            url: String(l.url || '')
+                        };
+                    })
+                };
+            });
+        }
+
+        // Push the full panel set to Convex (no-op if sync is off or offline).
+        async function pushToCloud(panels) {
+            const key = getSyncKey();
+            if (!key || !window.convexClient) return;
+            try {
+                await window.convexClient.mutation('workshop:savePanels', {
+                    syncKey: key,
+                    panels: sanitizePanels(panels)
+                });
+                flashSyncStatus('☁️ Saved to your account');
+            } catch (e) {
+                console.warn('Cloud save failed — kept on this device.', e);
+                flashSyncStatus('⚠️ Offline — saved on this device');
+            }
         }
 
         function esc(str) {
@@ -766,13 +932,137 @@
         }
 
         function deletePanel(id) {
-            if (!confirm('Remove this area? This only affects your browser.')) return;
+            var msg = getSyncKey()
+                ? 'Remove this area? It will be removed from all your synced devices.'
+                : 'Remove this area? This only affects this browser.';
+            if (!confirm(msg)) return;
             savePanels(loadPanels().filter(function (p) { return p.id !== id; }));
             renderCustomPanels();
         }
 
-        // Render any saved areas when the page loads
+        /* ==================== */
+        /* Cross-device sync UI */
+        /* ==================== */
+
+        function openSyncPrompt() {
+            document.getElementById('syncToggle').style.display = 'none';
+            document.getElementById('syncPrompt').style.display = 'flex';
+            document.getElementById('syncEmail').focus();
+        }
+
+        function closeSyncPrompt() {
+            document.getElementById('syncPrompt').style.display = 'none';
+            updateSyncUI();
+        }
+
+        function updateSyncUI(tempMsg) {
+            var key = getSyncKey();
+            var toggle = document.getElementById('syncToggle');
+            var prompt = document.getElementById('syncPrompt');
+            var status = document.getElementById('syncStatus');
+
+            if (key) {
+                toggle.style.display = 'none';
+                prompt.style.display = 'none';
+                status.style.display = 'flex';
+                status.innerHTML =
+                    '<span>' + esc(tempMsg || ('☁️ Synced as ' + key)) + '</span>' +
+                    '<button class="sync-off" onclick="disableSync()">Turn off sync</button>' +
+                    '<span class="sync-note">Open this page on another device and sync with the same email.</span>';
+            } else {
+                status.style.display = 'none';
+                prompt.style.display = 'none';
+                toggle.style.display = 'inline-block';
+            }
+        }
+
+        // Briefly show a status message, then revert to the steady state.
+        var syncFlashTimer = null;
+        function flashSyncStatus(msg) {
+            if (!getSyncKey()) return;
+            updateSyncUI(msg);
+            if (syncFlashTimer) clearTimeout(syncFlashTimer);
+            syncFlashTimer = setTimeout(function () { updateSyncUI(); }, 2500);
+        }
+
+        async function enableSync() {
+            var email = document.getElementById('syncEmail').value.trim().toLowerCase();
+            var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!re.test(email)) {
+                alert('Please enter a valid email address to sync.');
+                return;
+            }
+            localStorage.setItem(SYNC_KEY_STORAGE, email);
+            updateSyncUI('☁️ Turning on sync…');
+
+            if (!window.convexClient) {
+                updateSyncUI('☁️ Sync on — will connect when online');
+                return;
+            }
+
+            try {
+                // Merge whatever is already in the cloud with this device's areas,
+                // so nothing is lost the first time you connect.
+                var cloud = await window.convexClient.query('workshop:getPanels', { syncKey: email });
+                var local = loadPanels();
+                var merged = Array.isArray(cloud) ? cloud.slice() : [];
+                var ids = {};
+                merged.forEach(function (p) { ids[p.id] = true; });
+                local.forEach(function (p) { if (!ids[p.id]) merged.push(p); });
+
+                persistLocal(merged);
+                renderCustomPanels();
+                await window.convexClient.mutation('workshop:savePanels', {
+                    syncKey: email,
+                    panels: sanitizePanels(merged)
+                });
+                updateSyncUI();
+            } catch (e) {
+                console.warn('Could not reach your account.', e);
+                updateSyncUI('⚠️ Sync on, but offline — saved on this device');
+            }
+        }
+
+        function disableSync() {
+            if (!confirm('Turn off sync on this device? Your areas stay here, but new changes will not sync until you turn it back on.')) return;
+            localStorage.removeItem(SYNC_KEY_STORAGE);
+            updateSyncUI();
+        }
+
+        // Pull the latest areas from the cloud (used on load when sync is on).
+        async function pullFromCloud() {
+            var key = getSyncKey();
+            if (!key || !window.convexClient) return;
+            try {
+                var cloud = await window.convexClient.query('workshop:getPanels', { syncKey: key });
+                if (Array.isArray(cloud)) {
+                    persistLocal(cloud);
+                    renderCustomPanels();
+                }
+                updateSyncUI();
+            } catch (e) {
+                console.warn('Sync refresh failed — showing this device\'s copy.', e);
+                updateSyncUI('⚠️ Offline — showing this device\'s copy');
+            }
+        }
+
+        /* ==================== */
+        /* Startup             */
+        /* ==================== */
+
+        // 1) Render instantly from the local cache.
         renderCustomPanels();
+        updateSyncUI();
+
+        // 2) Once the Convex client has settled, refresh from the cloud.
+        function onConvexReady() {
+            if (getSyncKey()) pullFromCloud();
+        }
+        if (window.convexClient) {
+            onConvexReady();
+        } else {
+            window.addEventListener('convex-ready', onConvexReady, { once: true });
+        }
     </script>
 </body>
 </html>
