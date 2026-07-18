@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent 51 — Your Personal Assistant</title>
-    <meta name="description" content="Agent 51 is Billy Daws' personal faith & productivity assistant — Scripture for what you're facing, quick routes to your Workshop, and devotion, sermon, and prayer prompts.">
+    <meta name="description" content="Agent 51 is Billy Daws' personal assistant — ask it anything and it answers, keeps your notes, reminders, prayer list and timers, gives Scripture for what you're facing, and jumps you into your Workshop.">
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="styles.css">
 
@@ -62,8 +62,8 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            height: 70vh;
-            min-height: 460px;
+            height: 72vh;
+            min-height: 480px;
         }
 
         .chat-topbar {
@@ -237,7 +237,7 @@
             align-items: center;
             gap: 8px;
             background: #f0f1ff;
-            padding: 9px 13px;
+            padding: 10px 13px;
             border-radius: 10px;
             text-decoration: none;
             color: #333;
@@ -249,6 +249,38 @@
         .bubble .route-links a:hover {
             background: #e2e5ff;
             transform: translateX(3px);
+        }
+
+        .bubble .route-links a.primary {
+            background: #8B1538;
+            color: white;
+        }
+
+        .bubble .route-links a.primary:hover {
+            background: #5C0F28;
+        }
+
+        .bubble ul.simple-list {
+            list-style: none;
+            margin: 8px 0 2px;
+            padding: 0;
+            display: grid;
+            gap: 6px;
+        }
+
+        .bubble ul.simple-list li {
+            background: #f4f5ff;
+            border-left: 3px solid #8B1538;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.98rem;
+        }
+
+        .bubble .timer-count {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #8B1538;
+            letter-spacing: 1px;
         }
 
         /* Typing indicator */
@@ -354,7 +386,7 @@
 
         @media (max-width: 768px) {
             .agent-title { font-size: 2.2rem; }
-            .chat-card { height: 76vh; }
+            .chat-card { height: 78vh; }
             .msg { max-width: 94%; }
         }
     </style>
@@ -380,9 +412,9 @@
 
     <!-- Header -->
     <header class="agent-header">
-        <div class="agent-eyebrow">🛰️ Your Personal Assistant</div>
+        <div class="agent-eyebrow">🛰️ At Your Beck & Call</div>
         <h1 class="agent-title">Agent 51</h1>
-        <p class="agent-subtitle">Scripture, guidance, and a fast route to everything you're working on.</p>
+        <p class="agent-subtitle">Ask me anything. Notes, reminders, prayer, Scripture, timers — and a fast route to everything you're working on.</p>
     </header>
 
     <!-- Chat -->
@@ -392,7 +424,7 @@
                 <div class="agent-avatar">🛰️</div>
                 <div class="who">
                     <h2>Agent 51</h2>
-                    <p><span class="status-dot"></span> Online • at your service</p>
+                    <p><span class="status-dot"></span> Online • standing by</p>
                 </div>
                 <button class="chat-clear" onclick="clearChat()">Clear</button>
             </div>
@@ -409,7 +441,7 @@
     </main>
 
     <p class="agent-footnote">
-        Agent 51 runs entirely in your browser — nothing you type here leaves your device. Scripture is quoted from the New King James Version (NKJV).
+        Agent 51 runs privately in your browser. It answers open questions by handing them to a live AI, and keeps your notes, reminders &amp; prayers on this device. Scripture is NKJV.
     </p>
 
     <!-- Footer -->
@@ -431,14 +463,73 @@
         }
 
         /* ====================================================== */
-        /* Agent 51 — a local, privacy-first assistant "brain".   */
-        /* No network calls: it matches what you say to intents   */
-        /* and replies with Scripture, guidance, or quick routes. */
+        /* Agent 51 — a private, always-available assistant.      */
+        /* Everything runs in your browser. Open questions are    */
+        /* handed to a live AI; notes, reminders, prayers and     */
+        /* timers are kept on this device.                        */
         /* ====================================================== */
 
-        const CHAT_KEY = 'agent51Conversation';
+        const CHAT_KEY   = 'agent51Conversation';
+        const NOTES_KEY  = 'agent51Notes';
+        const PRAYER_KEY = 'agent51Prayers';
 
-        // --- Scripture library (NKJV), grouped by what you might be facing ---
+        function esc(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function has(text, words) {
+            return words.some(function (w) { return text.indexOf(w) !== -1; });
+        }
+
+        // Small reply helper: html to show, plus an optional side-effect to run after.
+        function R(html, effect) { return { html: html, effect: effect || null }; }
+
+        /* ---------- Local lists (notes / reminders / prayers) ---------- */
+
+        function loadList(key) {
+            try {
+                const a = JSON.parse(localStorage.getItem(key));
+                if (Array.isArray(a)) return a;
+            } catch (e) {}
+            return [];
+        }
+        function saveList(key, arr) {
+            try { localStorage.setItem(key, JSON.stringify(arr.slice(-100))); } catch (e) {}
+        }
+        function addToList(key, text) {
+            const arr = loadList(key);
+            arr.push({ text: text, ts: Date.now() });
+            saveList(key, arr);
+            return arr;
+        }
+        function listHtml(arr, emptyMsg) {
+            if (!arr.length) return "<span style='color:#888;font-style:italic;'>" + esc(emptyMsg) + "</span>";
+            return "<ul class='simple-list'>" + arr.map(function (it) {
+                return "<li>" + esc(it.text) + "</li>";
+            }).join('') + "</ul>";
+        }
+
+        /* ---------- Ask a real AI (open questions) ---------- */
+
+        function askAiHtml(question, lead) {
+            const q = encodeURIComponent(question);
+            return (lead || "Here you go — I'll send that straight to a live AI that can answer in depth:") +
+                "<ul class='route-links'>" +
+                "<li><a class='primary' href='https://www.perplexity.ai/search?q=" + esc(q) + "' target='_blank' rel='noopener'>⚡ Answer it with Perplexity</a></li>" +
+                "<li><a href='https://chatgpt.com/?q=" + esc(q) + "' target='_blank' rel='noopener'>💬 Ask ChatGPT</a></li>" +
+                "<li><a href='https://www.google.com/search?q=" + esc(q) + "' target='_blank' rel='noopener'>🔎 Search Google</a></li>" +
+                "</ul>";
+        }
+
+        function looksLikeQuestion(text) {
+            if (text.trim().slice(-1) === '?') return true;
+            return /(^|\s)(who|what|when|where|why|how|which|can you|could you|do you|does|is|are|should|would|will|explain|define|tell me|help me understand|look up|search|google|find out|calculate|convert|translate)\b/.test(text);
+        }
+
+        /* ---------- Scripture library (NKJV) ---------- */
+
         const VERSES = {
             anxiety: [
                 { t: "Be anxious for nothing, but in everything by prayer and supplication, with thanksgiving, let your requests be made known to God; and the peace of God, which surpasses all understanding, will guard your hearts and minds through Christ Jesus.", r: "Philippians 4:6-7" },
@@ -506,29 +597,47 @@
                 { t: "This is the day the LORD has made; we will rejoice and be glad in it.", r: "Psalm 118:24" },
                 { t: "The LORD is my shepherd; I shall not want.", r: "Psalm 23:1" },
                 { t: "And we know that all things work together for good to those who love God, to those who are the called according to His purpose.", r: "Romans 8:28" },
-                { t: "Trust in the LORD with all your heart, and lean not on your own understanding.", r: "Proverbs 3:5" }
+                { t: "Trust in the LORD with all your heart, and lean not on your own understanding.", r: "Proverbs 3:5" },
+                { t: "The name of the LORD is a strong tower; the righteous run to it and are safe.", r: "Proverbs 18:10" },
+                { t: "Be strong and of good courage; do not be afraid, nor be dismayed, for the LORD your God is with you wherever you go.", r: "Joshua 1:9" }
             ]
         };
 
-        // Keyword → verse-topic map (checked against your message text)
         const TOPIC_KEYWORDS = [
             { topic: 'anxiety',    words: ['anxious', 'anxiety', 'worry', 'worried', 'stress', 'stressed', 'overwhelm', 'panic'] },
             { topic: 'fear',       words: ['afraid', 'fear', 'scared', 'terrified', 'nervous'] },
             { topic: 'sadness',    words: ['sad', 'depress', 'down', 'discouraged', 'hopeless', 'unhappy', 'blue'] },
-            { topic: 'temptation', words: ['tempt', 'temptation', 'lust', 'addiction', 'addicted', 'struggle with sin'] },
+            { topic: 'temptation', words: ['tempt', 'temptation', 'lust', 'addiction', 'addicted'] },
             { topic: 'anger',      words: ['angry', 'anger', 'furious', 'mad', 'bitter', 'resentment', 'frustrated'] },
             { topic: 'loneliness', words: ['lonely', 'alone', 'isolated', 'abandoned'] },
             { topic: 'grief',      words: ['grief', 'grieving', 'loss', 'died', 'death', 'mourning', 'mourn'] },
-            { topic: 'doubt',      words: ['doubt', 'unbelief', 'questioning', 'confused about god'] },
-            { topic: 'guilt',      words: ['guilt', 'guilty', 'shame', 'ashamed', 'condemn', 'forgive myself'] },
+            { topic: 'doubt',      words: ['doubt', 'unbelief', 'questioning'] },
+            { topic: 'guilt',      words: ['guilt', 'guilty', 'shame', 'ashamed', 'condemn'] },
             { topic: 'finances',   words: ['money', 'finance', 'financial', 'debt', 'bills', 'broke', 'provision'] },
             { topic: 'strength',   words: ['weak', 'tired', 'weary', 'exhausted', 'strength', 'burnout', 'burned out'] },
-            { topic: 'gratitude',  words: ['thankful', 'grateful', 'gratitude', 'blessed', 'thank god'] },
-            { topic: 'guidance',   words: ['guidance', 'direction', 'decision', 'what should i do', 'wisdom', 'lost'] },
-            { topic: 'hope',       words: ['hope', 'hopeful', 'future', 'discouraged about'] }
+            { topic: 'gratitude',  words: ['thankful', 'grateful', 'gratitude', 'blessed'] },
+            { topic: 'guidance',   words: ['guidance', 'direction', 'decision', 'wisdom', 'lost'] },
+            { topic: 'hope',       words: ['hope', 'hopeful'] }
         ];
 
-        // Workshop areas Agent 51 can route you to
+        // A day-stable pick so "verse of the day" stays put all day.
+        function dayIndex() {
+            return Math.floor(Date.now() / 86400000);
+        }
+        function pick(arr) {
+            return arr[Math.floor(Date.now() / 1000) % arr.length];
+        }
+        function pickDaily(arr) {
+            return arr[dayIndex() % arr.length];
+        }
+
+        function verseHtml(v) {
+            return '<span class="verse">' + esc(v.t) +
+                   '<span class="verse-ref">— ' + esc(v.r) + ' (NKJV)</span></span>';
+        }
+
+        /* ---------- Workshop routes ---------- */
+
         const ROUTES = {
             podcast:  { emoji: '🎙️', label: 'Billy Daws Workshop (podcast)', href: 'workshop.html' },
             budget:   { emoji: '💰', label: 'Budget & Finances', href: 'workshop.html' },
@@ -540,22 +649,6 @@
             trends:   { emoji: '📈', label: 'Trends', href: 'workshop.html' }
         };
 
-        const AI_LINKS = [
-            { emoji: '🧠', label: 'Ask Claude', href: 'https://claude.ai' },
-            { emoji: '💬', label: 'Ask ChatGPT', href: 'https://chatgpt.com' },
-            { emoji: '✨', label: 'Ask Gemini', href: 'https://gemini.google.com' }
-        ];
-
-        function pick(arr) {
-            // Deterministic-enough rotation without Math.random surprises: use time.
-            return arr[Math.floor(Date.now() / 1000) % arr.length];
-        }
-
-        function verseHtml(v) {
-            return '<span class="verse">' + esc(v.t) +
-                   '<span class="verse-ref">— ' + esc(v.r) + ' (NKJV)</span></span>';
-        }
-
         function routesHtml(items) {
             return '<ul class="route-links">' + items.map(function (it) {
                 return '<li><a href="' + esc(it.href) + '"' +
@@ -564,143 +657,247 @@
             }).join('') + '</ul>';
         }
 
-        function esc(s) {
-            return String(s == null ? '' : s)
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        /* ---------- Timer ---------- */
+
+        function parseDuration(text) {
+            let total = 0, found = false;
+            const re = /(\d+)\s*(hours?|hrs?|h|minutes?|mins?|m|seconds?|secs?|s)\b/g;
+            let m;
+            while ((m = re.exec(text)) !== null) {
+                const n = parseInt(m[1], 10);
+                const u = m[2][0];
+                if (u === 'h') total += n * 3600;
+                else if (u === 's') total += n;
+                else total += n * 60; // minutes (default for 'm')
+                found = true;
+            }
+            return found ? total : 0;
         }
 
-        function has(text, words) {
-            return words.some(function (w) { return text.indexOf(w) !== -1; });
+        function fmt(sec) {
+            sec = Math.max(0, sec);
+            const h = Math.floor(sec / 3600);
+            const mm = Math.floor((sec % 3600) / 60);
+            const ss = sec % 60;
+            const p = function (n) { return (n < 10 ? '0' : '') + n; };
+            return (h ? h + ':' : '') + p(mm) + ':' + p(ss);
         }
 
-        // The core "brain": takes your text, returns an HTML reply.
+        function startTimer(seconds) {
+            const bubble = addMessage('agent',
+                "⏱️ Timer running — <span class='timer-count' id='__timer'></span> left. " +
+                "I'll ping you when it's done. (Keep this tab open.)", false);
+            const el = bubble.querySelector('#__timer');
+            const end = Date.now() + seconds * 1000;
+            el.textContent = fmt(seconds);
+            const iv = setInterval(function () {
+                const left = Math.round((end - Date.now()) / 1000);
+                if (left <= 0) {
+                    clearInterval(iv);
+                    el.textContent = '00:00';
+                    addMessage('agent', "⏰ <strong>Time's up!</strong> Your timer just finished.");
+                    try {
+                        // A short beep, best-effort.
+                        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                        const o = ctx.createOscillator(); const g = ctx.createGain();
+                        o.connect(g); g.connect(ctx.destination); o.frequency.value = 880;
+                        o.start(); g.gain.setValueAtTime(0.2, ctx.currentTime);
+                        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+                        o.stop(ctx.currentTime + 0.7);
+                    } catch (e) {}
+                    return;
+                }
+                el.textContent = fmt(left);
+            }, 500);
+        }
+
+        /* ====================================================== */
+        /* The brain: turn what you type into a reply (+ effect). */
+        /* ====================================================== */
+
         function respond(raw) {
-            const text = ' ' + raw.toLowerCase().trim() + ' ';
+            const clean = raw.trim();
+            const text = ' ' + clean.toLowerCase() + ' ';
 
-            // 1) Greetings
-            if (/(^|\s)(hi|hey|hello|good morning|good evening|yo|howdy)(\s|!|\.|$)/.test(text)) {
-                return "Hey Billy! 👋 I'm Agent 51, standing by. I can share a verse for whatever you're facing, " +
-                       "point you to any of your Workshop areas, or help you start a devotion or prayer. What's on your mind?";
+            // --- Greetings ---
+            if (/(^|\s)(hi|hey|hello|good morning|good evening|good afternoon|yo|howdy)(\s|!|\.|$)/.test(text)) {
+                return R("Hey Billy! 👋 Agent 51 here, ready when you are. Ask me anything, tell me how you're doing, " +
+                    "jot a note, start a prayer list, or set a timer. What do you need?");
             }
 
-            // 2) Help / what can you do
-            if (has(text, ['help', 'what can you do', 'commands', 'how do you work', 'who are you'])) {
-                return "I'm your local assistant — everything I do runs right here in your browser. Try:" +
-                    routesHtml([
-                        { emoji: '📖', label: 'Give me a verse about anxiety', href: '#' },
-                        { emoji: '🙏', label: 'Help me pray', href: '#' },
-                        { emoji: '🧭', label: 'Open my Sermon Study area', href: 'workshop.html' },
-                        { emoji: '🧠', label: 'Ask an AI tool a hard question', href: 'workshop.html' }
-                    ]) +
-                    "<span style='font-size:0.9rem;color:#888;'>Tip: just type how you're feeling and I'll meet it with Scripture.</span>";
+            // --- Help ---
+            if (has(text, ['help', 'what can you do', 'commands', 'how do you work', 'who are you', 'what do you do'])) {
+                return R("I'm your personal assistant, always on call. I can:" +
+                    "<ul class='simple-list'>" +
+                    "<li>💬 <strong>Answer anything</strong> — I hand open questions to a live AI</li>" +
+                    "<li>📖 <strong>Give Scripture</strong> for whatever you're facing</li>" +
+                    "<li>📝 <strong>Keep notes &amp; reminders</strong> — “remind me to call Dad”</li>" +
+                    "<li>🙏 <strong>Hold a prayer list</strong> — “pray for my sister”</li>" +
+                    "<li>⏱️ <strong>Set timers</strong> — “set a timer for 10 minutes”</li>" +
+                    "<li>🧭 <strong>Jump you into your Workshop</strong> — “open Sermon Study”</li>" +
+                    "</ul>Just talk to me normally — I'll figure out what you need.");
             }
 
-            // 3) Prayer
-            if (has(text, ['pray', 'prayer'])) {
-                return "Let's bring it to God together. 🙏 You might pray something like:<br><br>" +
+            // --- Notes / reminders: ADD ---
+            var noteM = clean.match(/^(?:remind me(?: to| that)?|reminder:?|remember(?: to| that)?|note:?|jot down:?|add(?: a)? (?:note|task|to-?do|reminder):?|todo:?|to-?do:?)\s+(.+)$/i);
+            if (noteM && noteM[1]) {
+                var nt = noteM[1].trim();
+                addToList(NOTES_KEY, nt);
+                return R("✅ Got it — I'll remember: <strong>" + esc(nt) + "</strong><br>" +
+                    "<span style='font-size:0.9rem;color:#888;'>Say “show my notes” anytime.</span>");
+            }
+
+            // --- Notes / reminders: SHOW ---
+            if (/\b(show|list|see|what are|read).*(notes?|tasks?|to-?dos?|reminders?)\b/.test(text) ||
+                /\bmy (notes?|tasks?|to-?dos?|reminders?)\b/.test(text)) {
+                return R("📝 Here's your list:" + listHtml(loadList(NOTES_KEY), "Nothing yet — try “remind me to …”."));
+            }
+
+            // --- Notes: CLEAR ---
+            if (/\bclear.*(notes?|tasks?|to-?dos?|reminders?)\b/.test(text)) {
+                saveList(NOTES_KEY, []);
+                return R("🧹 Cleared your notes &amp; reminders.");
+            }
+
+            // --- Prayer list: ADD ("pray for X") ---
+            var prayM = clean.match(/^(?:pray(?:ing)? for|prayer for|pray about|lift up|add(?: a)? prayer(?: for)?:?)\s+(.+)$/i);
+            if (prayM && prayM[1]) {
+                var pt = prayM[1].trim();
+                addToList(PRAYER_KEY, pt);
+                return R("🙏 Added to your prayer list: <strong>" + esc(pt) + "</strong><br>" +
+                    "“Lord, I lift up " + esc(pt) + " to You.” Say “show my prayer list” anytime.");
+            }
+
+            // --- Prayer list: SHOW ---
+            if (/\b(show|list|see|read).*(prayer)/.test(text) || /\bmy prayer(s| list)?\b/.test(text)) {
+                return R("🙏 Your prayer list:" + listHtml(loadList(PRAYER_KEY), "Empty for now — try “pray for …”."));
+            }
+
+            // --- General "help me pray" prompt ---
+            if (/\b(help me pray|how do i pray|pray with me|lead me in prayer|teach me to pray)\b/.test(text) ||
+                /^\s*pray\s*$/.test(text)) {
+                return R("Let's bring it to God together. 🙏<br>" +
                     "<span class=\"verse\">“Father, thank You for being my help. I give You what's weighing on me right now, " +
                     "and I ask for Your peace, wisdom, and strength. Guide my steps today. In Jesus' name, amen.”</span>" +
-                    "When you're ready, your <a href=\"workshop.html\">Personal Devotion area</a> has your prayer journal and worship playlist.";
+                    "Want me to add anything to your <strong>prayer list</strong>? Just say “pray for …”.");
             }
 
-            // 4) Devotion / quiet time
+            // --- Timer ---
+            if (/\b(timer|countdown|remind me in|alarm for|set.*for .*(min|sec|hour))\b/.test(text)) {
+                var secs = parseDuration(text);
+                if (secs > 0) {
+                    return R("", function () { startTimer(secs); });
+                }
+                return R("Sure — how long? Try “set a timer for 10 minutes” or “timer for 90 seconds”.");
+            }
+
+            // --- Verse of the day ---
+            if (/\b(verse of the day|today'?s verse|daily verse|verse for today)\b/.test(text)) {
+                return R("📖 Your verse for today:<br>" + verseHtml(pickDaily(VERSES.general)));
+            }
+
+            // --- Devotion ---
             if (has(text, ['devotion', 'quiet time', 'read the bible', 'bible reading', 'draw closer'])) {
-                return "Beautiful — time with God is never wasted. Here's a verse to start with:<br>" +
+                return R("Time with God is never wasted. Here's a word to start:<br>" +
                     verseHtml(pick(VERSES.hope)) +
-                    "And here's your launchpad:" +
-                    routesHtml([ROUTES.devotion, { emoji: '📖', label: 'YouVersion Bible', href: 'https://www.bible.com' }]);
+                    "And your launchpad:" +
+                    routesHtml([ROUTES.devotion, { emoji: '📖', label: 'YouVersion Bible', href: 'https://www.bible.com' }]));
             }
 
-            // 5) Sermon prep
-            if (has(text, ['sermon', 'preach', 'teaching', 'study the word', 'commentary', 'exegesis'])) {
-                return "Let's dig in. 📖 Your Sermon Study area has Bible Gateway, Blue Letter Bible (original languages), " +
-                    "and Bible Hub commentaries ready to go:" +
+            // --- Sermon prep ---
+            if (has(text, ['sermon', 'preach', 'teaching', 'commentary', 'exegesis', 'study the word'])) {
+                return R("Let's dig in. 📖 Your Sermon Study area has Bible Gateway, Blue Letter Bible, and Bible Hub:" +
                     routesHtml([ROUTES.sermon]) +
-                    "A verse to frame it: " + verseHtml(pick(VERSES.guidance));
+                    "A verse to frame it: " + verseHtml(pick(VERSES.guidance)));
             }
 
-            // 6) Podcast
+            // --- Podcast ---
             if (has(text, ['podcast', 'record', 'episode', 'riverside', 'descript', 'show notes'])) {
-                return "Time to create. 🎙️ Everything for the show — hosting, recording/editing, show notes, and your episode calendar — lives here:" +
-                    routesHtml([ROUTES.podcast]);
+                return R("Time to create. 🎙️ Hosting, recording/editing, show notes, and your episode calendar are here:" +
+                    routesHtml([ROUTES.podcast]));
             }
 
-            // 7) Budget / money (route) — but a money *worry* still gets a verse (handled by topic below too)
+            // --- Budget ---
             if (has(text, ['budget', 'spending', 'invest', 'bank', 'subscriptions'])) {
-                return "Let's steward it well. 💰 Your Budget & Finances area has your spreadsheet, bank dashboard, investments, and bills:" +
+                return R("Let's steward it well. 💰 Your Budget & Finances area:" +
                     routesHtml([ROUTES.budget]) +
-                    "And a word to keep first things first: " + verseHtml(pick(VERSES.finances));
+                    "And a word to keep first things first: " + verseHtml(pick(VERSES.finances)));
             }
 
-            // 8) Health
+            // --- Health ---
             if (has(text, ['health', 'workout', 'exercise', 'fitness', 'sleep', 'nutrition', 'meditat', 'wellbeing', 'well-being'])) {
-                return "Caring for the temple. 💪 Your Personal Health area covers activity, nutrition, sleep, mind & meditation, and appointments:" +
-                    routesHtml([ROUTES.health]);
+                return R("Caring for the temple. 💪 Activity, nutrition, sleep, mind & meditation, appointments:" +
+                    routesHtml([ROUTES.health]));
             }
 
-            // 9) News / trends
+            // --- News / trends ---
             if (has(text, ['news', 'headlines', 'current events'])) {
-                return "Here are your trusted sources: 📰" + routesHtml([ROUTES.news]);
+                return R("Your trusted sources: 📰" + routesHtml([ROUTES.news]));
             }
-            if (has(text, ['trend', 'trending', 'youtube', 'spotify', 'charts'])) {
-                return "Here's what's rising right now: 📈" + routesHtml([ROUTES.trends]);
-            }
-
-            // 10) AI tools
-            if (has(text, ['claude', 'chatgpt', 'gpt', 'gemini', 'ai tool', 'ai help', 'artificial intelligence'])) {
-                return "For open-ended questions, hand it to one of your AI tools — they'll go deeper than I can here:" +
-                    routesHtml(AI_LINKS) +
-                    "Or open your full <a href=\"workshop.html\">Artificial Intelligence area</a>.";
+            if (has(text, ['trend', 'trending', 'charts'])) {
+                return R("What's rising right now: 📈" + routesHtml([ROUTES.trends]));
             }
 
-            // 11) "Open / go to / take me to <area>"
-            if (has(text, ['open', 'go to', 'take me to', 'show me', 'launch'])) {
-                for (const key in ROUTES) {
+            // --- Open / go to <area> ---
+            if (has(text, ['open ', 'go to', 'take me to', 'show me', 'launch '])) {
+                for (var key in ROUTES) {
                     if (text.indexOf(key) !== -1) {
-                        return "On it — here's your " + ROUTES[key].label + ":" + routesHtml([ROUTES[key]]);
+                        return R("On it — here's your " + ROUTES[key].label + ":" + routesHtml([ROUTES[key]]));
                     }
                 }
-                return "Sure — which area? Here's your whole command center:" +
-                    routesHtml([ROUTES.podcast, ROUTES.devotion, ROUTES.sermon, ROUTES.health, ROUTES.budget, ROUTES.ai]);
             }
 
-            // 12) Explicit "verse" / "encourage me" request without a stated topic
+            // --- Explicit "search / look up / google" → AI + search ---
+            var lookM = clean.match(/^(?:search(?: for)?|look up|google|find out|ask (?:ai|chatgpt|claude|perplexity)(?: about)?)\s+(.+)$/i);
+            if (lookM && lookM[1]) {
+                return R(askAiHtml(lookM[1].trim(), "On it — here's <strong>" + esc(lookM[1].trim()) + "</strong> from a live AI &amp; the web:"));
+            }
+
+            // --- Explicit "verse / encourage me" ---
             if (has(text, ['verse', 'scripture', 'encourage', 'encouragement', 'word for me', 'uplift', 'inspire'])) {
-                // If they named a feeling too, the topic scan below would catch it; otherwise general.
-                for (const k of TOPIC_KEYWORDS) {
-                    if (has(text, k.words)) return "Here's a word for that:<br>" + verseHtml(pick(VERSES[k.topic]));
+                for (var i = 0; i < TOPIC_KEYWORDS.length; i++) {
+                    if (has(text, TOPIC_KEYWORDS[i].words)) {
+                        return R("Here's a word for that:<br>" + verseHtml(pick(VERSES[TOPIC_KEYWORDS[i].topic])));
+                    }
                 }
-                return "Here's a word to lift your eyes today:<br>" + verseHtml(pick(VERSES.general));
+                return R("Here's a word to lift your eyes today:<br>" + verseHtml(pick(VERSES.general)));
             }
 
-            // 13) Thanks
-            if (has(text, ['thank', 'thanks', 'appreciate'])) {
-                return "Anytime, Billy. 🙌 " + verseHtml(pick(VERSES.gratitude));
+            // --- Thanks ---
+            if (has(text, ['thank', 'appreciate'])) {
+                return R("Anytime, Billy. 🙌 " + verseHtml(pick(VERSES.gratitude)));
             }
 
-            // 14) Topic scan — meet a stated feeling with Scripture
-            for (const k of TOPIC_KEYWORDS) {
-                if (has(text, k.words)) {
-                    return "I hear you. Here's what God's Word says:<br>" + verseHtml(pick(VERSES[k.topic])) +
-                        "Want to pray about it or open your <a href=\"workshop.html\">Personal Devotion area</a>?";
+            // --- Feeling scan → Scripture ---
+            for (var j = 0; j < TOPIC_KEYWORDS.length; j++) {
+                if (has(text, TOPIC_KEYWORDS[j].words)) {
+                    return R("I hear you. Here's what God's Word says:<br>" + verseHtml(pick(VERSES[TOPIC_KEYWORDS[j].topic])) +
+                        "Want to pray about it, or add it to your prayer list? Just say “pray for …”.");
                 }
             }
 
-            // 15) Fallback — helpful, honest about being local
-            return "I'm a local assistant, so I keep to Scripture, prayer, and routing you around your Workshop — " +
-                "but I've got you. Here's a verse for the moment:<br>" + verseHtml(pick(VERSES.general)) +
-                "For an open-ended question, one of these can dig deeper:" + routesHtml(AI_LINKS);
+            // --- Anything else that reads like a question → live AI ---
+            if (looksLikeQuestion(text) || clean.split(/\s+/).length >= 4) {
+                return R(askAiHtml(clean));
+            }
+
+            // --- Short fallback ---
+            return R("I can answer that with a live AI, or help another way. Want me to look it up?" +
+                askAiHtml(clean, "") +
+                "<span style='font-size:0.9rem;color:#888;'>Or try: a verse, a note, a prayer, a timer, or “help”.</span>");
         }
 
-        /* ---- Chat UI plumbing ---- */
+        /* ====================================================== */
+        /* Chat UI plumbing                                       */
+        /* ====================================================== */
 
         const QUICK_CHIPS = [
-            'Give me a verse',
+            'Ask a real AI',
+            'Verse of the day',
             "I'm feeling anxious",
+            'Remind me to…',
             'Help me pray',
-            'Open Sermon Study',
-            'Start a devotion',
+            'Set a 10-min timer',
             'What can you do?'
         ];
 
@@ -717,7 +914,6 @@
             } catch (e) {}
             return null;
         }
-
         function saveHistory(history) {
             try { localStorage.setItem(CHAT_KEY, JSON.stringify(history.slice(-40))); } catch (e) {}
         }
@@ -737,6 +933,7 @@
                 history.push({ role: role, html: html });
                 saveHistory(history);
             }
+            return wrap;
         }
 
         function showTyping() {
@@ -749,7 +946,6 @@
             log.appendChild(wrap);
             log.scrollTop = log.scrollHeight;
         }
-
         function hideTyping() {
             const t = document.getElementById('typingRow');
             if (t) t.remove();
@@ -760,13 +956,23 @@
         function sendText(text) {
             const clean = String(text || '').trim();
             if (!clean) return;
+            // Turn a placeholder chip into a real prompt.
+            const prompt = clean === 'Remind me to…' ? 'remind me to ' : clean;
+            if (prompt.slice(-1) === ' ') { // e.g. the reminder starter — just prefill the box
+                const input = document.getElementById('chatInput');
+                input.value = prompt;
+                input.focus();
+                return;
+            }
             addMessage('user', esc(clean));
             showTyping();
             if (replyTimer) clearTimeout(replyTimer);
             replyTimer = setTimeout(function () {
                 hideTyping();
-                addMessage('agent', respond(clean));
-            }, 480);
+                const reply = respond(clean);
+                if (reply.html) addMessage('agent', reply.html);
+                if (reply.effect) reply.effect();
+            }, 420);
         }
 
         function onSend(event) {
@@ -779,7 +985,7 @@
         }
 
         function clearChat() {
-            if (!confirm('Clear this conversation with Agent 51?')) return;
+            if (!confirm('Clear this conversation? (Your notes and prayer list are kept.)')) return;
             history = [];
             saveHistory(history);
             document.getElementById('chatLog').innerHTML = '';
@@ -788,9 +994,9 @@
 
         function greet() {
             addMessage('agent',
-                "Hey Billy, Agent 51 reporting in. 🛰️ I'm your personal assistant — I can hand you Scripture for " +
-                "whatever you're carrying, help you pray, and jump you straight into any area of your Workshop. " +
-                "How can I help right now?");
+                "Hey Billy, Agent 51 reporting in. 🛰️ I'm at your beck and call — ask me anything and I'll get you an answer, " +
+                "and I can keep your notes, reminders and prayer list, set timers, share Scripture, and jump you into your Workshop. " +
+                "What can I do for you right now?");
         }
 
         /* ---- Startup ---- */
