@@ -97,6 +97,15 @@
         .voice-card .words::before { content: '“'; }
         .voice-card .words::after  { content: '”'; }
 
+        .voice-card .prayer-lines {
+            font-family: 'Georgia', serif;
+            font-size: 1.15rem;
+            color: #5C0F28;
+            font-style: italic;
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
         .voice-card.no-quote .words::before,
         .voice-card.no-quote .words::after { content: ''; }
 
@@ -324,6 +333,14 @@
         // Add more here anytime (words + file).
         const VOICE = [
             { kind: 'player', label: "Her hello", file: 'audio/sheilah-greeting.mp3' },
+            { kind: 'prayer', title: "A prayer, in her voice", file: 'audio/sheilah-prayer.mp3', lines: [
+                "O Jesus, make Thyself to me",
+                "A living, bright reality,",
+                "More present to Faith's vision keen",
+                "Than any outward object seen,",
+                "More near, more intimately nigh,",
+                "Than e'en the sweetest earthly tie."
+            ] },
             { kind: 'line',   words: "I love you.", file: 'audio/sheilah-i-love-you.mp3' },
             { kind: 'line',   words: "I am so thankful that Jer found Michelle!", file: 'audio/sheilah-jer-michelle.mp3' }
         ];
@@ -348,6 +365,13 @@
                     return "<div class='voice-card no-quote'>" +
                         "<div class='card-label'>🕊️ " + esc(v.label) + "</div>" +
                         "<audio src='" + esc(v.file) + "' preload='none' controls></audio>" +
+                        "</div>";
+                }
+                if (v.kind === 'prayer') {
+                    return "<div class='voice-card no-quote'>" +
+                        "<div class='card-label'>🙏 " + esc(v.title) + "</div>" +
+                        "<div class='prayer-lines'>" + v.lines.map(function (l) { return esc(l); }).join('<br>') + "</div>" +
+                        "<button class='play-line' onclick=\"playClip('" + v.file + "', this)\">▶ Play in her voice</button>" +
                         "</div>";
                 }
                 return "<div class='voice-card'>" +
