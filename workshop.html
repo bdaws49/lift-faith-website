@@ -662,6 +662,7 @@
             <a href="index.html" class="nav-link">Home</a>
             <a href="explanation.html" class="nav-link">How It Works</a>
             <a href="workshop.html" class="nav-link active">Workshop</a>
+            <a href="agent51.html" class="nav-link">Agent 51</a>
             <a href="signup.html" class="nav-cta">Start Free Trial</a>
         </div>
     </nav>
@@ -787,6 +788,11 @@
 
         // The starting set of sections, used the first time you open the page.
         const DEFAULT_SECTIONS = [
+            { id: 'assistant', icon: '🛰️', title: 'Agent 51', subtitle: 'Your personal assistant — verses, prayer & quick routes', links: [
+                { emoji: '🛰️', label: 'Open Agent 51', url: '/agent51.html', note: 'chat with your assistant' },
+                { emoji: '📖', label: 'Ask for a verse', url: '/agent51.html', note: 'Scripture for what you\'re facing' },
+                { emoji: '🙏', label: 'Help me pray', url: '/agent51.html', note: 'a prayer to get you started' }
+            ]},
             { id: 'podcast', icon: '🎙️', title: 'Billy Daws Workshop', subtitle: 'Your podcast — record, edit, publish', links: [
                 { emoji: '🎧', label: 'Spotify for Creators', url: '#', note: 'host & publish' },
                 { emoji: '🎚️', label: 'Recording & Editing', url: '#', note: 'Riverside / Descript' },
