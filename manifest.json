@@ -1,0 +1,17 @@
+{
+  "name": "Agent 51 — Personal Assistant",
+  "short_name": "Agent 51",
+  "description": "Billy Daws' personal assistant — ask anything, notes, reminders, prayer list, timers, Scripture, and a fast route to the Workshop.",
+  "start_url": "/agent51.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#5C0F28",
+  "theme_color": "#8B1538",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

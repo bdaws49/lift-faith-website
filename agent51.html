@@ -6,6 +6,15 @@
     <title>Agent 51 — Your Personal Assistant</title>
     <meta name="description" content="Agent 51 is Billy Daws' personal assistant — ask it anything and it answers, keeps your notes, reminders, prayer list and timers, gives Scripture for what you're facing, and jumps you into your Workshop.">
     <link rel="icon" type="image/png" href="favicon.png">
+
+    <!-- Installable app (PWA): gives Agent 51 a real desktop / home-screen icon -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#8B1538">
+    <link rel="apple-touch-icon" href="/icon-180.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Agent 51">
+
     <link rel="stylesheet" href="styles.css">
 
     <style>
@@ -116,21 +125,72 @@
             50%      { box-shadow: 0 0 0 6px rgba(110, 231, 168, 0); }
         }
 
-        .chat-clear {
+        .topbar-controls {
             margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .top-btn {
             background: rgba(255, 255, 255, 0.15);
             border: 1px solid rgba(255, 255, 255, 0.4);
             color: white;
             font-family: 'Georgia', serif;
             font-size: 0.82rem;
-            padding: 7px 14px;
+            padding: 7px 12px;
             border-radius: 50px;
             cursor: pointer;
             transition: background 0.2s;
+            white-space: nowrap;
         }
 
-        .chat-clear:hover {
+        .top-btn:hover {
             background: rgba(255, 255, 255, 0.28);
+        }
+
+        .top-btn.on {
+            background: white;
+            color: #8B1538;
+            border-color: white;
+        }
+
+        .top-btn.install {
+            background: #ffd76a;
+            color: #5C0F28;
+            border-color: #ffd76a;
+            font-weight: bold;
+        }
+
+        .top-btn.install:hover {
+            background: #ffcf47;
+        }
+
+        /* Mic button in the composer */
+        .mic-btn {
+            flex-shrink: 0;
+            width: 54px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            background: white;
+            color: #8B1538;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mic-btn:hover { border-color: #8B1538; }
+
+        .mic-btn.listening {
+            background: #8B1538;
+            color: white;
+            border-color: #8B1538;
+            animation: micPulse 1.1s ease-in-out infinite;
+        }
+
+        @keyframes micPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(139, 21, 56, 0.5); }
+            50%      { box-shadow: 0 0 0 8px rgba(139, 21, 56, 0); }
         }
 
         /* Message list */
@@ -426,7 +486,11 @@
                     <h2>Agent 51</h2>
                     <p><span class="status-dot"></span> Online • standing by</p>
                 </div>
-                <button class="chat-clear" onclick="clearChat()">Clear</button>
+                <div class="topbar-controls">
+                    <button class="top-btn install" id="installBtn" onclick="installApp()" style="display:none;" title="Install Agent 51 as an app">⬇️ Install</button>
+                    <button class="top-btn" id="voiceBtn" onclick="toggleVoice()" title="Toggle Agent 51's voice">🔊 Voice</button>
+                    <button class="top-btn" onclick="clearChat()">Clear</button>
+                </div>
             </div>
 
             <div class="chat-log" id="chatLog" aria-live="polite"></div>
@@ -434,6 +498,7 @@
             <div class="chip-row" id="chipRow"></div>
 
             <form class="chat-composer" id="composer" onsubmit="return onSend(event)">
+                <button type="button" class="mic-btn" id="micBtn" onclick="toggleMic()" style="display:none;" aria-label="Talk to Agent 51" title="Talk to Agent 51">🎤</button>
                 <input type="text" id="chatInput" placeholder="Ask Agent 51 anything…" autocomplete="off" aria-label="Message Agent 51">
                 <button type="submit" aria-label="Send">➤</button>
             </form>
@@ -970,7 +1035,10 @@
             replyTimer = setTimeout(function () {
                 hideTyping();
                 const reply = respond(clean);
-                if (reply.html) addMessage('agent', reply.html);
+                if (reply.html) {
+                    addMessage('agent', reply.html);
+                    speak(stripHtml(reply.html));
+                }
                 if (reply.effect) reply.effect();
             }, 420);
         }
@@ -999,7 +1067,163 @@
                 "What can I do for you right now?");
         }
 
+        /* ====================================================== */
+        /* Her voice — Agent 51 speaks her replies aloud.         */
+        /* ====================================================== */
+
+        const VOICE_KEY = 'agent51VoiceOn';
+        let voiceOn = localStorage.getItem(VOICE_KEY) !== 'off'; // default ON
+        let chosenVoice = null;
+
+        function stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            let t = (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
+            // Don't read out long link/URL noise; keep it to a natural sentence or two.
+            if (t.length > 320) t = t.slice(0, 317) + '…';
+            return t;
+        }
+
+        function preferredVoice() {
+            if (!('speechSynthesis' in window)) return null;
+            const voices = window.speechSynthesis.getVoices() || [];
+            if (!voices.length) return null;
+            const en = voices.filter(function (v) { return /^en(-|_|$)/i.test(v.lang); });
+            const pool = en.length ? en : voices;
+            // Prefer a natural, feminine-sounding English voice when available.
+            const wanted = ['samantha', 'jenny', 'aria', 'zira', 'google us english', 'female', 'karen', 'moira', 'serena', 'victoria'];
+            for (let i = 0; i < wanted.length; i++) {
+                const hit = pool.find(function (v) { return v.name.toLowerCase().indexOf(wanted[i]) !== -1; });
+                if (hit) return hit;
+            }
+            return pool[0];
+        }
+
+        function speak(text) {
+            if (!voiceOn || !text || !('speechSynthesis' in window)) return;
+            try {
+                window.speechSynthesis.cancel(); // don't stack utterances
+                const u = new SpeechSynthesisUtterance(text);
+                if (!chosenVoice) chosenVoice = preferredVoice();
+                if (chosenVoice) u.voice = chosenVoice;
+                u.rate = 1.0;
+                u.pitch = 1.05;
+                u.lang = (chosenVoice && chosenVoice.lang) || 'en-US';
+                window.speechSynthesis.speak(u);
+            } catch (e) {}
+        }
+
+        function updateVoiceBtn() {
+            const btn = document.getElementById('voiceBtn');
+            if (!btn) return;
+            btn.textContent = voiceOn ? '🔊 Voice' : '🔇 Voice';
+            btn.classList.toggle('on', voiceOn);
+        }
+
+        function toggleVoice() {
+            voiceOn = !voiceOn;
+            localStorage.setItem(VOICE_KEY, voiceOn ? 'on' : 'off');
+            updateVoiceBtn();
+            if (voiceOn) {
+                speak("Voice on. I'm listening, Billy.");
+            } else if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        if ('speechSynthesis' in window) {
+            // Voices often load asynchronously.
+            window.speechSynthesis.onvoiceschanged = function () { chosenVoice = preferredVoice(); };
+        }
+
+        /* ====================================================== */
+        /* Her ears — talk to Agent 51 (speech-to-text).          */
+        /* ====================================================== */
+
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recog = null, listening = false;
+
+        function setupMic() {
+            if (!SR) return; // not supported (button stays hidden)
+            document.getElementById('micBtn').style.display = 'block';
+            recog = new SR();
+            recog.lang = 'en-US';
+            recog.interimResults = false;
+            recog.maxAlternatives = 1;
+            recog.onresult = function (e) {
+                const said = e.results[0][0].transcript;
+                document.getElementById('chatInput').value = said;
+                stopMic();
+                sendText(said);
+            };
+            recog.onend = function () { stopMic(); };
+            recog.onerror = function () { stopMic(); };
+        }
+
+        function toggleMic() {
+            if (!recog) return;
+            if (listening) { stopMic(); return; }
+            try {
+                // Pause her voice so she isn't talking over you.
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                recog.start();
+                listening = true;
+                document.getElementById('micBtn').classList.add('listening');
+                document.getElementById('chatInput').placeholder = 'Listening… speak now';
+            } catch (e) { stopMic(); }
+        }
+
+        function stopMic() {
+            listening = false;
+            const b = document.getElementById('micBtn');
+            if (b) b.classList.remove('listening');
+            const inp = document.getElementById('chatInput');
+            if (inp) inp.placeholder = 'Ask Agent 51 anything…';
+            try { if (recog) recog.stop(); } catch (e) {}
+        }
+
+        /* ====================================================== */
+        /* Install as an app (desktop / home-screen icon).        */
+        /* ====================================================== */
+
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            const b = document.getElementById('installBtn');
+            if (b) b.style.display = 'block';
+        });
+
+        function installApp() {
+            if (!deferredPrompt) {
+                alert("To add Agent 51 to your desktop:\n\n• Chrome / Edge: click the ⊕ install icon in the address bar, or the ⋮ menu → “Install Agent 51”.\n• iPhone / iPad (Safari): tap Share → “Add to Home Screen”.");
+                return;
+            }
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.finally(function () {
+                deferredPrompt = null;
+                const b = document.getElementById('installBtn');
+                if (b) b.style.display = 'none';
+            });
+        }
+
+        window.addEventListener('appinstalled', function () {
+            deferredPrompt = null;
+            const b = document.getElementById('installBtn');
+            if (b) b.style.display = 'none';
+        });
+
+        // Register the service worker (required for install + offline use).
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js').catch(function () {});
+            });
+        }
+
         /* ---- Startup ---- */
+        updateVoiceBtn();
+        setupMic();
         renderChips();
         const saved = loadHistory();
         if (saved && saved.length) {
