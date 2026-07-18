@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remembering Sheilah</title>
+    <meta name="description" content="A quiet place to remember Sheilah — her voice, and the memories Billy carries.">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="styles.css">
+    <meta name="theme-color" content="#8B1538">
+
+    <style>
+        body {
+            background: linear-gradient(180deg, #fbf6f8 0%, #f6eef1 100%);
+        }
+
+        .mem-wrap {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+
+        /* Hero */
+        .mem-hero {
+            text-align: center;
+            padding: 40px 16px 24px;
+        }
+
+        .mem-dove {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 10px;
+            animation: floaty 5s ease-in-out infinite;
+        }
+
+        @keyframes floaty {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-8px); }
+        }
+
+        .mem-title {
+            font-family: 'Georgia', serif;
+            font-size: 2.6rem;
+            color: #8B1538;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .mem-subtitle {
+            font-family: 'Georgia', serif;
+            font-size: 1.15rem;
+            color: #7a5763;
+            font-style: italic;
+            line-height: 1.6;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        /* Section headings */
+        .mem-section-title {
+            font-family: 'Georgia', serif;
+            font-size: 1.3rem;
+            color: #8B1538;
+            margin: 38px 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mem-section-note {
+            font-family: 'Georgia', serif;
+            font-size: 0.92rem;
+            color: #9a8088;
+            font-style: italic;
+            margin-bottom: 16px;
+        }
+
+        /* Voice cards */
+        .voice-card {
+            background: #fff;
+            border: 1px solid #efdbe2;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 14px;
+            box-shadow: 0 6px 20px rgba(139, 21, 56, 0.06);
+        }
+
+        .voice-card .words {
+            font-family: 'Georgia', serif;
+            font-size: 1.25rem;
+            color: #5C0F28;
+            font-style: italic;
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+
+        .voice-card .words::before { content: '“'; }
+        .voice-card .words::after  { content: '”'; }
+
+        .voice-card.no-quote .words::before,
+        .voice-card.no-quote .words::after { content: ''; }
+
+        .play-line {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #8B1538;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 12px 22px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .play-line:hover {
+            background: #5C0F28;
+            transform: translateY(-1px);
+        }
+
+        .play-line.playing {
+            background: #5C0F28;
+        }
+
+        .voice-card audio {
+            width: 100%;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .voice-card .card-label {
+            font-family: 'Georgia', serif;
+            font-size: 0.9rem;
+            color: #8B1538;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Journal */
+        .journal-box {
+            background: #fff;
+            border: 1px solid #efdbe2;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 6px 20px rgba(139, 21, 56, 0.06);
+        }
+
+        .journal-box textarea {
+            width: 100%;
+            min-height: 110px;
+            border: 1px solid #e4cdd5;
+            border-radius: 12px;
+            padding: 14px;
+            font-family: 'Georgia', serif;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: #333;
+            outline: none;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .journal-box textarea:focus { border-color: #8B1538; }
+
+        .journal-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        .journal-save {
+            background: #8B1538;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 12px 26px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .journal-save:hover { background: #5C0F28; }
+
+        .memory-list { margin-top: 22px; }
+
+        .memory-item {
+            background: #fff;
+            border-left: 4px solid #8B1538;
+            border-radius: 10px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 14px rgba(139, 21, 56, 0.05);
+        }
+
+        .memory-item .memory-text {
+            font-family: 'Georgia', serif;
+            font-size: 1.05rem;
+            color: #333;
+            line-height: 1.65;
+            white-space: pre-wrap;
+        }
+
+        .memory-item .memory-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .memory-item .memory-date {
+            font-family: 'Georgia', serif;
+            font-size: 0.85rem;
+            color: #a8929a;
+            font-style: italic;
+        }
+
+        .memory-del {
+            background: none;
+            border: none;
+            color: #c98ca0;
+            font-size: 0.85rem;
+            font-family: 'Georgia', serif;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .memory-del:hover { color: #8B1538; }
+
+        .memory-empty {
+            font-family: 'Georgia', serif;
+            color: #a8929a;
+            font-style: italic;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .mem-privacy {
+            text-align: center;
+            font-family: 'Georgia', serif;
+            font-size: 0.85rem;
+            color: #a8929a;
+            font-style: italic;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 600px) {
+            .mem-title { font-size: 2.1rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-logo">
+            <div class="logo-placeholder">L</div>
+            <span class="nav-logo-text">Lift</span>
+        </a>
+        <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle navigation">☰</button>
+        <div class="nav-links" id="navLinks">
+            <a href="workshop.html" class="nav-link">Workshop</a>
+            <a href="agent51.html" class="nav-link">Agent 51</a>
+            <a href="memories.html" class="nav-link active">Sheilah</a>
+        </div>
+    </nav>
+
+    <div class="mem-wrap">
+        <header class="mem-hero">
+            <span class="mem-dove">🕊️</span>
+            <h1 class="mem-title">Remembering Sheilah</h1>
+            <p class="mem-subtitle">Her voice, and the memories you carry — a quiet place, just for you.</p>
+        </header>
+
+        <!-- Her voice -->
+        <h2 class="mem-section-title">🎧 Her voice</h2>
+        <p class="mem-section-note">Tap to hear her.</p>
+        <div id="voiceCards"></div>
+
+        <!-- Written memories -->
+        <h2 class="mem-section-title">✍️ Memories to keep</h2>
+        <p class="mem-section-note">Write down a moment, a story, something she said — anything you want to hold onto.</p>
+        <div class="journal-box">
+            <textarea id="memoryInput" placeholder="I remember the way she…"></textarea>
+            <div class="journal-actions">
+                <button class="journal-save" onclick="saveMemory()">Keep this memory</button>
+            </div>
+        </div>
+
+        <div class="memory-list" id="memoryList"></div>
+
+        <p class="mem-privacy">🔒 Everything here stays private on your device. Nothing is uploaded or shared.</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="agent51.html" class="footer-link">Agent 51</a>
+                <a href="workshop.html" class="footer-link">Workshop</a>
+            </div>
+        </div>
+        <p class="footer-text">&copy; 2026 Billy Daws. | "She is not here; she is home." 🕊️</p>
+    </footer>
+
+    <script>
+        function toggleNav() {
+            document.getElementById('navLinks').classList.toggle('active');
+        }
+
+        function esc(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        /* ---- Her voice clips ---- */
+        // Add more here anytime (words + file).
+        const VOICE = [
+            { kind: 'player', label: "Her hello", file: 'audio/sheilah-greeting.mp3' },
+            { kind: 'line',   words: "I love you.", file: 'audio/sheilah-i-love-you.mp3' },
+            { kind: 'line',   words: "I am so thankful that Jer found Michelle!", file: 'audio/sheilah-jer-michelle.mp3' }
+        ];
+
+        let shared = null;
+        function playClip(file, btn) {
+            try {
+                if (shared) { shared.pause(); }
+                document.querySelectorAll('.play-line.playing').forEach(function (b) { b.classList.remove('playing'); });
+                shared = new Audio(file);
+                if (btn) {
+                    btn.classList.add('playing');
+                    shared.onended = function () { btn.classList.remove('playing'); };
+                }
+                shared.play().catch(function () {});
+            } catch (e) {}
+        }
+
+        function renderVoice() {
+            document.getElementById('voiceCards').innerHTML = VOICE.map(function (v) {
+                if (v.kind === 'player') {
+                    return "<div class='voice-card no-quote'>" +
+                        "<div class='card-label'>🕊️ " + esc(v.label) + "</div>" +
+                        "<audio src='" + esc(v.file) + "' preload='none' controls></audio>" +
+                        "</div>";
+                }
+                return "<div class='voice-card'>" +
+                    "<div class='words'>" + esc(v.words) + "</div>" +
+                    "<button class='play-line' onclick=\"playClip('" + v.file + "', this)\">▶ Play in her voice</button>" +
+                    "</div>";
+            }).join('');
+        }
+
+        /* ---- Written memories (private, on this device) ---- */
+        const MEM_KEY = 'sheilahMemories';
+
+        function loadMemories() {
+            try {
+                const a = JSON.parse(localStorage.getItem(MEM_KEY));
+                if (Array.isArray(a)) return a;
+            } catch (e) {}
+            return [];
+        }
+        function storeMemories(arr) {
+            try { localStorage.setItem(MEM_KEY, JSON.stringify(arr)); } catch (e) {}
+        }
+
+        function saveMemory() {
+            const input = document.getElementById('memoryInput');
+            const text = input.value.trim();
+            if (!text) { input.focus(); return; }
+            const arr = loadMemories();
+            arr.unshift({ text: text, ts: Date.now() });
+            storeMemories(arr);
+            input.value = '';
+            renderMemories();
+        }
+
+        function deleteMemory(ts) {
+            if (!confirm('Remove this memory from this device?')) return;
+            storeMemories(loadMemories().filter(function (m) { return m.ts !== ts; }));
+            renderMemories();
+        }
+
+        function fmtDate(ts) {
+            try {
+                return new Date(ts).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+            } catch (e) { return ''; }
+        }
+
+        function renderMemories() {
+            const arr = loadMemories();
+            const list = document.getElementById('memoryList');
+            if (!arr.length) {
+                list.innerHTML = "<div class='memory-empty'>Your memories will gather here.</div>";
+                return;
+            }
+            list.innerHTML = arr.map(function (m) {
+                return "<div class='memory-item'>" +
+                    "<div class='memory-text'>" + esc(m.text) + "</div>" +
+                    "<div class='memory-meta'>" +
+                        "<span class='memory-date'>" + esc(fmtDate(m.ts)) + "</span>" +
+                        "<button class='memory-del' onclick='deleteMemory(" + m.ts + ")'>remove</button>" +
+                    "</div>" +
+                "</div>";
+            }).join('');
+        }
+
+        /* ---- Startup ---- */
+        renderVoice();
+        renderMemories();
+    </script>
+</body>
+</html>

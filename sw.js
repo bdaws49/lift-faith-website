@@ -1,8 +1,9 @@
 /* Agent 51 service worker — makes the app installable and usable offline.
    Strategy: cache-first for the app shell, network fallback for the rest. */
-const CACHE = 'agent51-v3';
+const CACHE = 'agent51-v4';
 const SHELL = [
   '/agent51.html',
+  '/memories.html',
   '/workshop.html',
   '/index.html',
   '/styles.css',
