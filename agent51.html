@@ -343,6 +343,30 @@
             letter-spacing: 1px;
         }
 
+        /* Sheilah's voice clip */
+        .bubble .voice-clip {
+            margin-top: 12px;
+            background: #fbeef1;
+            border: 1px solid #e6c3ce;
+            border-radius: 12px;
+            padding: 12px 12px 10px;
+        }
+
+        .bubble .voice-clip .voice-clip-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #8B1538;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .bubble .voice-clip audio {
+            width: 100%;
+            display: block;
+        }
+
         /* Typing indicator */
         .typing .bubble {
             display: inline-flex;
@@ -1060,11 +1084,31 @@
             greet();
         }
 
+        /* ---- Sheilah's voice: her greeting clip ---- */
+        const SHEILAH_CLIP = 'audio/sheilah-greeting.mp3';
+        let sheilahPlayed = false;
+
+        function sheilahClipHtml() {
+            return "<div class='voice-clip'>" +
+                "<div class='voice-clip-label'>🕊️ In Sheilah's voice</div>" +
+                "<audio id='sheilahAudio' src='" + SHEILAH_CLIP + "' preload='auto' controls></audio>" +
+                "</div>";
+        }
+
+        function tryPlaySheilah() {
+            if (sheilahPlayed) return;
+            const a = document.getElementById('sheilahAudio');
+            if (!a) return;
+            const p = a.play();
+            if (p && p.then) p.then(function () { sheilahPlayed = true; }).catch(function () {});
+        }
+
         function greet() {
             addMessage('agent',
-                "Hey Billy, Agent 51 reporting in. 🛰️ I'm at your beck and call — ask me anything and I'll get you an answer, " +
-                "and I can keep your notes, reminders and prayer list, set timers, share Scripture, and jump you into your Workshop. " +
-                "What can I do for you right now?");
+                "Hey Billy — Agent 51 here, and Sheilah wanted to say hello. 🕊️ Tap play below to hear her. " +
+                "I'm right here whenever you're ready — ask me anything, and I can keep your notes, reminders and " +
+                "prayer list, set timers, share Scripture, and jump you into your Workshop." +
+                sheilahClipHtml());
         }
 
         /* ====================================================== */
@@ -1227,11 +1271,20 @@
         renderChips();
         const saved = loadHistory();
         if (saved && saved.length) {
+            // Lead every visit with Sheilah's greeting, then the saved conversation.
+            addMessage('agent', "Sheilah wanted to say hello. 🕊️" + sheilahClipHtml(), false);
             history = saved;
             saved.forEach(function (m) { addMessage(m.role, m.html, false); });
         } else {
             greet();
         }
+
+        // Gently play her greeting on your first interaction (browsers block
+        // audio before then). The player also has its own play button.
+        ['click', 'keydown', 'touchstart'].forEach(function (ev) {
+            document.addEventListener(ev, tryPlaySheilah);
+        });
+
         document.getElementById('chatInput').focus();
     </script>
 </body>
