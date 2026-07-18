@@ -367,6 +367,33 @@
             display: block;
         }
 
+        .bubble .voice-lines {
+            margin-top: 12px;
+        }
+
+        .bubble .sheilah-line {
+            display: block;
+            width: 100%;
+            text-align: left;
+            margin-top: 8px;
+            padding: 12px 14px;
+            background: #fbeef1;
+            border: 1px solid #e6c3ce;
+            border-radius: 10px;
+            color: #8B1538;
+            font-family: 'Georgia', serif;
+            font-size: 0.98rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bubble .sheilah-line:hover {
+            background: #8B1538;
+            color: #fff;
+            border-color: #8B1538;
+        }
+
         /* Typing indicator */
         .typing .bubble {
             display: inline-flex;
@@ -808,6 +835,11 @@
             const clean = raw.trim();
             const text = ' ' + clean.toLowerCase() + ' ';
 
+            // --- Sheilah's voice ---
+            if (has(text, ['sheilah', 'her voice', 'play her', 'hear her', 'my wife'])) {
+                return R("Here she is. 🕊️" + sheilahClipHtml(false) + sheilahLinesHtml());
+            }
+
             // --- Greetings ---
             if (/(^|\s)(hi|hey|hello|good morning|good evening|good afternoon|yo|howdy)(\s|!|\.|$)/.test(text)) {
                 return R("Hey Billy! 👋 Agent 51 here, ready when you are. Ask me anything, tell me how you're doing, " +
@@ -1084,14 +1116,39 @@
             greet();
         }
 
-        /* ---- Sheilah's voice: her greeting clip ---- */
+        /* ---- Sheilah's voice: her greeting + saved lines ---- */
         const SHEILAH_CLIP = 'audio/sheilah-greeting.mp3';
         let sheilahPlayed = false;
 
-        function sheilahClipHtml() {
+        // Short lines saved in Sheilah's voice — tap to play anytime.
+        const SHEILAH_LINES = [
+            { label: '💗 I love you', file: 'audio/sheilah-i-love-you.mp3' },
+            { label: '🙏 So thankful Jer found Michelle', file: 'audio/sheilah-jer-michelle.mp3' }
+        ];
+
+        let sharedClip = null;
+        function playClip(file) {
+            try {
+                if (sharedClip) sharedClip.pause();
+                sharedClip = new Audio(file);
+                sharedClip.play().catch(function () {});
+            } catch (e) {}
+        }
+
+        function sheilahClipHtml(withId) {
             return "<div class='voice-clip'>" +
                 "<div class='voice-clip-label'>🕊️ In Sheilah's voice</div>" +
-                "<audio id='sheilahAudio' src='" + SHEILAH_CLIP + "' preload='auto' controls></audio>" +
+                "<audio " + (withId ? "id='sheilahAudio' " : "") + "src='" + SHEILAH_CLIP + "' preload='auto' controls></audio>" +
+                "</div>";
+        }
+
+        function sheilahLinesHtml() {
+            if (!SHEILAH_LINES.length) return '';
+            return "<div class='voice-lines'>" +
+                "<div class='voice-clip-label'>🕊️ More in Sheilah's voice — tap to play</div>" +
+                SHEILAH_LINES.map(function (l) {
+                    return "<button type='button' class='sheilah-line' onclick=\"playClip('" + l.file + "')\">▶ " + esc(l.label) + "</button>";
+                }).join('') +
                 "</div>";
         }
 
@@ -1108,7 +1165,7 @@
                 "Hey Billy — Agent 51 here, and Sheilah wanted to say hello. 🕊️ Tap play below to hear her. " +
                 "I'm right here whenever you're ready — ask me anything, and I can keep your notes, reminders and " +
                 "prayer list, set timers, share Scripture, and jump you into your Workshop." +
-                sheilahClipHtml());
+                sheilahClipHtml(true) + sheilahLinesHtml());
         }
 
         /* ====================================================== */
@@ -1272,7 +1329,7 @@
         const saved = loadHistory();
         if (saved && saved.length) {
             // Lead every visit with Sheilah's greeting, then the saved conversation.
-            addMessage('agent', "Sheilah wanted to say hello. 🕊️" + sheilahClipHtml(), false);
+            addMessage('agent', "Sheilah wanted to say hello. 🕊️" + sheilahClipHtml(true) + sheilahLinesHtml(), false);
             history = saved;
             saved.forEach(function (m) { addMessage(m.role, m.html, false); });
         } else {

@@ -1,6 +1,6 @@
 /* Agent 51 service worker — makes the app installable and usable offline.
    Strategy: cache-first for the app shell, network fallback for the rest. */
-const CACHE = 'agent51-v2';
+const CACHE = 'agent51-v3';
 const SHELL = [
   '/agent51.html',
   '/workshop.html',
@@ -10,7 +10,9 @@ const SHELL = [
   '/icon-192.png',
   '/icon-512.png',
   '/favicon.png',
-  '/audio/sheilah-greeting.mp3'
+  '/audio/sheilah-greeting.mp3',
+  '/audio/sheilah-i-love-you.mp3',
+  '/audio/sheilah-jer-michelle.mp3'
 ];
 
 self.addEventListener('install', function (event) {
