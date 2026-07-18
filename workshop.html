@@ -788,8 +788,10 @@
 
         // The starting set of sections, used the first time you open the page.
         const DEFAULT_SECTIONS = [
-            { id: 'assistant', icon: '🛰️', title: 'Agent 51', subtitle: 'Your personal assistant — verses, prayer & quick routes', links: [
+            { id: 'assistant', icon: '🛰️', title: 'Agent 51', subtitle: 'Your personal assistant — talk to her, install her, ask anything', links: [
                 { emoji: '🛰️', label: 'Open Agent 51', url: '/agent51.html', note: 'chat with your assistant' },
+                { emoji: '🎤', label: 'Talk to Agent 51', url: '/agent51.html', note: 'voice chat — she speaks back' },
+                { emoji: '⬇️', label: 'Install as an app', url: '/agent51.html', note: 'get a desktop / home-screen icon' },
                 { emoji: '📖', label: 'Ask for a verse', url: '/agent51.html', note: 'Scripture for what you\'re facing' },
                 { emoji: '🙏', label: 'Help me pray', url: '/agent51.html', note: 'a prayer to get you started' }
             ]},
@@ -972,6 +974,33 @@
             return sections;
         }
 
+        // For existing 'assistant' tiles, make sure the newer "Talk to Agent 51"
+        // and "Install as an app" hint links are present. Non-destructive: it
+        // only adds missing links, never removes or reorders your own, and does
+        // nothing if you deleted the tile. Idempotent once the links exist.
+        function migrateAssistantLinks(sections) {
+            const a = sections.find(function (s) { return s.id === 'assistant'; });
+            if (!a) return sections;
+            a.links = a.links || [];
+            function hasLabel(needle) {
+                return a.links.some(function (l) {
+                    return (l.label || '').toLowerCase().indexOf(needle) !== -1;
+                });
+            }
+            let changed = false;
+            if (!hasLabel('talk to agent')) {
+                a.links.splice(1, 0, { emoji: '🎤', label: 'Talk to Agent 51', url: '/agent51.html', note: 'voice chat — she speaks back' });
+                changed = true;
+            }
+            if (!hasLabel('install')) {
+                const idx = a.links.findIndex(function (l) { return (l.label || '').toLowerCase().indexOf('talk to agent') !== -1; });
+                a.links.splice(idx >= 0 ? idx + 1 : 1, 0, { emoji: '⬇️', label: 'Install as an app', url: '/agent51.html', note: 'get a desktop / home-screen icon' });
+                changed = true;
+            }
+            if (changed) { migrationChanged = true; persistLocal(sections); }
+            return sections;
+        }
+
         // Always returns a usable array, seeding + saving on the very first run.
         function getSections() {
             migrationChanged = false;
@@ -985,6 +1014,7 @@
             }
             s = backfillDefaults(s);
             s = migrateMergeAI(s);
+            s = migrateAssistantLinks(s);
             return s;
         }
 
