@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/agent51", "destination": "/agent51.html" },
+    { "source": "/memories", "destination": "/memories.html" },
+    { "source": "/sheilah", "destination": "/memories.html" },
+    { "source": "/workshop", "destination": "/workshop.html" }
+  ]
+}
