@@ -64,6 +64,32 @@
             font-style: italic;
         }
 
+        /* Prominent "Open Agent 51" launch button */
+        .agent51-launch-wrap {
+            margin-top: 22px;
+        }
+
+        .agent51-launch {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            color: #8B1538;
+            font-family: 'Georgia', serif;
+            font-size: 1.15rem;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 15px 34px;
+            border-radius: 50px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .agent51-launch:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 9px 24px rgba(0, 0, 0, 0.32);
+        }
+
         /* Cross-device sync bar */
         .sync-bar {
             margin-top: 20px;
@@ -673,6 +699,11 @@
         <div class="workshop-eyebrow">🛠️ Your Command Center</div>
         <h1 class="workshop-title">Billy Daws' Main Workshop</h1>
         <p class="workshop-subtitle">Everything you're working on — one click away.</p>
+
+        <!-- Launch Agent 51 -->
+        <div class="agent51-launch-wrap">
+            <a href="agent51.html" class="agent51-launch">🛰️ Open Agent 51</a>
+        </div>
 
         <!-- Cross-device sync -->
         <div class="sync-bar" id="syncBar">
