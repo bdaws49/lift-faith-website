@@ -1,0 +1,8 @@
+# Local, machine-specific artifacts — never commit these.
+.venv/
+Wav2Lip/
+*.pth
+*.mp4
+*.wav
+*.mp3
+.wav2lip_raw.mp4
