@@ -9,3 +9,6 @@ checkpoints_v2/
 *.wav
 *.mp3
 .wav2lip_raw.mp4
+
+# Personal test assets (voice/likeness) — keep local, never commit.
+test-assets/

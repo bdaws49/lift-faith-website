@@ -121,6 +121,24 @@ bash animate_photo.sh --photo me.jpg --audio line.wav --out test.mp4 --fast
 
 ---
 
+## Test assets
+
+Sample assets live in `test-assets/` (kept out of git — personal voice/likeness):
+
+- `test-assets/Billy_Daws.mp3` — a ~45s voice clip (good length for a reel test).
+- Add your **"Under the Scope" portrait** here as `test-assets/billy_daws.jpg`
+  (front-facing, clear face — Wav2Lip needs to detect the face).
+
+Quick test once both are in place and setup is done:
+
+```bash
+# Step 1 — photo speaks the recorded clip (mouth-sync only):
+bash animate_photo.sh --photo test-assets/billy_daws.jpg --audio test-assets/Billy_Daws.mp3 --out test-assets/test_reel.mp4 --fast
+
+# Full pipeline — cloned voice speaks new text:
+bash make_reel.sh --text "Welcome to Under the Scope." --photo test-assets/billy_daws.jpg --voice test-assets/Billy_Daws.mp3 --out test-assets/test_reel.mp4 --fast
+```
+
 ## Troubleshooting
 
 - **"checkpoint not found"** → you haven't placed `wav2lip_gan.pth` / `s3fd.pth`
