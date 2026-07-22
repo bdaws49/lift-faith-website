@@ -4,9 +4,17 @@ Turn **one still photo + an audio clip** into a short **vertical (9:16) talking-
 video** for Reels — 100% **local, free, and open-source**, running on **CPU**
 (no NVIDIA GPU, no Apple Silicon required).
 
-This is **Step 1** of the plan: get a photo talking with Wav2Lip so you can judge
-speed and quality on *your* machine. Voice cloning (OpenVoice) is Step 2 — added
-later once this works.
+The full pipeline is:
+
+```
+your text  →  OpenVoice (clone a voice + speak it)  →  Wav2Lip (photo speaks)  →  ffmpeg (9:16)  →  reel
+```
+
+You can run it in **two stages**:
+- **Step 1 — Wav2Lip only** (`animate_photo.sh`): photo + *any* audio → talking reel.
+  Best first, to judge speed/quality on your machine.
+- **Step 2 — add voice cloning** (`make_reel.sh`): text + photo + a voice sample →
+  the photo speaks in a **cloned voice**, fully automated.
 
 > ### Honest expectations (Intel Mac, CPU only)
 > - **Short clips only.** Aim for **15–60 seconds** — perfect for Reels.
@@ -23,10 +31,18 @@ later once this works.
 
 | File | What it does |
 |------|--------------|
-| `setup_wav2lip_mac.sh` | One-time installer: creates a Python virtual-env, installs Wav2Lip + dependencies, and helps you place the model checkpoints. |
-| `animate_photo.sh` | The everyday command: `photo + audio → vertical talking-head reel`. Runs Wav2Lip, then formats the result to 1080×1920 with ffmpeg. |
-| `requirements.txt` | Pinned Python dependencies known to cooperate with Wav2Lip on CPU. |
+| `setup_wav2lip_mac.sh` | **Step 1 setup** — Python venv (`.venv`), installs Wav2Lip + deps, checks model checkpoints. |
+| `animate_photo.sh` | **Step 1 run** — `photo + audio → vertical talking-head reel` (Wav2Lip + ffmpeg). |
+| `requirements.txt` | Pinned Wav2Lip deps for CPU. |
+| `setup_voice_mac.sh` | **Step 2 setup** — separate voice venv (`.venv-voice`), installs OpenVoice + MeloTTS, checks checkpoints. |
+| `clone_voice.py` | **Step 2 engine** — clone a voice from a sample and speak text → `.wav` (importable + standalone). |
+| `make_reel.sh` | **Full pipeline** — `text + photo + voice-sample → cloned-voice talking reel` (OpenVoice → Wav2Lip → ffmpeg). |
 | `README.md` | This file. |
+
+> ### Why two virtual-envs?
+> OpenVoice needs *newer* versions of NumPy/librosa than Wav2Lip tolerates. Installing
+> both in one env causes conflicts, so setup builds **two**: `.venv` (Wav2Lip) and
+> `.venv-voice` (OpenVoice). `make_reel.sh` drives each in turn — you don't manage it.
 
 ---
 
@@ -120,13 +136,72 @@ bash animate_photo.sh --photo me.jpg --audio line.wav --out test.mp4 --fast
 
 ---
 
-## Next step (when you're happy with this)
+---
 
-Add **voice cloning** so the reel speaks in a cloned voice, fully automated:
+## Step 2 — Add voice cloning (OpenVoice)
 
+Once Step 1 works, add a **cloned voice** so you only supply *text* — no need to
+record the audio yourself.
+
+### One-time voice setup
+
+```bash
+bash setup_voice_mac.sh
 ```
-your text → OpenVoice (clone + speak) → this Wav2Lip step → vertical reel
+
+This clones OpenVoice, builds the separate `.venv-voice`, installs OpenVoice +
+MeloTTS, and tells you to download the free **`checkpoints_v2`** model pack and
+where to unzip it (`OpenVoice/checkpoints_v2/…`).
+
+### The full one-command pipeline
+
+Give it your **text**, a **photo**, and a short **voice sample** to clone
+(~10–30s of clean speech from the voice you want):
+
+```bash
+bash make_reel.sh \
+  --text "Welcome to my channel — here's today's thought." \
+  --photo me.jpg \
+  --voice voice_sample.wav \
+  --out my_reel.mp4
 ```
 
-Say the word and I'll add the `clone_voice.py` step and wire it into a single
-`make_reel.py` command.
+It will:
+1. Clone the voice from `voice_sample.wav` and speak your text → a `.wav`.
+2. Lip-sync your photo to that speech.
+3. Format to vertical 1080×1920.
+
+Use `--text-file script.txt` for longer scripts, `--speed 1.1` to adjust pace,
+and `--fast` for a quick test render.
+
+### Just the voice step (optional)
+
+To generate cloned-voice audio on its own (e.g. to reuse or check quality):
+
+```bash
+source .venv-voice/bin/activate
+python clone_voice.py --text "Testing my cloned voice." --voice voice_sample.wav --out speech.wav
+```
+
+> **Voice-clone expectations on CPU:** generating speech runs on CPU and is
+> reasonably quick for a few sentences (seconds to a couple of minutes). The
+> *video* step is still the slow part — keep clips short.
+
+### ⚖️ A note on responsible use
+
+Only clone voices you have the **right to use** — your own, or one you have clear
+permission for. Don't impersonate real people without consent.
+
+---
+
+## The whole thing at a glance
+
+```bash
+# one-time
+brew install python@3.10 ffmpeg git
+bash setup_wav2lip_mac.sh      # + download wav2lip_gan.pth, s3fd.pth
+bash setup_voice_mac.sh        # + download checkpoints_v2
+
+# make a reel from just text + a photo + a voice sample
+bash make_reel.sh --text "..." --photo me.jpg --voice voice_sample.wav --out reel.mp4
+```

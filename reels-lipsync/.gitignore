@@ -1,6 +1,9 @@
 # Local, machine-specific artifacts — never commit these.
 .venv/
+.venv-voice/
 Wav2Lip/
+OpenVoice/
+checkpoints_v2/
 *.pth
 *.mp4
 *.wav
