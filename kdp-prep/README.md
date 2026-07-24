@@ -17,6 +17,7 @@ of an hour of fiddling with dimensions.
 
 | Command | What you get |
 |---|---|
+| `workshop` | **Start here.** An interactive, guided walkthrough that runs the whole process one step at a time — set up the book, check the interior, build the cover, prep images, and validate the eBook. |
 | `sizes` | All KDP trim sizes and paper types, in inches and pixels. |
 | `new <name>` | A tidy project folder: `source/`, `output/`, a metadata sheet, and a pre-upload checklist. |
 | `cover` | Spine width + full wraparound-cover size (inches **and** pixels), a blank guide template, and validation of a cover you already have. |
@@ -39,6 +40,15 @@ command is on your PATH. If found, `image` uses it automatically; otherwise it
 falls back to a high-quality Lanczos resample.
 
 ## Quick start
+
+The easiest way in is the guided workshop — it walks you through every step
+and calls the other commands for you:
+
+```bash
+python3 kdp_prep.py workshop
+```
+
+Or run the steps yourself:
 
 ```bash
 # 1. See what KDP supports

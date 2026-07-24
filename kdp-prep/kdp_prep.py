@@ -29,6 +29,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 
 try:
     from PIL import Image, ImageDraw, ImageFont
@@ -755,6 +756,205 @@ def cmd_check_epub(args):
 
 
 # --------------------------------------------------------------------------- #
+# command: workshop  (interactive, guided walkthrough)
+# --------------------------------------------------------------------------- #
+
+def _ask(prompt, default=None):
+    suffix = f" [{default}]" if default not in (None, "", 0) else ""
+    try:
+        val = input(f"  {prompt}{suffix}: ").strip()
+    except EOFError:
+        print()
+        return default
+    return val or default
+
+
+def _ask_yn(prompt, default=True):
+    d = "Y/n" if default else "y/N"
+    try:
+        val = input(f"  {prompt} [{d}]: ").strip().lower()
+    except EOFError:
+        print()
+        return default
+    if not val:
+        return default
+    return val.startswith("y")
+
+
+def _ask_choice(prompt, choices):
+    """choices: list of (key, label). Returns the chosen key."""
+    print(f"  {prompt}")
+    for i, (_, label) in enumerate(choices, 1):
+        print(f"    {i}) {label}")
+    while True:
+        try:
+            raw = input("  Choose a number: ").strip()
+        except EOFError:
+            print()
+            return choices[0][0]
+        if raw.isdigit() and 1 <= int(raw) <= len(choices):
+            return choices[int(raw) - 1][0]
+        print("    Please enter a valid number.")
+
+
+def _ns(**kw):
+    """Build an args-like object with defaults for calling cmd_* functions."""
+    base = dict(project=None, trim=None, paper=None, pages=None, input=None,
+                template=False, out_dir=None, placement=None, bleed=False,
+                format="png", no_ai=False, build=False, name=None, force=False)
+    base.update(kw)
+    return SimpleNamespace(**base)
+
+
+def _save_config(cfg):
+    path = os.path.join(cfg["_dir"], "config.json")
+    to_save = {k: v for k, v in cfg.items() if not k.startswith("_")}
+    with open(path, "w") as f:
+        json.dump(to_save, f, indent=2)
+
+
+def _pause():
+    try:
+        input("\n  -- press Enter to continue --\n")
+    except EOFError:
+        print()
+
+
+def cmd_workshop(args):
+    head("KDP PREP WORKSHOP")
+    print("  A guided walkthrough that gets your book to Amazon KDP spec,")
+    print("  one step at a time. Nothing here uploads to Amazon -- KDP has no")
+    print("  publishing API, and automating the site risks your account. This")
+    print("  gets every file ready so the manual upload is quick and safe.")
+    print()
+
+    # -- Step 1: project ---------------------------------------------------- #
+    head("Step 1 of 6  --  Your book")
+    name = args.project or _ask("Book / project name", "My Book")
+    slug = "".join(c if c.isalnum() or c in "-_" else "-" for c in name.strip().lower())
+    base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "projects")
+    if not os.path.exists(os.path.join(base, slug, "config.json")):
+        cmd_new(_ns(name=name, force=True))
+    cfg = load_project(slug)
+
+    cfg["title"] = _ask("Book title (for metadata)", cfg.get("title") or name)
+    print()
+    print("  Trim size is your book's finished page size. 6x9 is the common")
+    print("  choice; run `python kdp_prep.py sizes` any time to see them all.")
+    cfg["trim"] = _ask("Trim size", cfg.get("trim") or spec.DEFAULT_TRIM)
+    cfg["paper"] = _ask("Paper (white / cream / color)",
+                        cfg.get("paper") or spec.DEFAULT_PAPER)
+    pages_raw = _ask("Final interior page count (0 if not final yet)",
+                     cfg.get("page_count") or 0)
+    try:
+        cfg["page_count"] = int(pages_raw)
+    except (TypeError, ValueError):
+        cfg["page_count"] = 0
+    cfg["bleed"] = _ask_yn("Does the interior use bleed (full-page images to the "
+                           "edge)?", cfg.get("bleed", False))
+    _save_config(cfg)
+    ok(f"Saved settings to projects/{slug}/config.json")
+    src_dir = os.path.join(cfg["_dir"], "source")
+    print()
+    info(f"Put your manuscript PDF and cover/images in: {src_dir}")
+    _pause()
+
+    fmt = _ask_choice("Which format are you preparing?",
+                      [("both", "Both print and eBook"),
+                       ("print", "Print book only (paperback / hardcover)"),
+                       ("ebook", "eBook (Kindle) only")])
+
+    do_print = fmt in ("both", "print")
+    do_ebook = fmt in ("both", "ebook")
+
+    # -- Step 2: interior PDF (print) --------------------------------------- #
+    head("Step 2 of 6  --  Interior PDF" + ("" if do_print else "  (skipped)"))
+    if do_print:
+        if _first_pdf(src_dir) or _ask_yn("Do you have an interior PDF to check?", True):
+            pdf = _first_pdf(src_dir) or _ask("Path to interior PDF", "")
+            if pdf and os.path.exists(pdf):
+                cmd_check_pdf(_ns(project=slug, input=pdf, bleed=cfg["bleed"]))
+            else:
+                warn("No interior PDF found yet -- export one and re-run the "
+                     "workshop, or use `check-pdf` later.")
+        else:
+            info("Skipping interior check for now.")
+    else:
+        info("eBook-only -- no print interior to check.")
+    _pause()
+
+    # -- Step 3: print cover ------------------------------------------------ #
+    head("Step 3 of 6  --  Print cover" + ("" if do_print else "  (skipped)"))
+    if do_print:
+        if not cfg["page_count"]:
+            warn("Spine width needs the FINAL page count. Set it and re-run this "
+                 "step once your interior is finished.")
+        else:
+            make_tpl = _ask_yn("Generate a blank cover template with guide lines?", True)
+            cmd_cover(_ns(project=slug, template=make_tpl))
+    else:
+        info("eBook-only -- print cover skipped.")
+    _pause()
+
+    # -- Step 4: interior images ------------------------------------------- #
+    head("Step 4 of 6  --  Interior images")
+    if _ask_yn("Do you have interior images to prep to 300 DPI?", False):
+        while True:
+            img = _ask("Path to an image (blank to finish)", "")
+            if not img:
+                break
+            if not os.path.exists(img):
+                warn("Not found -- try again.")
+                continue
+            full = _ask_yn("Is this a full-page image (uses trim size + bleed)?", True)
+            if full:
+                cmd_image(_ns(project=slug, input=img, bleed=cfg["bleed"]))
+            else:
+                place = _ask("Print size on the page, WxH inches (e.g. 4x6)", "4x6")
+                cmd_image(_ns(project=slug, input=img, placement=place))
+    else:
+        info("No interior images to prep.")
+    _pause()
+
+    # -- Step 5: eBook ------------------------------------------------------ #
+    head("Step 5 of 6  --  eBook" + ("" if do_ebook else "  (skipped)"))
+    if do_ebook:
+        print("  eBook cover (front-only, 1.6:1):")
+        cmd_ebook_cover(_ns(project=slug, build=_ask_yn(
+            "Build a Kindle-ready 1600x2560 JPEG from your cover?", True)))
+        print()
+        print("  EPUB file:")
+        info("Not built an EPUB yet? Use Calibre, Sigil, Pandoc, or Kindle "
+             "Create, then check it here.")
+        if _ask_yn("Do you have an EPUB to validate?", False):
+            epub = _ask("Path to EPUB", "")
+            if epub and os.path.exists(epub):
+                cmd_check_epub(_ns(project=slug, input=epub))
+            else:
+                warn("EPUB not found -- run `check-epub` later.")
+    else:
+        info("Print-only -- eBook steps skipped.")
+    _pause()
+
+    # -- Step 6: metadata + finish ----------------------------------------- #
+    head("Step 6 of 6  --  Metadata & upload")
+    meta_path = os.path.join(cfg["_dir"], "metadata.txt")
+    check_path = os.path.join(cfg["_dir"], "checklist.txt")
+    out_dir = os.path.join(cfg["_dir"], "output")
+    ok("Your project is set up. Before you publish on kdp.amazon.com:")
+    print(f"    1. Fill in listing details:  {meta_path}")
+    print(f"    2. Work through:             {check_path}")
+    print(f"    3. Prepared files are in:    {out_dir}")
+    print()
+    warn("Always order a KDP digital proof (print) or use Kindle Previewer "
+         "(eBook) before hitting Publish.")
+    print()
+    head("Workshop complete")
+    info("Re-run any single step any time, e.g.  python kdp_prep.py cover "
+         f"--project {slug}")
+
+
+# --------------------------------------------------------------------------- #
 # argument parsing
 # --------------------------------------------------------------------------- #
 
@@ -767,6 +967,10 @@ def build_parser():
                "so the manual upload is quick and safe.",
     )
     sub = p.add_subparsers(dest="command", required=True)
+
+    sp = sub.add_parser("workshop", help="Interactive, guided walkthrough of the whole process.")
+    sp.add_argument("--project", help="Book/project name to use or create.")
+    sp.set_defaults(func=cmd_workshop)
 
     sp = sub.add_parser("sizes", help="List trim sizes and paper types.")
     sp.set_defaults(func=cmd_sizes)
