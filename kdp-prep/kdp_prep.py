@@ -170,8 +170,8 @@ FINAL
 
 PROJECT_CONFIG = {
     "title": "",
-    "trim": "6x9",
-    "paper": "white",
+    "trim": spec.DEFAULT_TRIM,
+    "paper": spec.DEFAULT_PAPER,
     "page_count": 0,
     "bleed": False,
     "notes": "Edit these values, then run cover/image/check-pdf with --project.",
@@ -313,14 +313,16 @@ def validate_cover_image(path, g):
 def cmd_cover(args):
     if args.project:
         cfg = load_project(args.project)
-        trim = args.trim or cfg["trim"]
-        paper = args.paper or cfg["paper"]
+        trim = args.trim or cfg.get("trim") or spec.DEFAULT_TRIM
+        paper = args.paper or cfg.get("paper") or spec.DEFAULT_PAPER
         pages = args.pages or cfg["page_count"]
         out_dir = args.out_dir or os.path.join(cfg["_dir"], "output")
         cover_in = args.input or _first_match(os.path.join(cfg["_dir"], "source"),
                                               ("cover",))
     else:
-        trim, paper, pages = args.trim, args.paper, args.pages
+        trim = args.trim or spec.DEFAULT_TRIM
+        paper = args.paper or spec.DEFAULT_PAPER
+        pages = args.pages
         out_dir = args.out_dir or "."
         cover_in = args.input
 
@@ -387,10 +389,10 @@ def ai_upscale(src, scale):
 def cmd_image(args):
     if args.project:
         cfg = load_project(args.project)
-        trim = args.trim or cfg["trim"]
+        trim = args.trim or cfg.get("trim") or spec.DEFAULT_TRIM
         out_dir = args.out_dir or os.path.join(cfg["_dir"], "output")
     else:
-        trim = args.trim
+        trim = args.trim or spec.DEFAULT_TRIM
         out_dir = args.out_dir or "."
 
     if not os.path.exists(args.input):
@@ -479,16 +481,15 @@ def cmd_check_pdf(args):
 
     if args.project:
         cfg = load_project(args.project)
-        trim = args.trim or cfg["trim"]
+        trim = args.trim or cfg.get("trim") or spec.DEFAULT_TRIM
         has_bleed = args.bleed or cfg.get("bleed", False)
         pdf_in = args.input or _first_pdf(os.path.join(cfg["_dir"], "source"))
     else:
-        trim, has_bleed, pdf_in = args.trim, args.bleed, args.input
+        trim = args.trim or spec.DEFAULT_TRIM
+        has_bleed, pdf_in = args.bleed, args.input
 
     if not pdf_in or not os.path.exists(pdf_in):
         sys.exit("No interior PDF found. Pass --input path/to/interior.pdf")
-    if not trim:
-        sys.exit("Trim size required. Pass --trim NAME.")
 
     tw, th = spec.resolve_trim(trim)
     exp_w = tw + (spec.BLEED_IN if has_bleed else 0)
@@ -569,9 +570,9 @@ def build_parser():
 
     sp = sub.add_parser("cover", help="Spine/bleed math, template, cover validation.")
     sp.add_argument("--project", help="Use a project's config.json for defaults.")
-    sp.add_argument("--trim", help="Trim size, e.g. 6x9.")
+    sp.add_argument("--trim", help="Trim size (default 6x9).")
     sp.add_argument("--pages", type=int, help="FINAL interior page count.")
-    sp.add_argument("--paper", default="white", help="white | cream | color.")
+    sp.add_argument("--paper", help="white | cream | color (default cream).")
     sp.add_argument("--input", help="Existing cover image to validate.")
     sp.add_argument("--template", action="store_true", help="Generate a blank guide template PNG.")
     sp.add_argument("--out-dir", help="Where to write outputs.")
@@ -580,7 +581,7 @@ def build_parser():
     sp = sub.add_parser("image", help="Upscale an image, set 300 DPI, validate.")
     sp.add_argument("--input", required=True, help="Source image path.")
     sp.add_argument("--project", help="Use a project's config.json for defaults.")
-    sp.add_argument("--trim", help="Target trim size (for full-page images).")
+    sp.add_argument("--trim", help="Target trim size for full-page images (default 6x9).")
     sp.add_argument("--placement", help="Target print size WxH in inches, e.g. 4x6.")
     sp.add_argument("--bleed", action="store_true", help="Add bleed to a full-page image.")
     sp.add_argument("--format", default="png", help="Output format: png | jpg | tif.")
@@ -591,7 +592,7 @@ def build_parser():
     sp = sub.add_parser("check-pdf", help="Validate an interior PDF's size and page count.")
     sp.add_argument("--input", help="Interior PDF path.")
     sp.add_argument("--project", help="Use a project's config.json for defaults.")
-    sp.add_argument("--trim", help="Trim size, e.g. 6x9.")
+    sp.add_argument("--trim", help="Trim size (default 6x9).")
     sp.add_argument("--bleed", action="store_true", help="Interior uses bleed.")
     sp.set_defaults(func=cmd_check_pdf)
 

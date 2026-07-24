@@ -20,6 +20,10 @@ BLEED_IN = 0.125
 # Minimum page count for KDP to allow text on the spine.
 SPINE_TEXT_MIN_PAGES = 79
 
+# Defaults used when no project config or flag specifies otherwise.
+DEFAULT_TRIM = "6x9"
+DEFAULT_PAPER = "cream"
+
 # Common KDP trim sizes, width x height in inches.
 # You may also pass an arbitrary size as "WxH" (e.g. "6.5x9.5").
 TRIM_SIZES = {

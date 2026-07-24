@@ -60,10 +60,16 @@ python3 kdp_prep.py image --project my-book --input projects/my-book/source/art.
 You can also run every command **without a project**, passing options directly:
 
 ```bash
-python3 kdp_prep.py cover --trim 6x9 --pages 240 --paper cream --template
+python3 kdp_prep.py cover --pages 240 --template        # 6x9 cream assumed
 python3 kdp_prep.py image --input photo.jpg --placement 4x6 --format tif
-python3 kdp_prep.py check-pdf --input interior.pdf --trim 6x9 --bleed
+python3 kdp_prep.py check-pdf --input interior.pdf --bleed
 ```
+
+### Defaults
+
+Trim size defaults to **6x9** and paper to **cream** — so you only pass those
+flags when a book differs. A project's `config.json` overrides the defaults,
+and an explicit `--trim` / `--paper` flag overrides both.
 
 ## How the cover math works
 
