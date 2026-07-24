@@ -547,6 +547,214 @@ def _first_pdf(folder):
 
 
 # --------------------------------------------------------------------------- #
+# command: ebook-cover  (Kindle eBook cover prep + validation)
+# --------------------------------------------------------------------------- #
+
+def cmd_ebook_cover(args):
+    iw, ih = spec.KINDLE_COVER_IDEAL
+    head("Kindle eBook cover spec")
+    print(f"  Ideal size:   {iw} x {ih} px (width x height)")
+    print(f"  Ratio:        {spec.KINDLE_COVER_RATIO}:1 (height : width)")
+    print(f"  Minimum:      >= {spec.KINDLE_COVER_MIN_SHORT} px on the shortest side")
+    print(f"  Format:       JPEG or TIFF, RGB (sRGB), under {spec.KINDLE_COVER_MAX_MB} MB")
+    info("The eBook cover is separate from the print (wraparound) cover -- "
+         "it is front-only.")
+
+    src = args.input
+    if not src and args.project:
+        cfg = load_project(args.project)
+        src = _first_match(os.path.join(cfg["_dir"], "source"), ("cover",))
+        out_dir = args.out_dir or os.path.join(cfg["_dir"], "output")
+    else:
+        out_dir = args.out_dir or "."
+    if not src:
+        print()
+        info("Pass --input path/to/cover.jpg to validate or build an eBook cover.")
+        return
+    if not os.path.exists(src):
+        sys.exit(f"Input not found: {src}")
+
+    print()
+    rule()
+    print(f"Checking: {os.path.basename(src)}")
+    with Image.open(src) as im:
+        w, h = im.size
+        mode = im.mode
+        ratio = h / w if w else 0
+        print(f"  size:   {w} x {h} px   (ratio {ratio:.2f}:1)")
+
+        short = min(w, h)
+        long = max(w, h)
+        (ok if short >= spec.KINDLE_COVER_MIN_SHORT else fail)(
+            f"Shortest side {short} px "
+            f"({'>=' if short >= spec.KINDLE_COVER_MIN_SHORT else '<'} "
+            f"{spec.KINDLE_COVER_MIN_SHORT} px minimum)")
+        ratio_ok = abs(ratio - spec.KINDLE_COVER_RATIO) <= 0.05
+        (ok if ratio_ok else warn)(
+            f"Aspect ratio {ratio:.2f}:1 "
+            f"({'matches' if ratio_ok else 'differs from'} the ideal "
+            f"{spec.KINDLE_COVER_RATIO}:1)")
+        (ok if long <= spec.KINDLE_COVER_MAX_LONG else fail)(
+            f"Longest side {long} px (max {spec.KINDLE_COVER_MAX_LONG})")
+        (ok if mode in ("RGB", "L") else warn)(
+            f"Color mode: {mode} (RGB expected; CMYK is not accepted for eBooks)")
+        size_mb = os.path.getsize(src) / (1024 * 1024)
+        (ok if size_mb <= spec.KINDLE_COVER_MAX_MB else fail)(
+            f"File size: {size_mb:.1f} MB (max {spec.KINDLE_COVER_MAX_MB} MB)")
+
+        if args.build:
+            os.makedirs(out_dir, exist_ok=True)
+            rgb = im.convert("RGB")
+            iw, ih = spec.KINDLE_COVER_IDEAL
+            if not ratio_ok:
+                warn("Ratio is not 1.6:1 -- resizing to ideal would distort the "
+                     "image. Re-crop the source to 1.6:1 first, then re-run --build.")
+            else:
+                if short >= spec.KINDLE_COVER_MIN_SHORT:
+                    rgb = rgb.resize((iw, ih), Image.LANCZOS)
+                else:
+                    warn("Source is below the recommended minimum; enlarging it "
+                         "cannot add detail.")
+                    rgb = rgb.resize((iw, ih), Image.LANCZOS)
+                stem = os.path.splitext(os.path.basename(src))[0]
+                out_path = os.path.join(out_dir, f"{stem}_kindle.jpg")
+                rgb.save(out_path, quality=90)
+                print()
+                ok(f"Wrote Kindle-ready cover: {out_path}")
+
+
+# --------------------------------------------------------------------------- #
+# command: check-epub  (validate an EPUB before upload)
+# --------------------------------------------------------------------------- #
+
+def _local(tag):
+    """Strip an XML namespace: '{ns}title' -> 'title'."""
+    return tag.rsplit("}", 1)[-1]
+
+
+def cmd_check_epub(args):
+    import zipfile
+    import xml.etree.ElementTree as ET
+
+    src = args.input
+    if not src and args.project:
+        cfg = load_project(args.project)
+        folder = os.path.join(cfg["_dir"], "source")
+        if os.path.isdir(folder):
+            for fn in sorted(os.listdir(folder)):
+                if fn.lower().endswith(".epub"):
+                    src = os.path.join(folder, fn)
+                    break
+    if not src or not os.path.exists(src):
+        sys.exit("No EPUB found. Pass --input path/to/book.epub")
+
+    head(f"EPUB check: {os.path.basename(src)}")
+    if not zipfile.is_zipfile(src):
+        fail("Not a valid ZIP archive -- this is not a usable EPUB.")
+        return
+
+    problems = 0
+    with zipfile.ZipFile(src) as z:
+        names = z.namelist()
+
+        # 1. mimetype must be first, stored uncompressed, exact content.
+        if names and names[0] == "mimetype":
+            info0 = z.getinfo("mimetype")
+            content = z.read("mimetype").decode("ascii", "replace").strip()
+            if content == "application/epub+zip":
+                ok("mimetype is present, first, and correct.")
+            else:
+                problems += 1
+                fail(f"mimetype content is '{content}', expected application/epub+zip.")
+            if info0.compress_type != zipfile.ZIP_STORED:
+                problems += 1
+                warn("mimetype should be stored uncompressed (some validators reject it).")
+        else:
+            problems += 1
+            fail("mimetype file is missing or not the first entry.")
+
+        # 2. container.xml -> OPF path.
+        opf_path = None
+        if "META-INF/container.xml" in names:
+            try:
+                root = ET.fromstring(z.read("META-INF/container.xml"))
+                for el in root.iter():
+                    if _local(el.tag) == "rootfile" and el.get("full-path"):
+                        opf_path = el.get("full-path")
+                        break
+                (ok if opf_path else fail)(
+                    f"container.xml points to: {opf_path}" if opf_path
+                    else "container.xml has no rootfile path.")
+                if not opf_path:
+                    problems += 1
+            except ET.ParseError:
+                problems += 1
+                fail("container.xml is not valid XML.")
+        else:
+            problems += 1
+            fail("META-INF/container.xml is missing.")
+
+        # 3. Parse the OPF for metadata, spine, and cover.
+        if opf_path and opf_path in names:
+            try:
+                opf = ET.fromstring(z.read(opf_path))
+            except ET.ParseError:
+                problems += 1
+                fail("The OPF package file is not valid XML.")
+                opf = None
+            if opf is not None:
+                meta = {"title": None, "creator": None, "language": None,
+                        "identifier": None}
+                spine_count = 0
+                manifest_ids = {}
+                cover_declared = False
+                for el in opf.iter():
+                    t = _local(el.tag)
+                    txt = (el.text or "").strip()
+                    if t in meta and txt and not meta[t]:
+                        meta[t] = txt
+                    if t == "item":
+                        manifest_ids[el.get("id")] = el.get("href")
+                        if (el.get("properties") or "").find("cover-image") >= 0:
+                            cover_declared = True
+                    if t == "itemref":
+                        spine_count += 1
+                    if t == "meta" and el.get("name") == "cover":
+                        cover_declared = True
+
+                print()
+                print("  Metadata:")
+                for k in ("title", "creator", "language", "identifier"):
+                    label = {"creator": "author", "identifier": "identifier/ISBN"}.get(k, k)
+                    val = meta[k] or "(missing)"
+                    (ok if meta[k] else warn)(f"{label}: {val}")
+                    if not meta[k]:
+                        problems += 1
+                print()
+                (ok if spine_count else fail)(
+                    f"Reading order (spine): {spine_count} document(s)")
+                if not spine_count:
+                    problems += 1
+                (ok if cover_declared else warn)(
+                    "Cover image is declared in the manifest." if cover_declared
+                    else "No cover image declared -- upload one in KDP, or add a "
+                         "cover-image to the EPUB.")
+        elif opf_path:
+            problems += 1
+            fail(f"OPF file '{opf_path}' is referenced but not in the archive.")
+
+    print()
+    if problems == 0:
+        ok("EPUB passed the structural checks. Preview it in Kindle Previewer "
+           "before publishing.")
+    else:
+        warn(f"{problems} issue(s) found above. Fix them, or open the file in "
+             "Kindle Create / Calibre / Sigil to repair, then re-check.")
+    warn("This is a structural check only. Amazon's free Kindle Previewer is the "
+         "authoritative test of how the book renders on devices.")
+
+
+# --------------------------------------------------------------------------- #
 # argument parsing
 # --------------------------------------------------------------------------- #
 
@@ -595,6 +803,19 @@ def build_parser():
     sp.add_argument("--trim", help="Trim size (default 6x9).")
     sp.add_argument("--bleed", action="store_true", help="Interior uses bleed.")
     sp.set_defaults(func=cmd_check_pdf)
+
+    sp = sub.add_parser("ebook-cover", help="Prep/validate a Kindle eBook cover.")
+    sp.add_argument("--input", help="Cover image to validate.")
+    sp.add_argument("--project", help="Use a project's source/ folder.")
+    sp.add_argument("--build", action="store_true",
+                    help="Also write a Kindle-ready 1600x2560 sRGB JPEG.")
+    sp.add_argument("--out-dir", help="Where to write outputs.")
+    sp.set_defaults(func=cmd_ebook_cover)
+
+    sp = sub.add_parser("check-epub", help="Validate an EPUB before upload.")
+    sp.add_argument("--input", help="EPUB file path.")
+    sp.add_argument("--project", help="Use a project's source/ folder.")
+    sp.set_defaults(func=cmd_check_epub)
 
     return p
 

@@ -44,6 +44,16 @@ TRIM_SIZES = {
     "8.5x11":    (8.50, 11.00),
 }
 
+# --- Kindle eBook cover -------------------------------------------------- #
+# Amazon KDP recommends a 1.6:1 height:width ratio for the eBook cover.
+# Ideal pixel size is 1600 wide x 2560 tall; at least 1000 px on the short side.
+KINDLE_COVER_RATIO = 1.6          # height / width
+KINDLE_COVER_IDEAL = (1600, 2560)  # (width, height) in pixels
+KINDLE_COVER_MIN_SHORT = 1000      # px on the shortest side (recommended min)
+KINDLE_COVER_MAX_LONG = 10000      # px on the longest side (KDP max)
+KINDLE_COVER_MAX_MB = 50           # max file size for the eBook cover
+
+
 # Per-page paper thickness in inches, used for spine width.
 PAPER_THICKNESS = {
     "white": 0.002252,

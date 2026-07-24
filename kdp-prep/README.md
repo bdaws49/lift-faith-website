@@ -22,6 +22,8 @@ of an hour of fiddling with dimensions.
 | `cover` | Spine width + full wraparound-cover size (inches **and** pixels), a blank guide template, and validation of a cover you already have. |
 | `image` | Upscales an image (AI if available, else high-quality resample), stamps it to **300 DPI**, and confirms it meets 300 DPI at your print size. |
 | `check-pdf` | Confirms your interior PDF's page size matches the trim, reports page count, and gives the right margins for that length. |
+| `ebook-cover` | Validates a **Kindle eBook cover** (1.6:1 ratio, ≥1000 px short side, RGB) and can build a print-ready 1600×2560 sRGB JPEG. |
+| `check-epub` | Validates an **EPUB** before upload: mimetype, container, OPF metadata (title/author/language/ISBN), reading order, and cover declaration. |
 
 ## Setup (one time)
 
@@ -64,6 +66,26 @@ python3 kdp_prep.py cover --pages 240 --template        # 6x9 cream assumed
 python3 kdp_prep.py image --input photo.jpg --placement 4x6 --format tif
 python3 kdp_prep.py check-pdf --input interior.pdf --bleed
 ```
+
+### eBook (Kindle) prep
+
+Print and eBook are separate KDP formats with separate covers. The eBook
+cover is **front-only** (no spine/back) at a 1.6:1 ratio:
+
+```bash
+# Validate an eBook cover, and build a Kindle-ready 1600x2560 JPEG
+python3 kdp_prep.py ebook-cover --input cover.jpg --build
+
+# Validate an EPUB before uploading
+python3 kdp_prep.py check-epub --input book.epub
+```
+
+This tool validates and preps eBook files but does **not** convert a
+manuscript into EPUB — for that, use a free tool like
+[Calibre](https://calibre-ebook.com/), [Sigil](https://sigil-ebook.com/),
+[Pandoc](https://pandoc.org/), or Amazon's own **Kindle Create**, then run
+`check-epub` on the result. Amazon's free **Kindle Previewer** is the final
+word on how the book renders on devices.
 
 ### Defaults
 
