@@ -6,11 +6,13 @@ stay clean and there is one obvious place to look when a key is missing.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
 import sys
 from dataclasses import dataclass
+from pathlib import Path
 
 try:
     from dotenv import load_dotenv
@@ -58,14 +60,22 @@ class Config:
 
     @classmethod
     def load(cls) -> "Config":
+        # Non-secret show settings live in a committed show.json so they persist
+        # across machines/sessions. Environment variables override them, and the
+        # secret (OPENAI_API_KEY) only ever comes from the environment.
+        show = _load_show_json()
+
+        def pick(env_key: str, json_key: str, default: str = "") -> str:
+            return os.getenv(env_key) or show.get(json_key, default)
+
         return cls(
             openai_api_key=os.getenv("OPENAI_API_KEY", ""),
             openai_model=os.getenv("OPENAI_MODEL", "gpt-4o"),
-            show_name=os.getenv("SHOW_NAME", "Under the Scope"),
-            show_host=os.getenv("SHOW_HOST", "Pastor Billy Daws"),
-            support_url=os.getenv("SUPPORT_URL", ""),
-            book_title=os.getenv("BOOK_TITLE", ""),
-            book_url=os.getenv("BOOK_URL", ""),
+            show_name=pick("SHOW_NAME", "show_name", "Under the Scope"),
+            show_host=pick("SHOW_HOST", "show_host", "Pastor Billy Daws"),
+            support_url=pick("SUPPORT_URL", "support_url"),
+            book_title=pick("BOOK_TITLE", "book_title"),
+            book_url=pick("BOOK_URL", "book_url"),
         )
 
     def require(self, *keys: str) -> None:
@@ -77,6 +87,17 @@ class Config:
                 f"\n  Missing required setting(s): {names}\n"
                 f"  Add them to podcast-workshop/.env (see .env.example).\n"
             )
+
+
+def _load_show_json() -> dict:
+    """Read the committed show.json next to the workshop, if present."""
+    path = Path(__file__).resolve().parent.parent / "show.json"
+    if path.exists():
+        try:
+            return json.loads(path.read_text())
+        except (ValueError, OSError):
+            return {}
+    return {}
 
 
 def slugify(text: str) -> str:
