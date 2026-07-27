@@ -7,6 +7,35 @@
   "book_url": "",
 
   "amazon_books": [
-    { "title": "The Path to Spiritual Maturity", "url": "" }
+    {
+      "title": "The Path to Spiritual Maturity",
+      "url": "",
+      "desc": "A 25-chapter journey from new birth to spiritual fatherhood — how to actually grow up in Christ. (This is also the free giveaway.)"
+    },
+    {
+      "title": "Discern: Standing True in the Age of Deception",
+      "url": "https://www.amazon.com/dp/B0F6VBJ3PJ",
+      "desc": "How to stand firm in truth and recognize deception in a confused age."
+    },
+    {
+      "title": "When God Feels Silent: Finding Faith in the Quiet Seasons of Life",
+      "url": "https://www.amazon.com/dp/B0H6FY4SQ9",
+      "desc": "Finding faith in the quiet seasons when God feels far away, and the questions believers are afraid to ask."
+    },
+    {
+      "title": "A Comprehensive Study of Biblical Prayer",
+      "url": "https://www.amazon.com/dp/B0F1V4VFKT",
+      "desc": "A deep dive into every element of prayer, biblical examples, and the great prayer warriors of Scripture."
+    },
+    {
+      "title": "The Ships and Boats of the Bible",
+      "url": "https://www.amazon.com/dp/B0FCHCDCG9",
+      "desc": "Every boat in Scripture as a vessel of purpose — deliverance, judgment, mission, refuge, and destiny."
+    },
+    {
+      "title": "Do You Treat Your Husband Like a King?",
+      "url": "https://www.amazon.com/dp/B0F77HLW2C",
+      "desc": "A challenge and encouragement for wives on honoring their husbands."
+    }
   ]
 }

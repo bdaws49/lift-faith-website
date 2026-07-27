@@ -43,9 +43,14 @@ def main() -> None:
     p.add_argument("--ad-book", dest="ad_book",
                    help="which Amazon book the ad promotes: a number (1 = first "
                         "in show.json's amazon_books) or part of the title")
+    p.add_argument("--list-books", action="store_true",
+                   help="print your Amazon book drop list and exit")
     args = p.parse_args()
 
     cfg = Config.load()
+    if args.list_books:
+        _list_books(cfg)
+        return
     project = _resolve_project(args)
     if args.ad_book is not None:
         project.data["ad_book"] = args.ad_book
@@ -74,6 +79,21 @@ def _resolve_project(args) -> Project:
         sys.exit("Give me an idea:  python workshop.py \"your episode idea\" --to voiceprep")
     slug = slugify(args.idea.split("—")[0].split(" - ")[0])
     return Project.create(BASE, slug, args.idea)
+
+
+def _list_books(cfg) -> None:
+    books = cfg.amazon_books
+    if not books:
+        print("  No books in show.json yet (amazon_books is empty).")
+        return
+    print(f"\n  {cfg.show_name} — ad book drop list "
+          f"(pick with --ad-book <number|title>):\n")
+    for i, b in enumerate(books, start=1):
+        link = b.get("url") or "(no Amazon link yet)"
+        print(f"  {i}. {b['title']}")
+        if b.get("desc"):
+            print(f"     {b['desc']}")
+        print(f"     {link}\n")
 
 
 def _which_stages(args) -> list[str]:

@@ -70,9 +70,10 @@ def run(project: Project, cfg: Config) -> None:
     if ad_book:
         project.data["ad_book_used"] = ad_book
         url = f" Point them to Amazon: {ad_book['url']}" if ad_book.get("url") else ""
+        desc = f" About the book: {ad_book['desc']}" if ad_book.get("desc") else ""
         ad_instruction = (
             f"AD INSTRUCTION: Make the ad a warm 20-30 second promo for the "
-            f"host's book, \"{ad_book['title']}\".{url} Tie it naturally to "
+            f"host's book, \"{ad_book['title']}\".{desc}{url} Tie it naturally to "
             f"today's theme and invite listeners to grab a copy."
         )
         log("script", f"ad promotes: {ad_book['title']}")
