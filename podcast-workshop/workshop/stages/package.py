@@ -52,7 +52,7 @@ def run(project: Project, cfg: Config) -> None:
         shutil.copy2(cover, youtube / "thumbnail.png")
     (youtube / "description.txt").write_text(_youtube_description(episode, cfg))
 
-    # --- Content360: the 3 reels + manifest ---
+    # --- Content360: the 3 reels + per-reel post copy + manifest ---
     reels_made = []
     for n, reel in enumerate(episode.get("reels", []), start=1):
         f = reel.get("file")
@@ -60,6 +60,14 @@ def run(project: Project, cfg: Config) -> None:
             dest = f"reel_{n}.mp4"
             shutil.copy2(project.reels_dir / f, content360 / dest)
             reels_made.append((n, reel))
+            # The copy you paste when uploading this reel.
+            if reel.get("description") or reel.get("first_comment"):
+                (content360 / f"reel_{n}_description.txt").write_text(
+                    (reel.get("description", "") + "\n").lstrip()
+                )
+                (content360 / f"reel_{n}_first_comment.txt").write_text(
+                    (reel.get("first_comment", "") + "\n").lstrip()
+                )
     (content360 / "manifest.txt").write_text(_content360_manifest(episode, cfg, reels_made))
 
     # --- Landing page + checklist ---
@@ -118,10 +126,10 @@ def _content360_manifest(ep: dict, cfg: Config, reels) -> str:
     lines = [f"{cfg.show_name} — reels for distribution", ""]
     for n, reel in reels:
         lines += [
-            f"reel_{n}.mp4",
-            f"  caption: \"{reel['quote']}\"",
-            f"  from: {ep['title']} @ {reel.get('timestamp','')}",
-            f"  hashtags: #UnderTheScope #Bible #Faith #{_tag(ep['title'])}",
+            f"reel_{n}.mp4  —  {ep['title']} @ {reel.get('timestamp','')}",
+            f"  quote: \"{reel['quote']}\"",
+            f"  description: paste reel_{n}_description.txt",
+            f"  first comment (pin it): paste reel_{n}_first_comment.txt",
             "",
         ]
     return "\n".join(lines)
@@ -141,8 +149,9 @@ def _checklist(ep: dict, cfg: Config, slug: str) -> str:
         f"- [ ] **Spotify** — upload `spotify/{slug}.mp3` + paste `spotify/show-notes.txt`.",
         f"- [ ] **YouTube** — upload `youtube/{slug}.mp4`, add `youtube/{slug}.srt`,",
         "        paste `youtube/description.txt`, set `youtube/thumbnail.png`.",
-        "- [ ] **Content360** — upload the 3 reels in `content360/` for distribution",
-        "        (captions/hashtags in `content360/manifest.txt`).",
+        "- [ ] **Content360** — upload the 3 reels in `content360/`; for each,",
+        "        paste `reel_N_description.txt` and pin `reel_N_first_comment.txt`",
+        "        (the prayer / support / book / free-copy appeals).",
         "",
     ]) + "\n"
 

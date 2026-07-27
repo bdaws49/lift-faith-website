@@ -51,6 +51,11 @@ class Config:
     show_name: str
     show_host: str
 
+    # Distribution / appeals (used in the reel first-comment).
+    support_url: str = ""
+    book_title: str = ""
+    book_url: str = ""
+
     @classmethod
     def load(cls) -> "Config":
         return cls(
@@ -58,6 +63,9 @@ class Config:
             openai_model=os.getenv("OPENAI_MODEL", "gpt-4o"),
             show_name=os.getenv("SHOW_NAME", "Under the Scope"),
             show_host=os.getenv("SHOW_HOST", "Pastor Billy Daws"),
+            support_url=os.getenv("SUPPORT_URL", ""),
+            book_title=os.getenv("BOOK_TITLE", ""),
+            book_url=os.getenv("BOOK_URL", ""),
         )
 
     def require(self, *keys: str) -> None:
