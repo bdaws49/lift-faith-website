@@ -1,9 +1,0 @@
-.env
-.venv/
-__pycache__/
-*.pyc
-# Generated media can get large; keep the repo clean. Remove these lines if you
-# want finished episodes committed too.
-output/*/audio/
-output/*/reels/
-output/*/upload/
