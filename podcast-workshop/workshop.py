@@ -40,10 +40,16 @@ def main() -> None:
                    help="start from this stage and run to the end")
     p.add_argument("--to", dest="to_stage", choices=stages.ALL,
                    help="stop after this stage")
+    p.add_argument("--ad-book", dest="ad_book",
+                   help="which Amazon book the ad promotes: a number (1 = first "
+                        "in show.json's amazon_books) or part of the title")
     args = p.parse_args()
 
     cfg = Config.load()
     project = _resolve_project(args)
+    if args.ad_book is not None:
+        project.data["ad_book"] = args.ad_book
+        project.save()
     to_run = _which_stages(args)
 
     if any(s not in stages.NO_FFMPEG for s in to_run):

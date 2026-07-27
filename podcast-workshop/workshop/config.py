@@ -11,7 +11,7 @@ import os
 import re
 import shutil
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 try:
@@ -55,8 +55,24 @@ class Config:
 
     # Distribution / appeals (used in the reel first-comment).
     support_url: str = ""
-    book_title: str = ""
+    book_title: str = ""       # the free-giveaway book
     book_url: str = ""
+    # The "drop list" of Amazon books the ad segment can promote.
+    # Each item: {"title": "...", "url": "https://www.amazon.com/dp/..."}
+    amazon_books: list = field(default_factory=list)
+
+    def find_book(self, ref) -> dict | None:
+        """Resolve an ad-book choice by 1-based index or title substring."""
+        if ref in (None, ""):
+            return self.amazon_books[0] if self.amazon_books else None
+        if isinstance(ref, int) or str(ref).isdigit():
+            i = int(ref) - 1
+            return self.amazon_books[i] if 0 <= i < len(self.amazon_books) else None
+        low = str(ref).lower()
+        for b in self.amazon_books:
+            if low in b.get("title", "").lower():
+                return b
+        return None
 
     @classmethod
     def load(cls) -> "Config":
@@ -76,6 +92,7 @@ class Config:
             support_url=pick("SUPPORT_URL", "support_url"),
             book_title=pick("BOOK_TITLE", "book_title"),
             book_url=pick("BOOK_URL", "book_url"),
+            amazon_books=show.get("amazon_books", []),
         )
 
     def require(self, *keys: str) -> None:

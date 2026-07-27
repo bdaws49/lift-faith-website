@@ -42,18 +42,27 @@ def run(project: Project, cfg: Config) -> None:
 
 def build_first_comment(cfg: Config) -> str:
     support = cfg.support_url or "[add your support/giving link]"
-    book_title = cfg.book_title or "[add your book title]"
-    book_url = cfg.book_url or "[add your Amazon link]"
+    title = cfg.book_title or "[add your book title]"
+
+    # The book line adapts to whether it's on Amazon yet.
+    if cfg.book_url:
+        book_line = (f"3) GO DEEPER — my book “{title}” takes these truths "
+                     f"further. Grab it on Amazon: {cfg.book_url}")
+    else:
+        book_line = (f"3) THE BOOK — I wrote “{title}” to walk this out, and "
+                     f"I want to put it in your hands free (see below).")
+
+    free_line = (
+        f"❤️ And we mean this: the NEXT person to support the show gets a FREE "
+        f"copy of “{title}.” Support, then comment “BOOK” — we’re watching for you."
+    )
     return (
         "🙏 If this reached you today, would you do three things?\n\n"
         "1) PRAY — comment “praying,” and tell us how we can pray for YOU this "
         "week. We read every one and lift them by name.\n\n"
         "2) SUPPORT — Under the Scope is listener-funded. If God has used this "
         f"show in your life, help us keep making it: {support}\n\n"
-        f"3) GO DEEPER — the book “{book_title}” takes these truths further: "
-        f"{book_url}\n\n"
-        "❤️ And we mean this: the NEXT person to support the show gets a FREE "
-        "copy of the book. Support, then comment “BOOK” — we’re watching for you."
+        f"{book_line}\n\n{free_line}"
     )
 
 

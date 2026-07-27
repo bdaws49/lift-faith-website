@@ -37,7 +37,7 @@ Write a complete episode in this exact structure and return STRICT JSON:
     "hook":  "8-15 seconds. A cold open that stops the scroll. One striking line.",
     "intro": "Welcome + what we're putting under the scope today. Name the show.",
     "part1": "The first teaching movement. Set up the detail in the text.",
-    "ad":    "A warm 20-30 second ad slot in the host's voice. If no sponsor is given, make it a house spot: invite listeners to follow, share the episode, and leave a review. Do NOT mention any outside brand unless the idea names one.",
+    "ad":    "A warm 20-30 second ad slot in the host's voice — follow the AD INSTRUCTION given in the user message exactly.",
     "part2": "The second teaching movement. The payoff — what the detail reveals.",
     "outro": "Land the plane. A closing thought, then invite them to follow the show."
   },
@@ -63,15 +63,36 @@ def run(project: Project, cfg: Config) -> None:
 
     client = OpenAI(api_key=cfg.openai_api_key)
     idea = project.data["idea"]
-    log("script", f"asking {cfg.openai_model} to write the 6-part episode…")
 
+    # Pick which Amazon book the ad promotes (chosen on the CLI, else the first
+    # in the drop list, else a house spot).
+    ad_book = cfg.find_book(project.data.get("ad_book"))
+    if ad_book:
+        project.data["ad_book_used"] = ad_book
+        url = f" Point them to Amazon: {ad_book['url']}" if ad_book.get("url") else ""
+        ad_instruction = (
+            f"AD INSTRUCTION: Make the ad a warm 20-30 second promo for the "
+            f"host's book, \"{ad_book['title']}\".{url} Tie it naturally to "
+            f"today's theme and invite listeners to grab a copy."
+        )
+        log("script", f"ad promotes: {ad_book['title']}")
+    else:
+        ad_instruction = (
+            "AD INSTRUCTION: No book selected — make the ad a house spot: invite "
+            "listeners to follow, share the episode, and leave a review. Do not "
+            "mention any outside brand."
+        )
+        log("script", "ad: house spot (no Amazon book selected)")
+
+    log("script", f"asking {cfg.openai_model} to write the 6-part episode…")
     resp = client.chat.completions.create(
         model=cfg.openai_model,
         response_format={"type": "json_object"},
         temperature=0.8,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"The idea for this episode:\n\n{idea}"},
+            {"role": "user", "content":
+                f"The idea for this episode:\n\n{idea}\n\n{ad_instruction}"},
         ],
     )
     episode = json.loads(resp.choices[0].message.content)
