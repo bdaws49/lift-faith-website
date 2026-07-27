@@ -20,13 +20,28 @@ except ImportError:  # dotenv is optional; real env vars still work without it.
     pass
 
 
+# Fallback background color when no cover/reel image is generated (deep burgundy).
+BG_COLOR_FALLBACK = "0x5C0F28"
+
+# The episode's script structure, in play order. Each is generated separately
+# and voiced separately in CloneVoice.
+SEGMENTS = ["hook", "intro", "part1", "ad", "part2", "outro"]
+
+# Friendly labels for the segments (used in prompts and instruction sheets).
+SEGMENT_LABELS = {
+    "hook": "Hook",
+    "intro": "Intro",
+    "part1": "Part 1",
+    "ad": "Ad",
+    "part2": "Part 2",
+    "outro": "Outro",
+}
+
+
 @dataclass
 class Config:
     openai_api_key: str
     openai_model: str
-    elevenlabs_api_key: str
-    elevenlabs_voice_id: str
-    elevenlabs_model: str
     show_name: str
     show_host: str
 
@@ -35,9 +50,6 @@ class Config:
         return cls(
             openai_api_key=os.getenv("OPENAI_API_KEY", ""),
             openai_model=os.getenv("OPENAI_MODEL", "gpt-4o"),
-            elevenlabs_api_key=os.getenv("ELEVENLABS_API_KEY", ""),
-            elevenlabs_voice_id=os.getenv("ELEVENLABS_VOICE_ID", ""),
-            elevenlabs_model=os.getenv("ELEVENLABS_MODEL", "eleven_multilingual_v2"),
             show_name=os.getenv("SHOW_NAME", "Under the Scope"),
             show_host=os.getenv("SHOW_HOST", "Pastor Billy Daws"),
         )
