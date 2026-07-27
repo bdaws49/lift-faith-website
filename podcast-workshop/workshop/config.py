@@ -23,6 +23,12 @@ except ImportError:  # dotenv is optional; real env vars still work without it.
 # Fallback background color when no cover/reel image is generated (deep burgundy).
 BG_COLOR_FALLBACK = "0x5C0F28"
 
+# Loudness target for leveling the voices. -16 LUFS is the podcast standard for
+# mono; true-peak capped at -1.5 dBTP to avoid clipping.
+LOUDNESS_LUFS = -16.0
+LOUDNESS_TRUE_PEAK = -1.5
+LOUDNESS_RANGE = 11.0
+
 # The episode's script structure, in play order. Each is generated separately
 # and voiced separately in CloneVoice.
 SEGMENTS = ["hook", "intro", "part1", "ad", "part2", "outro"]

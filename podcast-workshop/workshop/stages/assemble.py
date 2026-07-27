@@ -14,7 +14,14 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from ..config import SEGMENTS, Config, log
+from ..config import (
+    LOUDNESS_LUFS,
+    LOUDNESS_RANGE,
+    LOUDNESS_TRUE_PEAK,
+    SEGMENTS,
+    Config,
+    log,
+)
 from ..project import Project
 
 GAP_SECONDS = 0.6  # a short breath between segments
@@ -27,22 +34,42 @@ def run(project: Project, cfg: Config) -> None:
 
     files = _locate_segment_audio(project)  # errors clearly if any are missing
 
-    # Compute each segment's start time and duration.
+    # Level every segment to the same loudness so no voice clip is louder than
+    # another, then measure the *leveled* audio for the timeline.
+    log("assemble", f"leveling voices to {LOUDNESS_LUFS:g} LUFS…")
+    leveled = {}
+    for seg in SEGMENTS:
+        dst = project.audio_dir / f"_leveled_{seg}.mp3"
+        _normalize(files[seg], dst)
+        leveled[seg] = dst
+
     timeline = {}
     cursor = 0.0
-    for i, seg in enumerate(SEGMENTS, start=1):
-        path = files[seg]
-        dur = _duration_seconds(path)
-        timeline[seg] = {"file": path.name, "start": round(cursor, 3), "duration": dur}
+    for seg in SEGMENTS:
+        dur = _duration_seconds(leveled[seg])
+        timeline[seg] = {"file": files[seg].name, "start": round(cursor, 3),
+                         "duration": dur}
         cursor += dur + GAP_SECONDS
     episode["timeline"] = timeline
     episode["episode_seconds"] = round(cursor, 3)
+    episode["loudness_lufs"] = LOUDNESS_LUFS
 
     out = project.audio_dir / "full_episode.mp3"
-    _concat_with_gaps([files[s] for s in SEGMENTS], out, project.audio_dir)
+    _concat_with_gaps([leveled[s] for s in SEGMENTS], out, project.audio_dir)
 
     project.mark_done("assemble")
-    log("assemble", f"full episode → {out.name} ({episode['episode_seconds']/60:.1f} min)")
+    log("assemble", f"full episode → {out.name} ({episode['episode_seconds']/60:.1f} min), "
+                    f"voices leveled to {LOUDNESS_LUFS:g} LUFS.")
+
+
+def _normalize(src: Path, dst: Path) -> None:
+    """Loudness-normalize one segment to the podcast target (EBU R128)."""
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(src),
+         "-af", f"loudnorm=I={LOUDNESS_LUFS}:TP={LOUDNESS_TRUE_PEAK}:LRA={LOUDNESS_RANGE}",
+         "-ar", "44100", "-ac", "1", "-c:a", "libmp3lame", "-q:a", "2", str(dst)],
+        check=True, capture_output=True,
+    )
 
 
 def _locate_segment_audio(project: Project) -> dict[str, Path]:
