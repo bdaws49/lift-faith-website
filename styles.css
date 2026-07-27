@@ -10,11 +10,16 @@
     box-sizing: border-box;
 }
 
+html {
+    font-size: 112.5%; /* ~18px base so all rem-based text scales up */
+}
+
 body {
     font-family: 'Georgia', serif;
     background: linear-gradient(135deg, #8B1538 0%, #5C0F28 100%);
     min-height: 100vh;
     padding: 20px;
+    color: #1a1a1a;
 }
 
 /* ==================== */
@@ -215,7 +220,7 @@ body {
 
 .tagline {
     font-size: 1.2rem;
-    color: #555;
+    color: #2b2b2b;
     font-style: italic;
     margin-bottom: 40px;
     position: relative;
@@ -228,13 +233,13 @@ body {
 
 .subtitle {
     font-size: 1.3rem;
-    color: #555;
+    color: #2b2b2b;
     margin-bottom: 10px;
 }
 
 .intro-text {
     font-size: 1rem;
-    color: #666;
+    color: #2b2b2b;
     line-height: 1.6;
     max-width: 600px;
     margin: 0 auto;
@@ -242,7 +247,7 @@ body {
 
 .description {
     font-size: 1.1rem;
-    color: #666;
+    color: #2b2b2b;
     line-height: 1.8;
     margin-top: 40px;
 }
@@ -310,7 +315,7 @@ body {
 
 .foundation .verse {
     font-style: italic;
-    color: #555;
+    color: #2b2b2b;
     margin-top: 20px;
     font-size: 1.1rem;
 }
@@ -365,7 +370,7 @@ body {
 }
 
 .feature-card p {
-    color: #666;
+    color: #2b2b2b;
     line-height: 1.6;
 }
 
@@ -433,7 +438,7 @@ body {
 
 .plan ul li {
     padding: 10px 0;
-    color: #666;
+    color: #2b2b2b;
     line-height: 1.6;
 }
 
@@ -470,7 +475,7 @@ body {
 
 .testimonial-text {
     font-style: italic;
-    color: #555;
+    color: #2b2b2b;
     line-height: 1.8;
     margin-bottom: 15px;
 }
@@ -482,7 +487,7 @@ body {
 
 .coming-soon-note {
     text-align: center;
-    color: #999;
+    color: #555;
     font-style: italic;
     margin-top: 20px;
 }
@@ -510,7 +515,7 @@ body {
 }
 
 .faq-answer {
-    color: #666;
+    color: #2b2b2b;
     line-height: 1.7;
 }
 
@@ -587,7 +592,7 @@ body {
 }
 
 .form-section p {
-    color: #666;
+    color: #2b2b2b;
     margin-bottom: 20px;
     line-height: 1.6;
 }
@@ -724,7 +729,7 @@ textarea.text-input {
 
 .plan-card .features {
     text-align: left;
-    color: #666;
+    color: #2b2b2b;
     font-size: 0.95rem;
     line-height: 1.6;
 }
@@ -838,7 +843,7 @@ textarea.text-input {
 }
 
 .success-message.profile p {
-    color: #666;
+    color: #2b2b2b;
     font-size: 1.1rem;
     line-height: 1.8;
 }
