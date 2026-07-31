@@ -157,14 +157,60 @@
     return div;
   }
 
-  // ---- Speech synthesis (Abe talks back) ----
+  // ---- Speech synthesis (Abe talks back — in a MAN'S voice) ----
+  // Browsers default to whatever voice the device picks (often female on iOS).
+  // We pick a male English voice by name, since the Web Speech API has no
+  // gender field. Voices load asynchronously on iOS, so we also listen for
+  // 'voiceschanged' and re-pick.
+  var abeVoice = null;
+  var MALE_PREF = ['aaron','daniel','arthur','gordon','oliver','tom','fred','rishi',
+    'alex','nathan','reed','evan','eddy','ralph','albert','junior','rocko','grandpa',
+    'google uk english male','google us english male','microsoft david','microsoft mark','microsoft guy'];
+  var FEMALE_NAMES = ['samantha','karen','moira','tessa','nicky','martha','catherine',
+    'fiona','victoria','allison','ava','susan','zoe','veena','kate','serena','stephanie',
+    'joana','luciana','paulina','shelley','grandma','flo','sandy','female','woman'];
+
+  function pickVoice() {
+    if (!('speechSynthesis' in window)) return null;
+    var voices = window.speechSynthesis.getVoices() || [];
+    if (!voices.length) return null;
+    var en = voices.filter(function (v) { return /^en/i.test(v.lang); });
+    var pool = en.length ? en : voices;
+    // 1) prefer a known male voice name
+    for (var i = 0; i < MALE_PREF.length; i++) {
+      var want = MALE_PREF[i];
+      for (var j = 0; j < pool.length; j++) {
+        if (pool[j].name.toLowerCase().indexOf(want) !== -1) return pool[j];
+      }
+    }
+    // 2) otherwise any English voice that isn't a known female voice
+    for (var k = 0; k < pool.length; k++) {
+      var nm = pool[k].name.toLowerCase();
+      var isFemale = false;
+      for (var m = 0; m < FEMALE_NAMES.length; m++) {
+        if (nm.indexOf(FEMALE_NAMES[m]) !== -1) { isFemale = true; break; }
+      }
+      if (!isFemale) return pool[k];
+    }
+    return pool[0] || null; // last resort
+  }
+
+  function ensureVoice() { if (!abeVoice) abeVoice = pickVoice(); return abeVoice; }
+
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = function () { abeVoice = pickVoice(); };
+    ensureVoice();
+  }
+
   function speak(text) {
     if (!speakToggle.checked) return;
     if (!('speechSynthesis' in window)) return;
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
-      u.rate = 0.98; u.pitch = 1.0;
+      var v = ensureVoice();
+      if (v) { u.voice = v; u.lang = v.lang; }
+      u.rate = 0.97; u.pitch = 0.92; // slightly lower = warmer, more masculine
       window.speechSynthesis.speak(u);
     } catch (e) {}
   }
