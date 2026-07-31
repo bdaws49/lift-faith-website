@@ -51,6 +51,11 @@
     font-family: -apple-system, Arial, sans-serif;
   }
   header .board-link:hover { background: rgba(255,255,255,.15); }
+  .agent-nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 11px auto 0; }
+  .agent-nav a { color: #fff; font-size: .76rem; text-decoration: none; opacity: .92;
+    border: 1px solid rgba(255,255,255,.5); border-radius: 999px; padding: 4px 11px; }
+  .agent-nav a:hover { background: rgba(255,255,255,.15); }
+  .agent-nav a.current { background: rgba(255,255,255,.22); font-weight: bold; opacity: 1; }
 
   #chat {
     flex: 1; overflow-y: auto; padding: 18px 14px 8px;
@@ -120,7 +125,12 @@
   <header>
     <h1>Talk to Barb</h1>
     <p>Your publishing manager — every book, everything in one place</p>
-    <a class="board-link" href="/dashboard">📋 Dashboard</a>
+    <nav class="agent-nav">
+      <a href="/abe">🎙️ Abe</a>
+      <a href="/chloe">🔎 Chloe</a>
+      <a class="current" href="/barb" aria-current="page">📚 Barb</a>
+      <a href="/dashboard">📋 Dashboard</a>
+    </nav>
   </header>
 
   <div id="lockbar" class="lockbar">
