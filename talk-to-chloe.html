@@ -313,13 +313,13 @@
 
   // ---- Pre-generated greeting in Chloe's real voice (Higgsfield preset: Naomi) ----
   // Only the fixed greeting is pre-rendered; live replies use the device voice.
-  var greetingAudio = new Audio('/chloe-greeting-v1.wav');
+  var greetingAudio = new Audio('/chloe-greeting-v2.mp3');
+  greetingAudio.preload = 'auto';
   function playGreeting() {
-    try {
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      greetingAudio.currentTime = 0;
-      greetingAudio.play();
-    } catch (e) {}
+    try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
+    try { greetingAudio.currentTime = 0; } catch (e) {}
+    var p = greetingAudio.play();
+    if (p && typeof p.catch === 'function') p.catch(function () {});
   }
   function showGreeting() {
     var g = addBubble('assistant', GREETING);
