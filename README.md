@@ -26,6 +26,17 @@ Lift is a faith-based subscription service that provides daily biblical encourag
 - **Professional Design** - Burgundy gradient theme, elegant typography
 - **Footer** - Links to privacy policy, terms, contact
 
+### Agents 🤖
+- **Abe** — Ministry Content Agent (`.claude/agents/abe.md`, `abe/`). Turns one
+  seed into a full content set in your voice. Talk to Abe at `/talk-to-abe`.
+- **Barb** — Publishing Agent (`.claude/agents/barb.md`, `barb/`). Maintains an
+  organized dashboard for every book — status, word count, cover, ISBN, KDP
+  files, marketing, launch checklist, reader bonuses, reviews. Two web apps:
+  the **visual dashboard** at `/dashboard`, and **Talk to Barb** (mic + chat) at
+  `/talk-to-barb` (a.k.a. `/barb`) — which can *edit* the dashboard once unlocked
+  with a passcode. Books live in Convex (`convex/books.ts`, live source of truth)
+  seeded from `barb/books.json`. Setup: `TALK-TO-BARB-SETUP.md`.
+
 ### Planned Features 🚧
 - Airtable data collection integration
 - Stripe payment processing

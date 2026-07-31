@@ -1,0 +1,22 @@
+{
+  "_comment": "Barb's single source of truth. One record per book. The visual dashboard (publishing-dashboard.html) reads this file. Keep it in sync with each book's markdown file in barb/books/. See barb/README.md.",
+  "statusFlow": ["idea", "drafting", "editing", "formatting", "cover", "pre-launch", "launched", "live"],
+  "books": [
+    {
+      "slug": "lift-your-eyes",
+      "title": "Lift Your Eyes: 30 Days of Strength from Psalm 121",
+      "author": "Billy Daws",
+      "format": "both",
+      "status": "editing",
+      "wordCount": { "current": 18400, "target": 22000 },
+      "cover": { "state": "in progress", "front": null, "printWrap": null, "notes": "Designer sent 2 concepts 7/28 — awaiting pick" },
+      "isbn": { "ebook": "KDP free ISBN", "print": "TODO — assign at paperback setup" },
+      "kdp": { "interior": "not started", "coverFile": "not started", "metadata": "draft", "path": "barb/books/lift-your-eyes/kdp/" },
+      "marketing": { "blurb": "draft", "keywords": ["daily devotional", "psalm 121", "christian encouragement", "faith over fear", "30 day devotional", "biblical strength", "anxiety scripture"], "categories": ["Religion & Spirituality > Christian Living > Devotionals", "Religion & Spirituality > Bible Study & Reference"], "aPlusContent": "not started", "price": { "ebook": 4.99, "print": 11.99 } },
+      "launch": { "target": "2026-09-15", "checklistDone": 4, "checklistTotal": 18 },
+      "bonuses": { "items": ["Printable Psalm 121 lock-screen", "7-day 'When You're Afraid' email mini-series"], "hostedAt": "TODO — set up on liftfaith.com/bonus", "path": "barb/books/lift-your-eyes/bonuses/" },
+      "reviews": { "arcTarget": 25, "arcCommitted": 6, "count": 0, "avgRating": null, "monitor": ["Amazon product page", "Goodreads"], "notes": "Build ARC team from waitlist + Substack" },
+      "updated": "2026-07-30"
+    }
+  ]
+}
