@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/talk-to-abe", "destination": "/talk-to-abe.html" },
+    { "source": "/abe", "destination": "/talk-to-abe.html" }
+  ]
+}
