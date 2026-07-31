@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Talk to Barb — Publishing Manager</title>
+<meta name="robots" content="noindex" />
+<!-- Make it feel like an app when added to an iPhone/iPad home screen -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Barb" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#8B1538" />
+<!-- App icons -->
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon-abe.png" />
+<link rel="manifest" href="/barb-manifest.webmanifest" />
+<style>
+  :root {
+    --burgundy: #8B1538;
+    --burgundy-deep: #5C0F28;
+    --cream: #f7f3ee;
+    --ink: #2b2b2b;
+    --barb-bubble: #ffffff;
+    --you-bubble: #8B1538;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    color: var(--ink);
+    background: linear-gradient(160deg, #fbf8f4 0%, #f1e7ea 100%);
+    display: flex; flex-direction: column;
+    min-height: 100dvh;
+  }
+  header {
+    background: linear-gradient(135deg, var(--burgundy), var(--burgundy-deep));
+    color: #fff; padding: 18px 20px; text-align: center;
+    padding-top: calc(18px + env(safe-area-inset-top));
+    box-shadow: 0 2px 10px rgba(0,0,0,.15);
+    position: relative;
+  }
+  header h1 { margin: 0; font-size: 1.35rem; letter-spacing: .3px; }
+  header p { margin: 4px 0 0; font-size: .85rem; opacity: .9; font-style: italic; }
+  header .board-link {
+    position: absolute; right: 14px; top: calc(14px + env(safe-area-inset-top));
+    color: #fff; font-size: .78rem; text-decoration: none; opacity: .92;
+    border: 1px solid rgba(255,255,255,.5); border-radius: 999px; padding: 4px 10px;
+    font-family: -apple-system, Arial, sans-serif;
+  }
+  header .board-link:hover { background: rgba(255,255,255,.15); }
+
+  #chat {
+    flex: 1; overflow-y: auto; padding: 18px 14px 8px;
+    display: flex; flex-direction: column; gap: 12px;
+    max-width: 720px; width: 100%; margin: 0 auto;
+  }
+  .msg { max-width: 82%; padding: 11px 15px; border-radius: 16px; line-height: 1.5;
+         font-size: 1.02rem; white-space: pre-wrap; word-wrap: break-word; }
+  .msg.barb { background: var(--barb-bubble); border: 1px solid #eaddd0;
+             align-self: flex-start; border-bottom-left-radius: 4px;
+             box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .msg.you { background: var(--you-bubble); color: #fff;
+             align-self: flex-end; border-bottom-right-radius: 4px; }
+  .msg .who { display: block; font-size: .72rem; text-transform: uppercase;
+              letter-spacing: .8px; opacity: .7; margin-bottom: 3px; }
+  .msg.you .who { color: #f3d9e0; }
+
+  .typing { font-style: italic; opacity: .7; }
+
+  footer {
+    background: rgba(255,255,255,.75); backdrop-filter: blur(6px);
+    border-top: 1px solid #e7d9cc; padding: 12px 14px 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+  .controls { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+  .mic-row { display: flex; align-items: center; justify-content: center; gap: 14px; }
+  #micBtn {
+    width: 78px; height: 78px; border-radius: 50%; border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--burgundy), var(--burgundy-deep));
+    color: #fff; font-size: 2rem; box-shadow: 0 4px 14px rgba(139,21,56,.4);
+    transition: transform .1s ease, box-shadow .2s ease; display: grid; place-items: center;
+  }
+  #micBtn:active { transform: scale(.94); }
+  #micBtn.listening { animation: pulse 1.2s infinite; background: #b81a47; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(184,26,71,.5);} 50% { box-shadow: 0 0 0 16px rgba(184,26,71,0);} }
+  .mic-hint { font-size: .82rem; color: var(--burgundy-deep); min-height: 1.2em; text-align: center; }
+
+  .type-row { display: flex; gap: 8px; }
+  #textInput {
+    flex: 1; padding: 12px 14px; border: 1px solid #d8c6b8; border-radius: 12px;
+    font-family: inherit; font-size: 1rem; background: #fff;
+  }
+  #sendBtn {
+    padding: 0 18px; border: none; border-radius: 12px; cursor: pointer;
+    background: var(--burgundy); color: #fff; font-family: inherit; font-size: 1rem;
+  }
+  .opts { display: flex; align-items: center; justify-content: center; gap: 16px;
+          font-size: .85rem; color: #6b5b52; }
+  .opts label { cursor: pointer; user-select: none; }
+  .opts button.link { background: none; border: none; color: var(--burgundy);
+    text-decoration: underline; cursor: pointer; font-family: inherit; font-size: .85rem; }
+  .banner { background: #fff4e5; border: 1px solid #f0d9b5; color: #7a5a1e;
+    padding: 8px 12px; border-radius: 10px; font-size: .85rem; text-align: center;
+    max-width: 720px; margin: 8px auto 0; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Talk to Barb</h1>
+    <p>Your publishing manager — every book, everything in one place</p>
+    <a class="board-link" href="/dashboard">📋 Dashboard</a>
+  </header>
+
+  <div id="chat" aria-live="polite"></div>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <footer>
+    <div class="controls">
+      <div class="mic-row">
+        <button id="micBtn" title="Tap to talk" aria-label="Tap to talk">🎤</button>
+      </div>
+      <div id="micHint" class="mic-hint">Tap the mic and talk — or type below.</div>
+      <div class="type-row">
+        <input id="textInput" type="text" placeholder="Ask Barb… (e.g. where does my book stand?)" autocomplete="off" />
+        <button id="sendBtn">Send</button>
+      </div>
+      <div class="opts">
+        <label><input type="checkbox" id="speakToggle" checked /> Barb speaks aloud</label>
+        <button class="link" id="clearBtn">Start over</button>
+      </div>
+    </div>
+  </footer>
+
+<script>
+(function () {
+  var chat = document.getElementById('chat');
+  var micBtn = document.getElementById('micBtn');
+  var micHint = document.getElementById('micHint');
+  var textInput = document.getElementById('textInput');
+  var sendBtn = document.getElementById('sendBtn');
+  var speakToggle = document.getElementById('speakToggle');
+  var clearBtn = document.getElementById('clearBtn');
+  var banner = document.getElementById('banner');
+
+  // Conversation history sent to the backend.
+  var messages = [];
+  var busy = false;
+
+  // Snapshot of the dashboard, loaded once so Barb can answer real questions.
+  var booksContext = '';
+  fetch('/barb/books.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.text() : ''; })
+    .then(function (t) { booksContext = t || ''; })
+    .catch(function () {});
+
+  var GREETING = "Hi Billy — Barb here. Everything's filed and I've got it in front of me. Ask me where a book stands, what's next on a launch, or where you saved something. Which title are we looking at?";
+
+  function showBanner(text) { banner.textContent = text; banner.hidden = false; }
+
+  function addBubble(role, text) {
+    var div = document.createElement('div');
+    div.className = 'msg ' + (role === 'assistant' ? 'barb' : 'you');
+    var who = document.createElement('span');
+    who.className = 'who';
+    who.textContent = role === 'assistant' ? 'Barb' : 'You';
+    div.appendChild(who);
+    div.appendChild(document.createTextNode(text));
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  // ---- Speech synthesis (Barb talks back — in a WOMAN'S voice) ----
+  // Browsers have no gender field, so we pick a female English voice by name.
+  // Voices load asynchronously on iOS, so we also listen for 'voiceschanged'.
+  var barbVoice = null;
+  var FEMALE_PREF = ['samantha','karen','moira','tessa','victoria','allison','ava',
+    'susan','zoe','kate','serena','stephanie','fiona','nicky','martha','catherine',
+    'google uk english female','google us english female','microsoft zira','microsoft aria','microsoft jenny'];
+  var MALE_NAMES = ['aaron','daniel','arthur','gordon','oliver','tom','fred','rishi',
+    'alex','nathan','reed','evan','eddy','ralph','albert','junior','rocko','grandpa',
+    'david','mark','guy','male','man'];
+
+  function pickVoice() {
+    if (!('speechSynthesis' in window)) return null;
+    var voices = window.speechSynthesis.getVoices() || [];
+    if (!voices.length) return null;
+    var en = voices.filter(function (v) { return /^en/i.test(v.lang); });
+    var pool = en.length ? en : voices;
+    // 1) prefer a known female voice name
+    for (var i = 0; i < FEMALE_PREF.length; i++) {
+      var want = FEMALE_PREF[i];
+      for (var j = 0; j < pool.length; j++) {
+        if (pool[j].name.toLowerCase().indexOf(want) !== -1) return pool[j];
+      }
+    }
+    // 2) otherwise any English voice that isn't a known male voice
+    for (var k = 0; k < pool.length; k++) {
+      var nm = pool[k].name.toLowerCase();
+      var isMale = false;
+      for (var m = 0; m < MALE_NAMES.length; m++) {
+        if (nm.indexOf(MALE_NAMES[m]) !== -1) { isMale = true; break; }
+      }
+      if (!isMale) return pool[k];
+    }
+    return pool[0] || null; // last resort
+  }
+
+  function ensureVoice() { if (!barbVoice) barbVoice = pickVoice(); return barbVoice; }
+
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = function () { barbVoice = pickVoice(); };
+    ensureVoice();
+  }
+
+  function speak(text) {
+    if (!speakToggle.checked) return;
+    if (!('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      var v = ensureVoice();
+      if (v) { u.voice = v; u.lang = v.lang; }
+      u.rate = 1.0; u.pitch = 1.05; // slightly higher = warmer, more feminine
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  // ---- Send to Barb ----
+  function send(text) {
+    text = (text || '').trim();
+    if (!text || busy) return;
+    busy = true;
+    addBubble('user', text);
+    messages.push({ role: 'user', content: text });
+    textInput.value = '';
+
+    var typing = addBubble('assistant', 'Barb is checking…');
+    typing.classList.add('typing');
+
+    fetch('/api/barb', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ messages: messages, books: booksContext })
+    })
+    .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+    .then(function (res) {
+      typing.remove();
+      if (!res.ok || res.d.error) {
+        var msg = (res.d && res.d.error) ? res.d.error : 'Barb is unavailable right now.';
+        addBubble('assistant', msg);
+        return;
+      }
+      var reply = res.d.reply || '(no reply)';
+      addBubble('assistant', reply);
+      messages.push({ role: 'assistant', content: reply });
+      speak(reply);
+    })
+    .catch(function () {
+      typing.remove();
+      addBubble('assistant', "I couldn't reach the server. If this is running locally, Barb needs to be deployed (with the AI key set) to answer.");
+    })
+    .finally(function () { busy = false; });
+  }
+
+  sendBtn.addEventListener('click', function () { send(textInput.value); });
+  textInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') send(textInput.value); });
+
+  clearBtn.addEventListener('click', function () {
+    messages = []; chat.innerHTML = '';
+    addBubble('assistant', GREETING);
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  });
+
+  // ---- Speech recognition (you talk to Barb) ----
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var recog = null, listening = false;
+
+  if (SR) {
+    recog = new SR();
+    recog.lang = 'en-US';
+    recog.interimResults = false;
+    recog.maxAlternatives = 1;
+
+    recog.onstart = function () { listening = true; micBtn.classList.add('listening'); micHint.textContent = 'Listening… tap again to stop.'; };
+    recog.onerror = function (e) { micHint.textContent = e.error === 'not-allowed' ? 'Microphone permission is off. Allow it in your browser, or just type.' : 'Didn’t catch that — try again or type.'; };
+    recog.onend = function () { listening = false; micBtn.classList.remove('listening'); if (micHint.textContent.indexOf('Listening') === 0) micHint.textContent = 'Tap the mic and talk — or type below.'; };
+    recog.onresult = function (e) {
+      var said = e.results[0][0].transcript;
+      send(said);
+    };
+
+    micBtn.addEventListener('click', function () {
+      if (busy) return;
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel(); // stop Barb so she doesn't hear herself
+      if (listening) { recog.stop(); return; }
+      try { recog.start(); } catch (e) {}
+    });
+  } else {
+    micBtn.disabled = true;
+    micBtn.style.opacity = '.5';
+    micHint.textContent = 'Voice input works best in Chrome or on Android. You can type to Barb here.';
+    showBanner('Tip: for talking out loud, open this page in Chrome or the Chrome app. Typing works everywhere.');
+  }
+
+  // Greeting
+  addBubble('assistant', GREETING);
+})();
+</script>
+</body>
+</html>

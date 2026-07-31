@@ -3,6 +3,7 @@
     { "source": "/talk-to-abe", "destination": "/talk-to-abe.html" },
     { "source": "/abe", "destination": "/talk-to-abe.html" },
     { "source": "/dashboard", "destination": "/publishing-dashboard.html" },
-    { "source": "/barb", "destination": "/publishing-dashboard.html" }
+    { "source": "/talk-to-barb", "destination": "/talk-to-barb.html" },
+    { "source": "/barb", "destination": "/talk-to-barb.html" }
   ]
 }

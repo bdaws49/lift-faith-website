@@ -31,8 +31,9 @@ Lift is a faith-based subscription service that provides daily biblical encourag
   seed into a full content set in your voice. Talk to Abe at `/talk-to-abe`.
 - **Barb** — Publishing Agent (`.claude/agents/barb.md`, `barb/`). Maintains an
   organized dashboard for every book — status, word count, cover, ISBN, KDP
-  files, marketing, launch checklist, reader bonuses, reviews. Visual dashboard
-  at `/dashboard` (a.k.a. `/barb`); source of truth is `barb/books.json`.
+  files, marketing, launch checklist, reader bonuses, reviews. Two web apps:
+  the **visual dashboard** at `/dashboard`, and **Talk to Barb** (mic + chat) at
+  `/talk-to-barb` (a.k.a. `/barb`). Source of truth is `barb/books.json`.
 
 ### Planned Features 🚧
 - Airtable data collection integration

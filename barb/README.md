@@ -34,8 +34,16 @@ barb/
 ```
 
 The agent definition lives at `.claude/agents/barb.md`.
-The visual dashboard is `publishing-dashboard.html` at the repo root, served at
-**`/dashboard`** (and **`/barb`**). It renders `barb/books.json`.
+
+Barb has two web apps (both in the site style, installable to your home screen):
+
+- **Visual dashboard** — `publishing-dashboard.html`, served at **`/dashboard`**.
+  Renders `barb/books.json` as at-a-glance cards.
+- **Talk to Barb** — `talk-to-barb.html` (+ `api/barb.js`), served at
+  **`/talk-to-barb`** and **`/barb`**. A mic + chat companion that reads your
+  dashboard and talks status, launches, and "where did I save that." Setup is in
+  `TALK-TO-BARB-SETUP.md` (same API key as Abe). The chat is read + advise;
+  actual edits happen through the Barb agent in Claude Code.
 
 ## Two files, one truth
 

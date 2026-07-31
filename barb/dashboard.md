@@ -2,7 +2,7 @@
 
 _Human-readable index maintained by **Barb**. The structured source of truth is
 `barb/books.json`; Barb regenerates this table when things change. For the visual
-version, open `/dashboard` (publishing-dashboard.html) on the site._
+version open `/dashboard`; to talk to Barb open `/talk-to-barb` (a.k.a. `/barb`)._
 
 **Last updated:** 2026-07-30
 
