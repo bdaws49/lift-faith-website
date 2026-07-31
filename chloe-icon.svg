@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Chloe — research assistant">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8B1538"/>
+      <stop offset="1" stop-color="#5C0F28"/>
+    </linearGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbf6ef"/>
+      <stop offset="1" stop-color="#efe2d2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- burgundy rounded tile, matching the Abe/Barb family -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- magnifying glass framing an open book: research / study under the scope -->
+  <g transform="translate(232 224)">
+    <!-- handle -->
+    <line x1="118" y1="118" x2="196" y2="196" stroke="#e8b84b" stroke-width="34" stroke-linecap="round"/>
+    <line x1="118" y1="118" x2="196" y2="196" stroke="#f6d885" stroke-width="14" stroke-linecap="round"/>
+
+    <!-- lens ring -->
+    <circle cx="0" cy="0" r="150" fill="#5C0F28"/>
+    <circle cx="0" cy="0" r="150" fill="none" stroke="#e8b84b" stroke-width="26"/>
+    <circle cx="0" cy="0" r="122" fill="#3f0a1c"/>
+
+    <!-- open book inside the lens -->
+    <g transform="translate(0 6)">
+      <!-- spine shadow -->
+      <path d="M0 -58 L0 60" stroke="#c9b7a2" stroke-width="6" stroke-linecap="round" opacity="0.5"/>
+      <!-- left page -->
+      <path d="M0 -52 C -34 -66 -74 -66 -104 -54 L -104 52 C -74 40 -34 40 0 54 Z" fill="url(#page)" stroke="#d8c6b0" stroke-width="3"/>
+      <!-- right page -->
+      <path d="M0 -52 C 34 -66 74 -66 104 -54 L 104 52 C 74 40 34 40 0 54 Z" fill="url(#page)" stroke="#d8c6b0" stroke-width="3"/>
+      <!-- text lines -->
+      <g stroke="#9c7f63" stroke-width="6" stroke-linecap="round">
+        <line x1="-84" y1="-34" x2="-24" y2="-28"/>
+        <line x1="-84" y1="-14" x2="-24" y2="-8"/>
+        <line x1="-84" y1="6"  x2="-24" y2="12"/>
+        <line x1="-84" y1="26" x2="-40" y2="30"/>
+        <line x1="24" y1="-28" x2="84" y2="-34"/>
+        <line x1="24" y1="-8"  x2="84" y2="-14"/>
+        <line x1="24" y1="12"  x2="84" y2="6"/>
+        <line x1="40" y1="30"  x2="84" y2="26"/>
+      </g>
+    </g>
+  </g>
+</svg>

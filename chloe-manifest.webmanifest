@@ -1,0 +1,15 @@
+{
+  "name": "Talk to Chloe",
+  "short_name": "Chloe",
+  "description": "Talk to Chloe, your research assistant — say \"prepare everything on Romans 8\" and get a full study brief.",
+  "start_url": "/talk-to-chloe",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#5C0F28",
+  "theme_color": "#8B1538",
+  "icons": [
+    { "src": "/chloe-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/chloe-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
