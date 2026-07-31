@@ -33,7 +33,9 @@ Lift is a faith-based subscription service that provides daily biblical encourag
   organized dashboard for every book — status, word count, cover, ISBN, KDP
   files, marketing, launch checklist, reader bonuses, reviews. Two web apps:
   the **visual dashboard** at `/dashboard`, and **Talk to Barb** (mic + chat) at
-  `/talk-to-barb` (a.k.a. `/barb`). Source of truth is `barb/books.json`.
+  `/talk-to-barb` (a.k.a. `/barb`) — which can *edit* the dashboard once unlocked
+  with a passcode. Books live in Convex (`convex/books.ts`, live source of truth)
+  seeded from `barb/books.json`. Setup: `TALK-TO-BARB-SETUP.md`.
 
 ### Planned Features 🚧
 - Airtable data collection integration

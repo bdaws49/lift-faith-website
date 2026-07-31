@@ -1,0 +1,45 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Barb — an open book">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8B1538"/>
+      <stop offset="1" stop-color="#5C0F28"/>
+    </linearGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffdf9"/>
+      <stop offset="1" stop-color="#f0e4d6"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- full-bleed background (OS masks the corners into a rounded app icon) -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- open book -->
+  <g filter="url(#soft)">
+    <!-- left page -->
+    <path d="M256 158 C 202 128, 132 126, 92 146 L 92 374 C 132 356, 202 358, 256 388 Z"
+          fill="url(#page)" stroke="#4a0c20" stroke-width="6" stroke-linejoin="round"/>
+    <!-- right page -->
+    <path d="M256 158 C 310 128, 380 126, 420 146 L 420 374 C 380 356, 310 358, 256 388 Z"
+          fill="url(#page)" stroke="#4a0c20" stroke-width="6" stroke-linejoin="round"/>
+    <!-- spine -->
+    <path d="M256 158 L 256 388" stroke="#4a0c20" stroke-width="8" stroke-linecap="round"/>
+    <!-- faint page lines for texture -->
+    <g stroke="#d8c3ad" stroke-width="5" stroke-linecap="round" opacity="0.8">
+      <path d="M126 186 C 168 172, 214 176, 240 192"/>
+      <path d="M386 186 C 344 172, 298 176, 272 192"/>
+      <path d="M126 350 C 168 336, 214 340, 240 356"/>
+      <path d="M386 350 C 344 336, 298 340, 272 356"/>
+    </g>
+  </g>
+
+  <!-- name ribbon across the book -->
+  <g filter="url(#soft)">
+    <rect x="70" y="236" width="372" height="80" rx="16" fill="#8B1538" stroke="#fffdf9" stroke-width="5"/>
+    <text x="256" y="293" text-anchor="middle"
+          font-family="Georgia, 'Times New Roman', serif" font-size="56" font-weight="bold"
+          letter-spacing="3" fill="#fffdf9">Barb</text>
+  </g>
+</svg>

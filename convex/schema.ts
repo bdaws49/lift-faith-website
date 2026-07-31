@@ -78,6 +78,20 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index("by_syncKey", ["syncKey"]),
 
+  // Books — Barb's publishing dashboard. Each row is one title. The nine
+  // tracked fields (status, word count, cover, ISBN, KDP files, marketing,
+  // launch checklist, reader bonuses, reviews) live in the flexible `data`
+  // object, mirroring barb/books.json. slug/title/status are denormalized to
+  // the top level for indexing and quick display.
+  books: defineTable({
+    slug: v.string(),
+    title: v.string(),
+    status: v.string(),
+    data: v.any(), // the full structured record (same shape as books.json)
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.string()), // e.g. "Barb (chat)"
+  }).index("by_slug", ["slug"]),
+
   // Prayer requests (for community feature - future)
   prayerRequests: defineTable({
     userId: v.id("users"),

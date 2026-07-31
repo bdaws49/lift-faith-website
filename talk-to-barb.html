@@ -11,10 +11,11 @@
 <meta name="apple-mobile-web-app-title" content="Barb" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#8B1538" />
-<!-- App icons -->
-<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
-<link rel="icon" type="image/png" sizes="64x64" href="/favicon-abe.png" />
+<!-- App icons — Barb's own open-book mark -->
+<link rel="apple-touch-icon" href="/barb-apple-touch.png" />
+<link rel="icon" type="image/svg+xml" href="/barb-icon.svg" />
+<link rel="icon" type="image/png" sizes="192x192" href="/barb-icon-192.png" />
+<link rel="icon" type="image/png" sizes="64x64" href="/barb-favicon.png" />
 <link rel="manifest" href="/barb-manifest.webmanifest" />
 <style>
   :root {
@@ -104,6 +105,15 @@
   .banner { background: #fff4e5; border: 1px solid #f0d9b5; color: #7a5a1e;
     padding: 8px 12px; border-radius: 10px; font-size: .85rem; text-align: center;
     max-width: 720px; margin: 8px auto 0; }
+
+  .lockbar { display: flex; align-items: center; justify-content: center; gap: 10px;
+    font-size: .8rem; color: #6b5b52; padding: 8px 12px; background: rgba(255,255,255,.6);
+    border-bottom: 1px solid #ecdfd2; font-family: -apple-system, Arial, sans-serif; }
+  .lockbar button { background: none; border: none; color: var(--burgundy);
+    text-decoration: underline; cursor: pointer; font: inherit; }
+  .lockbar.on { background: #e9f3ec; color: #2e7d54; border-bottom-color: #cfe6d6; }
+  .lockbar.on button { color: #2e7d54; }
+  .saved-flash { color: #2e7d54; font-weight: bold; margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -112,6 +122,12 @@
     <p>Your publishing manager — every book, everything in one place</p>
     <a class="board-link" href="/dashboard">📋 Dashboard</a>
   </header>
+
+  <div id="lockbar" class="lockbar">
+    <span id="lockState">🔒 Editing locked — Barb can read &amp; advise</span>
+    <button id="lockBtn">Unlock editing</button>
+    <span id="savedFlash"></span>
+  </div>
 
   <div id="chat" aria-live="polite"></div>
 
@@ -144,17 +160,73 @@
   var speakToggle = document.getElementById('speakToggle');
   var clearBtn = document.getElementById('clearBtn');
   var banner = document.getElementById('banner');
+  var lockbar = document.getElementById('lockbar');
+  var lockState = document.getElementById('lockState');
+  var lockBtn = document.getElementById('lockBtn');
+  var savedFlash = document.getElementById('savedFlash');
 
   // Conversation history sent to the backend.
   var messages = [];
   var busy = false;
 
-  // Snapshot of the dashboard, loaded once so Barb can answer real questions.
+  // ---- Editing lock (passcode, stored on this device) ----
+  var CONVEX_URL = 'https://tame-fennec-574.convex.cloud';
+  var passcode = '';
+  try { passcode = localStorage.getItem('barbPasscode') || ''; } catch (e) {}
+
+  function updateLockUI() {
+    if (passcode) {
+      lockbar.className = 'lockbar on';
+      lockState.textContent = '🔓 Editing on — Barb can update the dashboard';
+      lockBtn.textContent = 'Lock';
+    } else {
+      lockbar.className = 'lockbar';
+      lockState.textContent = '🔒 Editing locked — Barb can read & advise';
+      lockBtn.textContent = 'Unlock editing';
+    }
+  }
+  lockBtn.addEventListener('click', function () {
+    if (passcode) {
+      passcode = '';
+      try { localStorage.removeItem('barbPasscode'); } catch (e) {}
+    } else {
+      var entered = window.prompt('Enter your editing passcode. (Barb checks it when she saves — a wrong one just means changes won’t stick.)');
+      if (entered == null) return;
+      passcode = entered.trim();
+      try { localStorage.setItem('barbPasscode', passcode); } catch (e) {}
+    }
+    updateLockUI();
+  });
+  updateLockUI();
+
+  function flashSaved() {
+    savedFlash.textContent = '✓ saved';
+    savedFlash.className = 'saved-flash';
+    setTimeout(function () { savedFlash.textContent = ''; }, 2500);
+  }
+
+  // Snapshot of the dashboard so Barb answers real questions. Prefer the live
+  // Convex data; fall back to the static books.json if Convex isn't reachable.
   var booksContext = '';
-  fetch('/barb/books.json', { cache: 'no-store' })
-    .then(function (r) { return r.ok ? r.text() : ''; })
-    .then(function (t) { booksContext = t || ''; })
-    .catch(function () {});
+  function withTimeout(p, ms) { return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, ms); })]); }
+  (function loadBooks() {
+    withTimeout(
+      import('https://esm.sh/convex@1.29.1/browser').then(function (mod) {
+        var c = new mod.ConvexHttpClient(CONVEX_URL);
+        return c.query('books:list', {});
+      }), 3000
+    )
+      .then(function (rows) {
+        if (rows && rows.length) { booksContext = JSON.stringify({ books: rows }); return; }
+        throw new Error('empty');
+      })
+      .catch(function () {
+        fetch('/barb/books.json', { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.text() : ''; })
+          .then(function (t) { booksContext = t || ''; })
+          .catch(function () {});
+      });
+  })();
 
   var GREETING = "Hi Billy — Barb here. Everything's filed and I've got it in front of me. Ask me where a book stands, what's next on a launch, or where you saved something. Which title are we looking at?";
 
@@ -244,7 +316,7 @@
     fetch('/api/barb', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ messages: messages, books: booksContext })
+      body: JSON.stringify({ messages: messages, books: booksContext, passcode: passcode })
     })
     .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
     .then(function (res) {
@@ -257,6 +329,9 @@
       var reply = res.d.reply || '(no reply)';
       addBubble('assistant', reply);
       messages.push({ role: 'assistant', content: reply });
+      // If Barb changed the dashboard, refresh our snapshot and flash "saved".
+      if (res.d.changed) flashSaved();
+      if (res.d.books && res.d.books.length) booksContext = JSON.stringify({ books: res.d.books });
       speak(reply);
     })
     .catch(function () {

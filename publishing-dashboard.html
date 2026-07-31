@@ -10,8 +10,10 @@
 <meta name="apple-mobile-web-app-title" content="Barb" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#8B1538" />
-<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+<link rel="apple-touch-icon" href="/barb-apple-touch.png" />
+<link rel="icon" type="image/svg+xml" href="/barb-icon.svg" />
+<link rel="icon" type="image/png" sizes="192x192" href="/barb-icon-192.png" />
+<link rel="manifest" href="/barb-manifest.webmanifest" />
 <style>
   :root {
     --burgundy: #8B1538;
@@ -221,20 +223,42 @@ function renderSummary(books){
   return cards.map(c=>`<div class="stat"><div class="n">${c.n}</div><div class="l">${esc(c.l)}</div></div>`).join("");
 }
 
-fetch("/barb/books.json", {cache:"no-store"})
-  .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
-  .then(data => {
-    const books = (data.books||[]).slice().sort((a,b)=> STATUS_FLOW.indexOf(b.status)-STATUS_FLOW.indexOf(a.status));
+// Load books: prefer the live Convex data (what Barb edits from the chat app);
+// fall back to the static barb/books.json snapshot if Convex isn't reachable.
+const CONVEX_URL = "https://tame-fennec-574.convex.cloud";
+
+function withTimeout(p, ms){ return Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")), ms))]); }
+
+async function loadBooks(){
+  try {
+    const rows = await withTimeout((async () => {
+      const mod = await import("https://esm.sh/convex@1.29.1/browser");
+      const c = new mod.ConvexHttpClient(CONVEX_URL);
+      return await c.query("books:list", {});
+    })(), 3000);
+    if (Array.isArray(rows) && rows.length) return { books: rows, source: "live" };
+  } catch (e) { /* fall back to the static snapshot */ }
+  const r = await fetch("/barb/books.json", {cache:"no-store"});
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const data = await r.json();
+  return { books: data.books || [], source: "file" };
+}
+
+loadBooks()
+  .then(({books, source}) => {
+    books = books.slice().sort((a,b)=> STATUS_FLOW.indexOf(b.status)-STATUS_FLOW.indexOf(a.status));
     document.getElementById("summary").innerHTML = renderSummary(books);
     const updated = books.map(b=>b.updated).filter(Boolean).sort().pop();
-    document.getElementById("meta").textContent = updated ? ("Last updated "+updated) : "";
+    document.getElementById("meta").textContent = source === "live"
+      ? ("🟢 Live" + (updated ? " · updated " + updated : ""))
+      : ("Last updated" + (updated ? " " + updated : ""));
     document.getElementById("books").innerHTML = books.length
       ? books.map(renderBook).join("")
       : `<div class="empty">No books yet. Ask Barb to "add a book" to get started.</div>`;
   })
   .catch(err => {
     document.getElementById("books").innerHTML =
-      `<div class="error">Couldn't load <span class="path">barb/books.json</span> (${esc(err.message)}).<br>
+      `<div class="error">Couldn't load the dashboard (${esc(err.message)}).<br>
        On the live site this loads automatically. Opening the file locally? Serve the folder over http (e.g. <span class="path">npx serve</span>) — browsers block fetch on file://.</div>`;
   });
 </script>

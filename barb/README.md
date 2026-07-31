@@ -41,9 +41,24 @@ Barb has two web apps (both in the site style, installable to your home screen):
   Renders `barb/books.json` as at-a-glance cards.
 - **Talk to Barb** — `talk-to-barb.html` (+ `api/barb.js`), served at
   **`/talk-to-barb`** and **`/barb`**. A mic + chat companion that reads your
-  dashboard and talks status, launches, and "where did I save that." Setup is in
-  `TALK-TO-BARB-SETUP.md` (same API key as Abe). The chat is read + advise;
-  actual edits happen through the Barb agent in Claude Code.
+  dashboard and — once you **unlock editing** with a passcode — actually updates
+  it (add a book, change a field), saved to Convex. Setup is in
+  `TALK-TO-BARB-SETUP.md`.
+
+### Where the data lives
+
+- **Convex `books` table** — the **live** source of truth for the web apps.
+  Barb's chat app writes here (passcode-gated); the dashboard reads it.
+- **`barb/books.json`** — seeds Convex and is the offline fallback. It's also the
+  structured file the **Barb agent in Claude Code** edits (alongside each book's
+  markdown file) for deeper work.
+- Convex functions live in `convex/books.ts`; the passcode lives in the Convex
+  environment (`BARB_PASSCODE`), never in the code.
+
+Rule of thumb: quick field updates on the go → the phone chat app (Convex);
+deep work (marketing copy, launch checklists, filing cover/KDP/bonus files) →
+the Barb agent in Claude Code (files). Keep heavy editing in one place to avoid
+drift.
 
 ## Two files, one truth
 

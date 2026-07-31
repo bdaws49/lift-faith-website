@@ -1,64 +1,111 @@
-# Setting up the "Talk to Barb" page
+# Setting up "Talk to Barb" (read **and** edit)
 
 You have a real, clickable page where you talk to Barb — out loud or by typing —
-and she answers from your live book dashboard. It needs the **same one secret
-key** Abe uses, then a deploy. If Abe already works, **Barb already works.**
+and she answers from your live book dashboard **and can update it for you** once
+you unlock editing with a passcode.
 
-## What the pieces are
+There are two levels:
 
-- **`talk-to-barb.html`** — the page with the mic button (what you open). It
-  reads your dashboard (`barb/books.json`) so Barb can answer real questions.
-- **`api/barb.js`** — the small "brain" that keeps your AI key secret and calls
-  Claude with Barb's persona. Runs on the server; the key is never in the webpage.
-- **`publishing-dashboard.html`** — the *visual* board at `/dashboard`. The chat
-  and the board are linked to each other.
+- **Just talk (read + advise)** — needs one key (the same one Abe uses). Barb
+  reads your dashboard and tells you what she'd change. Works immediately.
+- **Full monte (Barb edits)** — Barb actually changes the dashboard from the
+  chat, saved to your Convex database, locked behind a passcode. A few more
+  one-time steps below.
 
-## The 2 steps to turn Barb on
+Everything degrades gracefully: before the edit setup is done, the pages fall
+back to the static `barb/books.json` and Barb stays in read/advise mode. Nothing
+breaks in the meantime.
 
-Your site deploys on **Vercel**, so:
+---
 
-1. **Add your AI key as an environment variable** (skip if you already did this
-   for Abe — it's the same key).
-   - Get an Anthropic API key from https://console.anthropic.com (Settings → API
-     Keys). It looks like `sk-ant-...`. (Usage-based; a chat is fractions of a
-     cent per exchange.)
-   - In Vercel: open your project → **Settings → Environment Variables**.
-   - Add: **Name** `ANTHROPIC_API_KEY` **Value** `sk-ant-...` → Save.
+## The pieces
 
-2. **Redeploy.** Vercel → **Deployments** → open the latest → **Redeploy** (or
-   push any commit).
+- **`talk-to-barb.html`** — the chat page (mic + type), with an **Unlock editing**
+  button. Served at `/talk-to-barb` and `/barb`.
+- **`publishing-dashboard.html`** — the visual board at `/dashboard`. Reads the
+  same live data.
+- **`api/barb.js`** — the server "brain." Reads your dashboard from Convex and,
+  when unlocked, gives Barb tools to add a book / update fields.
+- **`convex/books.ts` + `books` table** — where the books actually live. Writes
+  are passcode-gated inside Convex, so nothing can change without the passcode.
 
-That's it. Then open **`https://yourdomain.com/talk-to-barb`** (or just
-**`/barb`**) and tap the mic.
+---
 
-## Using it
+## Level 1 — Just talk (1 step, ~2 min)
 
-- **Tap the mic** and talk, or **type** in the box (works everywhere).
-- Ask things like: *"Where does Lift Your Eyes stand?"*, *"What's next on the
-  launch?"*, *"Where did I save the KDP files?"*, *"Read me the launch checklist."*
-- **"Barb speaks aloud"** turns her voice on/off. **"Start over"** clears the chat.
-- Voice *input* works best in **Chrome** or on **Android**; typing works on every
-  browser and iPhone.
+If Abe already works, this already works too — it's the same key.
 
-## Read vs. edit (important)
+1. In **Vercel → your project → Settings → Environment Variables**, add
+   `ANTHROPIC_API_KEY = sk-ant-...` (from https://console.anthropic.com). Redeploy.
 
-The chat page is **read + advise**: Barb answers from the dashboard and tells you
-what she'd change, but she can't edit files from the browser. To actually
-**update** the dashboard (mark a cover approved, add a book, log an ISBN), open
-this project in **Claude Code** and tell the Barb agent — she'll update
-`barb/books.json` and the book's file. The chat page then reflects it on reload.
+Open `https://yourdomain.com/barb` and talk. Ask *"Where does Lift Your Eyes
+stand?"*, *"What's next on the launch?"*, *"Where did I save the KDP files?"*
 
-## Optional settings (Vercel → Environment Variables)
+---
 
-- `BARB_MODEL` — the AI model Barb uses. Default `claude-sonnet-5` (fast + low
-  cost). Set to `claude-opus-5` for maximum depth at higher cost.
+## Level 2 — Let Barb edit (the full monte)
 
-## If you see "Barb isn't connected yet"
+### A. Deploy the book functions to Convex
+Your site already uses Convex (`convex/` folder). From the project, run:
 
-The key isn't set on the server yet — do step 1, then redeploy (step 2).
+```
+npx convex deploy
+```
 
-## A note on privacy
+This publishes the new `books` table and the `books:list / addBook / patchBook /
+seed` functions.
 
-The page is marked "no index," but anyone with the link can open it (and it uses
-your AI key + shows your book dashboard). If you want it locked to just you, tell
-me and I'll add a simple passcode.
+### B. Import your current book(s) into Convex (one time)
+Copy the `books` array from `barb/books.json` and seed it:
+
+```
+npx convex run books:seed '{"books": [ ...paste the books array here... ]}'
+```
+
+`seed` is non-destructive — it only adds titles that aren't there yet, so it's
+safe to run again.
+
+### C. Set the editing passcode (this is the lock)
+Pick any passcode and store it **in Convex** (not in the code):
+
+```
+npx convex env set BARB_PASSCODE "choose-something-only-you-know"
+```
+
+If this isn't set, editing stays disabled (fail closed) — Barb can read but never
+change anything.
+
+### D. Tell Vercel where Convex is (optional)
+`api/barb.js` defaults to your existing deployment
+(`https://tame-fennec-574.convex.cloud`). If yours differs, add
+`CONVEX_URL = https://<your-deployment>.convex.cloud` in Vercel and redeploy.
+
+### Using it
+- On `/barb`, tap **Unlock editing** and enter your passcode (stored on that
+  device only).
+- Then just tell her: *"Mark the cover approved — concept B,"* *"I hit 21,000
+  words,"* *"Add a new book called Still Waters,"* *"Set the paperback ISBN to
+  978-…"* She saves it and says what she changed; the dashboard reflects it.
+- Wrong passcode? The save simply won't stick and Barb will tell you.
+
+---
+
+## Read vs. edit, and the Claude Code agent
+
+- The **chat app** now edits too, but through **two safe tools** (add a book,
+  patch fields) — deliberately simple so nothing gets mangled from a phone.
+- For heavier work — rewriting marketing copy, reworking the full launch
+  checklist, filing cover/KDP/bonus files into `barb/books/<slug>/` — open the
+  project in **Claude Code** and talk to the **Barb agent**. That's still the
+  place for depth. The chat app and the agent read the same data.
+
+## Optional settings
+
+- `BARB_MODEL` (Vercel) — the model Barb uses. Default `claude-sonnet-5`. Use
+  `claude-opus-5` for more depth at higher cost.
+
+## Privacy
+
+The page is `noindex`, but anyone with the link can open it and read the board.
+Editing is locked by the passcode. Want reading locked to just you too? Say so
+and I'll add a read gate.

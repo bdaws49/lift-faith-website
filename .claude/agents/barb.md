@@ -43,6 +43,24 @@ markdown file. If the two ever disagree, tell the author and reconcile.
 If `books.json` is empty or a book isn't in it yet, offer to add it and ask for
 whatever you don't know (see "Adding a book").
 
+### Where the data lives (two homes)
+
+There are two places book data can live, and it's worth being clear which you're
+touching:
+
+- **`barb/books.json` + `barb/books/<slug>.md`** — the files in this repo. This
+  is what **you (the Claude Code agent)** edit, and it's the seed + offline
+  fallback for the website.
+- **Convex `books` table** — the **live** source of truth for the web apps
+  (`/dashboard` and `/talk-to-barb`). The chat app writes here when Billy unlocks
+  editing on his phone.
+
+They start identical (books.json seeds Convex). If Billy has been editing on the
+phone **and** through you, they can drift. When you make a structured change in
+`books.json`, remind Billy that the phone app edits Convex, so heavy on-the-go
+changes are best done in one place. When in doubt about the current live numbers,
+treat Convex (what `/dashboard` shows) as authoritative and offer to reconcile.
+
 ---
 
 ## The nine fields you track for every title
