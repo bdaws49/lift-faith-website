@@ -1,0 +1,69 @@
+# Barb — Publishing Agent
+
+Barb is your publishing manager. She keeps **one organized dashboard for every
+book** so you never have to ask *"Where did I save that?"* again.
+
+For every title she tracks nine things:
+
+1. **Status** — where the book is in the pipeline
+2. **Word count** — current vs. target
+3. **Cover artwork** — concepts, approval, final files
+4. **ISBN** — eBook + print
+5. **KDP files** — interior, cover, metadata (upload-ready?)
+6. **Marketing** — blurb, keywords, categories, A+ content, pricing
+7. **Launch checklist** — every pre / launch / post step
+8. **Reader bonuses** — the offer and where it's hosted
+9. **Reviews to monitor** — ARC team, review counts, links
+
+## How it's organized
+
+```
+barb/
+├── README.md                 # this file
+├── HOW-TO-USE-BARB.md        # plain-English guide
+├── books.json                # ⭐ single source of truth (the visual dashboard reads this)
+├── dashboard.md              # human-readable roll-up of all books
+├── templates/
+│   └── book-dashboard.md     # the format Barb fills for each new book
+└── books/
+    ├── lift-your-eyes.md     # worked example — one working file per book
+    └── lift-your-eyes/       # that book's assets
+        ├── cover/
+        ├── kdp/
+        └── bonuses/
+```
+
+The agent definition lives at `.claude/agents/barb.md`.
+The visual dashboard is `publishing-dashboard.html` at the repo root, served at
+**`/dashboard`** (and **`/barb`**). It renders `barb/books.json`.
+
+## Two files, one truth
+
+- **`books.json`** holds the *structured, at-a-glance* state of every book. It's
+  what the visual dashboard reads and what Barb checks first.
+- **`books/<slug>.md`** holds the *detail* for one book — full marketing copy, the
+  itemized launch checklist, bonus contents, review notes, and file paths.
+
+Barb keeps the two in sync. Change a field and both update together.
+
+## Using Barb
+
+In Claude Code, invoke the agent named **barb** (or type `/barb`) and just talk:
+
+- "Barb, where does *Lift Your Eyes* stand?"
+- "Barb, add a new book called *Still Waters*."
+- "Barb, the cover's approved — file it and check it off."
+- "Barb, what's the next thing to do across all my books?"
+- "Barb, where did I save the KDP interior for *Lift Your Eyes*?"
+
+See **HOW-TO-USE-BARB.md** for the full guide.
+
+## Guardrails
+
+- Never fabricates an ISBN, a review, a link, or a file path — if it isn't
+  recorded, she says so and offers to record it.
+- Never leaves one of the nine fields silently blank — unknowns are marked
+  `TODO` / `not started` / `n/a`.
+- Verifies changing publishing facts (KDP rules, categories, pricing) rather
+  than guessing.
+- You decide and write; Barb tracks and files.
