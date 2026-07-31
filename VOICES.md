@@ -1,13 +1,17 @@
 # Assistant Voices
 
-Each assistant's **greeting** is pre-rendered to an audio file in a chosen
-Higgsfield voice and played by a "🔊 Hear it" button on the greeting bubble.
+There are **two** voice paths:
 
-> Only the fixed greeting is pre-generated. Live back-and-forth replies still use
-> the visitor's **browser/device voice** — Higgsfield generates audio as async
-> jobs (~15–25s each), which is too slow to speak every live reply in real time.
-> For real-time custom voice on every reply, a streaming TTS provider
-> (e.g. ElevenLabs) would be needed.
+1. **Greeting** — a pre-made Higgsfield clip played by the "🔊 Hear it" button on
+   each greeting bubble (free, no per-use cost). Documented below.
+2. **Live replies** — spoken in real time by **ElevenLabs** when
+   `ELEVENLABS_API_KEY` is set (see `ELEVENLABS-SETUP.md`). If the key is missing
+   or credits run out, replies fall back to the browser/device voice, so the site
+   always works. A **⏹ Stop** button halts any playback (handy for long replies).
+
+Higgsfield can't drive live replies — it renders audio as async jobs (~15–25s),
+too slow for real-time chat — which is why greetings use Higgsfield and live
+replies use ElevenLabs.
 
 ## Current mapping
 

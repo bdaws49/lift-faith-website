@@ -136,6 +136,7 @@
       </div>
       <div class="opts">
         <label><input type="checkbox" id="speakToggle" checked /> Chloe speaks aloud</label>
+        <button class="link" id="stopBtn" hidden>⏹ Stop</button>
         <button class="link" id="clearBtn">Start over</button>
       </div>
     </div>
@@ -150,6 +151,7 @@
   var sendBtn = document.getElementById('sendBtn');
   var speakToggle = document.getElementById('speakToggle');
   var clearBtn = document.getElementById('clearBtn');
+  var stopBtn = document.getElementById('stopBtn');
   var banner = document.getElementById('banner');
 
   // Conversation history sent to the backend.
@@ -221,7 +223,39 @@
     ensureVoice();
   }
 
+  // Stop control shared by every playback path (ElevenLabs, greeting, browser TTS).
+  var currentAudio = null;
+  function showStop(on) { if (stopBtn) stopBtn.hidden = !on; }
+  function stopSpeaking() {
+    try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
+    if (currentAudio) { try { currentAudio.pause(); } catch (e) {} currentAudio = null; }
+    try { greetingAudio.pause(); } catch (e) {}
+    showStop(false);
+  }
+
+  // Speak a reply: try the ElevenLabs server voice, fall back to the device voice.
   function speak(text) {
+    if (!speakToggle.checked) return;
+    stopSpeaking();
+    fetch('/api/tts', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text: text, agent: 'chloe' })
+    })
+      .then(function (r) { return r.ok ? r.blob() : null; })
+      .then(function (blob) {
+        if (!blob || blob.type.indexOf('audio') === -1) { speakBrowser(text); return; }
+        var a = new Audio(URL.createObjectURL(blob));
+        currentAudio = a;
+        a.addEventListener('ended', function () { showStop(false); });
+        a.addEventListener('error', function () { showStop(false); speakBrowser(text); });
+        showStop(true);
+        a.play().catch(function () { showStop(false); speakBrowser(text); });
+      })
+      .catch(function () { speakBrowser(text); });
+  }
+
+  // Device (browser) voice — fallback when ElevenLabs isn't configured or errors.
+  function speakBrowser(text) {
     if (!speakToggle.checked) return;
     if (!('speechSynthesis' in window)) return;
     try {
@@ -230,8 +264,10 @@
       var v = ensureVoice();
       if (v) { u.voice = v; u.lang = v.lang; }
       u.rate = 0.96; u.pitch = 1.12; // measured + bright: distinct from Barb's voice
+      u.onend = function () { showStop(false); };
+      showStop(true);
       window.speechSynthesis.speak(u);
-    } catch (e) {}
+    } catch (e) { showStop(false); }
   }
 
   // ---- Send to Chloe ----
@@ -274,10 +310,11 @@
   sendBtn.addEventListener('click', function () { send(textInput.value); });
   textInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') send(textInput.value); });
 
+  if (stopBtn) stopBtn.addEventListener('click', stopSpeaking);
   clearBtn.addEventListener('click', function () {
     messages = []; chat.innerHTML = '';
+    stopSpeaking();
     showGreeting();
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
   });
 
   // ---- Speech recognition (you talk to Chloe) ----
@@ -300,7 +337,7 @@
 
     micBtn.addEventListener('click', function () {
       if (busy) return;
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel(); // stop Chloe so she doesn't hear herself
+      stopSpeaking(); // stop any playback so the mic doesn't hear it
       if (listening) { recog.stop(); return; }
       try { recog.start(); } catch (e) {}
     });
@@ -316,10 +353,13 @@
   var greetingAudio = new Audio('/chloe-greeting-v2.mp3');
   greetingAudio.preload = 'auto';
   function playGreeting() {
-    try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
+    stopSpeaking();
     try { greetingAudio.currentTime = 0; } catch (e) {}
+    currentAudio = greetingAudio;
+    greetingAudio.onended = function () { showStop(false); };
+    showStop(true);
     var p = greetingAudio.play();
-    if (p && typeof p.catch === 'function') p.catch(function () {});
+    if (p && typeof p.catch === 'function') p.catch(function () { showStop(false); });
   }
   function showGreeting() {
     var g = addBubble('assistant', GREETING);
