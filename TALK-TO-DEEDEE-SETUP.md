@@ -1,13 +1,23 @@
-# Setting up "Talk to DeeDee" (your operations manager)
+# Setting up "Talk to DeeDee" (read **and** edit)
 
 You have a real, clickable page where you talk to DeeDee — out loud or by typing —
 and she answers from your live ministry board: the podcast, recording days, the
 publishing calendar, speaking invitations, prayer requests, donations, the
 newsletter, and everything in the content pipeline. Her headline job is telling
-you **what's next** and **what you're forgetting**.
+you **what's next** and **what you're forgetting** — and once you **unlock
+editing** with a passcode, she can **update the board for you** from the chat.
 
-She reads the same board the DeeDee agent keeps in Claude Code, so the phone and
-the desktop stay in agreement.
+There are two levels:
+
+- **Just talk (read + advise)** — needs one key (the same one Abe uses). DeeDee
+  reads the board and tells you what she'd change. Works immediately.
+- **Full monte (DeeDee edits)** — DeeDee actually changes the board from the
+  chat, saved to your Convex database, locked behind a passcode. A few more
+  one-time steps below.
+
+Everything degrades gracefully: before the edit setup is done, the pages fall
+back to the static `deedee/ops.json` and DeeDee stays in read/advise mode.
+Nothing breaks in the meantime.
 
 ---
 
@@ -40,7 +50,7 @@ day?"*
 
 ---
 
-## Level 2 — DeeDee's real voice (Emily, optional)
+## DeeDee's real voice (Emily, optional)
 
 DeeDee speaks in the ElevenLabs **Emily** voice when text-to-speech is turned on.
 This is shared with the other agents through `api/tts.js`.
@@ -56,24 +66,70 @@ browser's built-in voice automatically.
 
 ---
 
-## Keeping the board up to date (this is where the value is)
+## Level 2 — Let DeeDee edit (the full monte)
 
-DeeDee is only as good as her board. The **DeeDee agent in Claude Code** is where
-you keep it current — it edits `deedee/ops.json` and refreshes
-`deedee/dashboard.md`:
+### A. Deploy the operations functions to Convex
+Your site already uses Convex (`convex/` folder). From the project, run:
 
-- Open this project in **Claude Code**, type `/deedee` (or just say her name), and
-  talk: *"We're recording the Habakkuk episode next Tuesday at the studio,"*
-  *"Log a $50 gift from the Andersons — thank-you owed,"* *"Add a speaking invite
-  for the men's retreat in October,"* *"Newsletter #1 goes out the first Monday of
-  September."* She updates the board and tells you what changed.
-- The phone page (`/deedee`) and the board (`/operations`) then read those updates.
+```
+npx convex deploy
+```
 
-> **Why read-only on the phone?** To keep the pocket experience simple and safe,
-> the phone chat reads and advises rather than editing the board directly. If you
-> later want DeeDee to *edit from the phone* (the way Barb does, behind a passcode
-> in Convex), that's a natural next step — say the word and it can be added with an
-> `ops` table + `list/patch` functions and a `DEEDEE_PASSCODE`.
+This publishes the new `opsBoard` table and the `ops:getBoard / addItem /
+patchItem / setField / seedBoard` functions.
+
+### B. Import your current board into Convex (one time)
+Seed the board from `deedee/ops.json` (paste its full contents as `data`):
+
+```
+npx convex run ops:seedBoard '{"data": { ...paste the contents of deedee/ops.json here... }}'
+```
+
+`seedBoard` is non-destructive — if a board already exists it does nothing, so
+it's safe to run again.
+
+### C. Set the editing passcode (this is the lock)
+Pick any passcode and store it **in Convex** (not in the code):
+
+```
+npx convex env set DEEDEE_PASSCODE "choose-something-only-you-know"
+```
+
+If this isn't set, editing stays disabled (fail closed) — DeeDee can read but
+never change anything.
+
+### D. Tell Vercel where Convex is (optional)
+`api/deedee.js` defaults to your existing deployment
+(`https://tame-fennec-574.convex.cloud`). If yours differs, add
+`CONVEX_URL = https://<your-deployment>.convex.cloud` in Vercel and redeploy.
+
+### Using it
+- On `/deedee`, tap **Unlock editing** and enter your passcode (stored on that
+  device only).
+- Then just tell her: *"We're recording the Habakkuk episode next Tuesday at the
+  studio,"* *"Log a $50 gift from the Andersons — thank-you owed,"* *"Mark that
+  thank-you sent,"* *"Add a speaking invite for the men's retreat in October,"*
+  *"Newsletter #1 goes out the first Monday of September, theme Habakkuk."* She
+  saves it and says what she changed; the board at `/operations` reflects it.
+- Wrong passcode? The save simply won't stick and DeeDee will tell you.
+
+DeeDee edits through **three safe tools** — add an item, update an item, set a
+cadence — deliberately simple so nothing gets mangled from a phone.
+
+---
+
+## Two homes for the board (and avoiding drift)
+
+- **Convex `opsBoard`** — the **live** source of truth for the web apps. DeeDee's
+  chat writes here (passcode-gated); `/operations` reads it.
+- **`deedee/ops.json`** — seeds Convex and is the offline fallback. It's also the
+  structured file the **DeeDee agent in Claude Code** edits (alongside
+  `deedee/dashboard.md`) for deeper work.
+
+Rule of thumb: quick logging on the go → the phone chat (Convex); deep work
+(reorganizing the pipeline, big calendar changes) → the DeeDee agent in Claude
+Code (files). Keep heavy editing in one place to avoid drift; when in doubt, treat
+what `/operations` shows (Convex) as authoritative.
 
 ---
 

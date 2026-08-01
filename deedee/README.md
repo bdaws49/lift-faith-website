@@ -41,8 +41,23 @@ DeeDee has two web apps (both in the site style, installable to your home screen
   "what's next" panel.
 - **Talk to DeeDee** — `talk-to-deedee.html` (+ `api/deedee.js`), served at
   **`/talk-to-deedee`** and **`/deedee`**. A mic + chat companion (ElevenLabs
-  **Emily** voice) that reads the board and tells you what's next and what's owed.
-  Setup is in `TALK-TO-DEEDEE-SETUP.md`.
+  **Emily** voice) that reads the board and — once you **unlock editing** with a
+  passcode — actually updates it (log a gift, add a recording day, set a cadence),
+  saved to Convex. Setup is in `TALK-TO-DEEDEE-SETUP.md`.
+
+### Where the data lives
+
+- **Convex `opsBoard` table** — the **live** source of truth for the web apps.
+  DeeDee's chat writes here (passcode-gated); `/operations` reads it.
+- **`deedee/ops.json`** — seeds Convex and is the offline fallback. It's also the
+  structured file the **DeeDee agent in Claude Code** edits (alongside
+  `dashboard.md`) for deeper work.
+- Convex functions live in `convex/ops.ts`; the passcode lives in the Convex
+  environment (`DEEDEE_PASSCODE`), never in the code.
+
+Rule of thumb: quick logging on the go → the phone chat (Convex); deep work →
+the DeeDee agent in Claude Code (files). Keep heavy editing in one place to avoid
+drift.
 
 ## Two files, one truth
 

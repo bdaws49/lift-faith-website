@@ -114,6 +114,15 @@
     color: var(--burgundy-deep); border-radius: 999px; padding: 6px 12px; cursor: pointer;
     font-family: inherit; font-size: .82rem; }
   .quickbar button:hover { background: #fff; }
+
+  .lockbar { display: flex; align-items: center; justify-content: center; gap: 10px;
+    font-size: .8rem; color: #6b5b52; padding: 8px 12px; background: rgba(255,255,255,.6);
+    border-bottom: 1px solid #ecdfd2; font-family: -apple-system, Arial, sans-serif; }
+  .lockbar button { background: none; border: none; color: var(--burgundy);
+    text-decoration: underline; cursor: pointer; font: inherit; }
+  .lockbar.on { background: #e9f3ec; color: #2e7d54; border-bottom-color: #cfe6d6; }
+  .lockbar.on button { color: #2e7d54; }
+  .saved-flash { color: #2e7d54; font-weight: bold; margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -128,6 +137,12 @@
       <a href="/operations">🗂️ Board</a>
     </nav>
   </header>
+
+  <div id="lockbar" class="lockbar">
+    <span id="lockState">🔒 Editing locked — DeeDee can read &amp; advise</span>
+    <button id="lockBtn">Unlock editing</button>
+    <span id="savedFlash"></span>
+  </div>
 
   <div id="chat" aria-live="polite"></div>
 
@@ -170,6 +185,10 @@
   var stopBtn = document.getElementById('stopBtn');
   var banner = document.getElementById('banner');
   var quickbar = document.getElementById('quickbar');
+  var lockbar = document.getElementById('lockbar');
+  var lockState = document.getElementById('lockState');
+  var lockBtn = document.getElementById('lockBtn');
+  var savedFlash = document.getElementById('savedFlash');
 
   // Conversation history sent to the backend.
   var messages = [];
@@ -178,12 +197,64 @@
   // Today's date (local) so DeeDee's "what's next" is grounded.
   var TODAY = new Date().toISOString().slice(0, 10);
 
-  // Snapshot of the operations board so DeeDee answers from real data.
+  // ---- Editing lock (passcode, stored on this device) ----
+  var CONVEX_URL = 'https://tame-fennec-574.convex.cloud';
+  var passcode = '';
+  try { passcode = localStorage.getItem('deedeePasscode') || ''; } catch (e) {}
+
+  function updateLockUI() {
+    if (passcode) {
+      lockbar.className = 'lockbar on';
+      lockState.textContent = '🔓 Editing on — DeeDee can update the board';
+      lockBtn.textContent = 'Lock';
+    } else {
+      lockbar.className = 'lockbar';
+      lockState.textContent = '🔒 Editing locked — DeeDee can read & advise';
+      lockBtn.textContent = 'Unlock editing';
+    }
+  }
+  lockBtn.addEventListener('click', function () {
+    if (passcode) {
+      passcode = '';
+      try { localStorage.removeItem('deedeePasscode'); } catch (e) {}
+    } else {
+      var entered = window.prompt('Enter your editing passcode. (DeeDee checks it when she saves — a wrong one just means changes won’t stick.)');
+      if (entered == null) return;
+      passcode = entered.trim();
+      try { localStorage.setItem('deedeePasscode', passcode); } catch (e) {}
+    }
+    updateLockUI();
+  });
+  updateLockUI();
+
+  function flashSaved() {
+    savedFlash.textContent = '✓ saved';
+    savedFlash.className = 'saved-flash';
+    setTimeout(function () { savedFlash.textContent = ''; }, 2500);
+  }
+
+  // Snapshot of the operations board so DeeDee answers from real data. Prefer
+  // the live Convex board; fall back to the static deedee/ops.json.
   var opsContext = '';
-  fetch('/deedee/ops.json', { cache: 'no-store' })
-    .then(function (r) { return r.ok ? r.text() : ''; })
-    .then(function (t) { opsContext = t || ''; })
-    .catch(function () {});
+  function withTimeout(p, ms) { return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, ms); })]); }
+  (function loadBoard() {
+    withTimeout(
+      import('https://esm.sh/convex@1.29.1/browser').then(function (mod) {
+        var c = new mod.ConvexHttpClient(CONVEX_URL);
+        return c.query('ops:getBoard', {});
+      }), 3000
+    )
+      .then(function (b) {
+        if (b && typeof b === 'object') { opsContext = JSON.stringify(b); return; }
+        throw new Error('empty');
+      })
+      .catch(function () {
+        fetch('/deedee/ops.json', { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.text() : ''; })
+          .then(function (t) { opsContext = t || ''; })
+          .catch(function () {});
+      });
+  })();
 
   var GREETING = "Hi Billy — DeeDee here. I've got the whole board in front of me: the podcast, recording days, the calendar, speaking invites, prayer requests, gifts, the newsletter, and everything in the pipeline. Ask me what's next, what you're forgetting, or where anything stands.";
 
@@ -299,7 +370,7 @@
     fetch('/api/deedee', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ messages: messages, ops: opsContext, today: TODAY })
+      body: JSON.stringify({ messages: messages, ops: opsContext, today: TODAY, passcode: passcode })
     })
     .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
     .then(function (res) {
@@ -312,6 +383,9 @@
       var reply = res.d.reply || '(no reply)';
       addBubble('assistant', reply);
       messages.push({ role: 'assistant', content: reply });
+      // If DeeDee changed the board, refresh our snapshot and flash "saved".
+      if (res.d.changed) flashSaved();
+      if (res.d.ops && typeof res.d.ops === 'object') opsContext = JSON.stringify(res.d.ops);
       speak(reply);
     })
     .catch(function () {

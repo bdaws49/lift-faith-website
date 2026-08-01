@@ -47,8 +47,10 @@ Lift is a faith-based subscription service that provides daily biblical encourag
   newsletter schedule, and the content pipeline — so you always know what's done
   and what's next. Two web apps: the **operations board** at `/operations`, and
   **Talk to DeeDee** (mic + chat, ElevenLabs *Emily* voice) at `/talk-to-deedee`
-  (a.k.a. `/deedee`). Source of truth: `deedee/ops.json` (mirrored to
-  `deedee/dashboard.md`). Setup: `TALK-TO-DEEDEE-SETUP.md`.
+  (a.k.a. `/deedee`) — which can *edit* the board once unlocked with a passcode.
+  The board lives in Convex (`convex/ops.ts`, live source of truth) seeded from
+  `deedee/ops.json` (mirrored to `deedee/dashboard.md`). Setup:
+  `TALK-TO-DEEDEE-SETUP.md`.
 
 ### Planned Features 🚧
 - Airtable data collection integration

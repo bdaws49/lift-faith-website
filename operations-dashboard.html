@@ -314,9 +314,33 @@ function render(ops){
   document.getElementById("board").innerHTML = out.join("");
 }
 
-fetch("/deedee/ops.json", {cache:"no-store"})
-  .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-  .then(render)
+// Prefer the live Convex board (what DeeDee edits from the chat app); fall back
+// to the static deedee/ops.json snapshot if Convex isn't reachable/seeded.
+var CONVEX_URL = "https://tame-fennec-574.convex.cloud";
+function withTimeout(p, ms){ return Promise.race([p, new Promise(function(_,rej){ setTimeout(function(){ rej(new Error("timeout")); }, ms); })]); }
+
+async function loadBoard(){
+  try {
+    var b = await withTimeout((async function(){
+      var mod = await import("https://esm.sh/convex@1.29.1/browser");
+      var c = new mod.ConvexHttpClient(CONVEX_URL);
+      return await c.query("ops:getBoard", {});
+    })(), 3000);
+    if (b && typeof b === "object") return { ops: b, source: "live" };
+  } catch (e) { /* fall back to the static snapshot */ }
+  var r = await fetch("/deedee/ops.json", {cache:"no-store"});
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return { ops: await r.json(), source: "file" };
+}
+
+loadBoard()
+  .then(function(res){
+    render(res.ops);
+    if (res.source === "live") {
+      var m = document.getElementById("meta");
+      m.textContent = "🟢 Live · " + m.textContent;
+    }
+  })
   .catch(function(err){
     document.getElementById("board").innerHTML =
       '<div class="error">Couldn\'t load the board (' + esc(err.message) + ').<br>' +

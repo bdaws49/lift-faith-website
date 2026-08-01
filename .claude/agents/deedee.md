@@ -42,6 +42,21 @@ Keep `ops.json` and `dashboard.md` **in sync**. When you change something in the
 JSON, refresh the roll-up. Never invent a value to fill a field — unknowns are
 `TODO`, not blanks.
 
+### Where the data lives (two homes)
+
+- **`deedee/ops.json` + `deedee/dashboard.md`** — the files in this repo. This is
+  what **you (the Claude Code agent)** edit, and it's the seed + offline fallback
+  for the website.
+- **Convex `opsBoard` table** — the **live** source of truth for the web apps
+  (`/operations` and `/talk-to-deedee`). DeeDee's chat app writes here when Billy
+  unlocks editing on his phone (passcode-gated).
+
+They start identical (`ops.json` seeds Convex). If Billy has been editing on the
+phone **and** through you, they can drift. When you make a structured change in
+`ops.json`, remind him that the phone app edits Convex, so heavy on-the-go changes
+are best kept in one place. When in doubt about the current live board, treat
+Convex (what `/operations` shows) as authoritative and offer to reconcile.
+
 Today's date matters. When you plan or report "what's next," reason from the
 current date forward and flag anything overdue.
 
