@@ -11,9 +11,10 @@
 //   Settings -> Environment Variables:
 //     ELEVENLABS_API_KEY = <your key>        (required to turn real voices on)
 //   Optional (defaults shown) — set to any voice id from your ElevenLabs library:
-//     ABE_VOICE_ID   = pNInz6obpgDQGcFmaJgB   (Adam — warm male)
-//     BARB_VOICE_ID  = 21m00Tcm4TlvDq8ikWAM   (Rachel — calm female)
-//     CHLOE_VOICE_ID = Xb7hH8MSUJpSbSDYk0k2   (Alice — clear female)
+//     ABE_VOICE_ID    = pNInz6obpgDQGcFmaJgB   (Adam — warm male)
+//     BARB_VOICE_ID   = 21m00Tcm4TlvDq8ikWAM   (Rachel — calm female)
+//     CHLOE_VOICE_ID  = Xb7hH8MSUJpSbSDYk0k2   (Alice — clear female)
+//     DEEDEE_VOICE_ID = LcfcDJNUP1GQjkzn1xUU   (Emily — warm, organized female)
 //     ELEVENLABS_MODEL = eleven_flash_v2_5    (low latency, ~half the credits)
 //     TTS_MAX_CHARS = 700                      (caps a single reply to protect credits)
 // Then redeploy.
@@ -22,6 +23,7 @@ const VOICES = {
   abe: process.env.ABE_VOICE_ID || "pNInz6obpgDQGcFmaJgB", // Adam
   barb: process.env.BARB_VOICE_ID || "21m00Tcm4TlvDq8ikWAM", // Rachel
   chloe: process.env.CHLOE_VOICE_ID || "Xb7hH8MSUJpSbSDYk0k2", // Alice
+  deedee: process.env.DEEDEE_VOICE_ID || "LcfcDJNUP1GQjkzn1xUU", // Emily
 };
 const MODEL = process.env.ELEVENLABS_MODEL || "eleven_flash_v2_5"; // fast + ~half cost
 const MAX_CHARS = parseInt(process.env.TTS_MAX_CHARS || "700", 10);

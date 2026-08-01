@@ -6,6 +6,9 @@
     { "source": "/talk-to-barb", "destination": "/talk-to-barb.html" },
     { "source": "/barb", "destination": "/talk-to-barb.html" },
     { "source": "/talk-to-chloe", "destination": "/talk-to-chloe.html" },
-    { "source": "/chloe", "destination": "/talk-to-chloe.html" }
+    { "source": "/chloe", "destination": "/talk-to-chloe.html" },
+    { "source": "/talk-to-deedee", "destination": "/talk-to-deedee.html" },
+    { "source": "/deedee", "destination": "/talk-to-deedee.html" },
+    { "source": "/operations", "destination": "/operations-dashboard.html" }
   ]
 }

@@ -3,27 +3,27 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Talk to Barb — Publishing Manager</title>
+<title>Talk to DeeDee — Ministry Operations</title>
 <meta name="robots" content="noindex" />
 <!-- Make it feel like an app when added to an iPhone/iPad home screen -->
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Barb" />
+<meta name="apple-mobile-web-app-title" content="DeeDee" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#8B1538" />
-<!-- App icons — Barb's own open-book mark -->
-<link rel="apple-touch-icon" href="/barb-apple-touch-v1.png" />
-<link rel="icon" type="image/svg+xml" href="/barb-icon-v1.svg" />
-<link rel="icon" type="image/png" sizes="192x192" href="/barb-icon-192-v1.png" />
-<link rel="icon" type="image/png" sizes="64x64" href="/barb-favicon-v1.png" />
-<link rel="manifest" href="/barb-manifest.webmanifest" />
+<!-- App icons — DeeDee's own calendar mark -->
+<link rel="apple-touch-icon" href="/deedee-apple-touch-v1.png" />
+<link rel="icon" type="image/svg+xml" href="/deedee-icon-v1.svg" />
+<link rel="icon" type="image/png" sizes="192x192" href="/deedee-icon-192-v1.png" />
+<link rel="icon" type="image/png" sizes="64x64" href="/deedee-favicon-v1.png" />
+<link rel="manifest" href="/deedee-manifest.webmanifest" />
 <style>
   :root {
     --burgundy: #8B1538;
     --burgundy-deep: #5C0F28;
     --cream: #f7f3ee;
     --ink: #2b2b2b;
-    --barb-bubble: #ffffff;
+    --deedee-bubble: #ffffff;
     --you-bubble: #8B1538;
   }
   * { box-sizing: border-box; }
@@ -44,13 +44,6 @@
   }
   header h1 { margin: 0; font-size: 1.35rem; letter-spacing: .3px; }
   header p { margin: 4px 0 0; font-size: .85rem; opacity: .9; font-style: italic; }
-  header .board-link {
-    position: absolute; right: 14px; top: calc(14px + env(safe-area-inset-top));
-    color: #fff; font-size: .78rem; text-decoration: none; opacity: .92;
-    border: 1px solid rgba(255,255,255,.5); border-radius: 999px; padding: 4px 10px;
-    font-family: -apple-system, Arial, sans-serif;
-  }
-  header .board-link:hover { background: rgba(255,255,255,.15); }
   .agent-nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 11px auto 0; }
   .agent-nav a { color: #fff; font-size: .76rem; text-decoration: none; opacity: .92;
     border: 1px solid rgba(255,255,255,.5); border-radius: 999px; padding: 4px 11px; }
@@ -64,7 +57,7 @@
   }
   .msg { max-width: 82%; padding: 11px 15px; border-radius: 16px; line-height: 1.5;
          font-size: 1.02rem; white-space: pre-wrap; word-wrap: break-word; }
-  .msg.barb { background: var(--barb-bubble); border: 1px solid #eaddd0;
+  .msg.deedee { background: var(--deedee-bubble); border: 1px solid #eaddd0;
              align-self: flex-start; border-bottom-left-radius: 4px;
              box-shadow: 0 1px 4px rgba(0,0,0,.06); }
   .msg.you { background: var(--you-bubble); color: #fff;
@@ -115,6 +108,13 @@
     font-family: inherit; font-size: .8rem; line-height: 1; border-radius: 999px; padding: 5px 11px; }
   .msg .replay:hover { background: rgba(139,21,56,.07); }
 
+  .quickbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    max-width: 720px; margin: 0 auto; padding: 4px 14px 0; }
+  .quickbar button { background: rgba(255,255,255,.7); border: 1px solid #e0cdbe;
+    color: var(--burgundy-deep); border-radius: 999px; padding: 6px 12px; cursor: pointer;
+    font-family: inherit; font-size: .82rem; }
+  .quickbar button:hover { background: #fff; }
+
   .lockbar { display: flex; align-items: center; justify-content: center; gap: 10px;
     font-size: .8rem; color: #6b5b52; padding: 8px 12px; background: rgba(255,255,255,.6);
     border-bottom: 1px solid #ecdfd2; font-family: -apple-system, Arial, sans-serif; }
@@ -123,23 +123,51 @@
   .lockbar.on { background: #e9f3ec; color: #2e7d54; border-bottom-color: #cfe6d6; }
   .lockbar.on button { color: #2e7d54; }
   .saved-flash { color: #2e7d54; font-weight: bold; margin-left: 6px; }
+
+  /* passcode gate overlay (shown only when reading is locked) */
+  .gate { position: fixed; inset: 0; z-index: 50; display: none;
+    background: linear-gradient(160deg, #fbf8f4 0%, #f1e7ea 100%);
+    align-items: center; justify-content: center; padding: 24px; }
+  .gate.show { display: flex; }
+  .gate-card { background: #fff; border: 1px solid #eaddd0; border-radius: 18px;
+    padding: 30px 28px; max-width: 380px; width: 100%; text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,.12); }
+  .gate-card .lock { font-size: 2.4rem; }
+  .gate-card h2 { margin: 10px 0 6px; color: var(--burgundy-deep); font-size: 1.25rem; }
+  .gate-card p { margin: 0 0 16px; color: #6b5b52; font-size: .9rem; line-height: 1.5; }
+  .gate-card input { width: 100%; padding: 12px 14px; border: 1px solid #d8c6b8; border-radius: 12px;
+    font-family: inherit; font-size: 1rem; margin-bottom: 12px; }
+  .gate-card button { width: 100%; padding: 12px; border: none; border-radius: 12px; cursor: pointer;
+    background: var(--burgundy); color: #fff; font-family: inherit; font-size: 1rem; }
+  .gate-card .err { color: #b0431f; font-size: .85rem; min-height: 1.1em; margin: 2px 0 8px; }
 </style>
 </head>
 <body>
+  <div class="gate" id="gate">
+    <div class="gate-card">
+      <div class="lock">🔒</div>
+      <h2>This board is private</h2>
+      <p>DeeDee's board holds prayer requests and giving. Enter the passcode to talk to her about it.</p>
+      <input id="gatePass" type="password" placeholder="Passcode" autocomplete="current-password" />
+      <div class="err" id="gateErr"></div>
+      <button id="gateBtn">Unlock</button>
+    </div>
+  </div>
+
   <header>
-    <h1>Talk to Barb</h1>
-    <p>Your publishing manager — every book, everything in one place</p>
+    <h1>Talk to DeeDee</h1>
+    <p>Your ministry operations manager — what's done, what's next</p>
     <nav class="agent-nav">
       <a href="/abe">🎙️ Abe</a>
       <a href="/chloe">🔎 Chloe</a>
-      <a class="current" href="/barb" aria-current="page">📚 Barb</a>
-      <a href="/deedee">📅 DeeDee</a>
-      <a href="/dashboard">📋 Dashboard</a>
+      <a href="/barb">📚 Barb</a>
+      <a class="current" href="/deedee" aria-current="page">📅 DeeDee</a>
+      <a href="/operations">🗂️ Board</a>
     </nav>
   </header>
 
   <div id="lockbar" class="lockbar">
-    <span id="lockState">🔒 Editing locked — Barb can read &amp; advise</span>
+    <span id="lockState">🔒 Editing locked — DeeDee can read &amp; advise</span>
     <button id="lockBtn">Unlock editing</button>
     <span id="savedFlash"></span>
   </div>
@@ -148,6 +176,13 @@
 
   <div id="banner" class="banner" hidden></div>
 
+  <div class="quickbar" id="quickbar">
+    <button data-q="What's next this week?">What's next?</button>
+    <button data-q="What am I forgetting?">What am I forgetting?</button>
+    <button data-q="Any thank-yous owed?">Thank-yous owed?</button>
+    <button data-q="When's my next recording day?">Next recording day?</button>
+  </div>
+
   <footer>
     <div class="controls">
       <div class="mic-row">
@@ -155,11 +190,11 @@
       </div>
       <div id="micHint" class="mic-hint">Tap the mic and talk — or type below.</div>
       <div class="type-row">
-        <input id="textInput" type="text" placeholder="Ask Barb… (e.g. where does my book stand?)" autocomplete="off" />
+        <input id="textInput" type="text" placeholder="Ask DeeDee… (e.g. what's next this week?)" autocomplete="off" />
         <button id="sendBtn">Send</button>
       </div>
       <div class="opts">
-        <label><input type="checkbox" id="speakToggle" checked /> Barb speaks aloud</label>
+        <label><input type="checkbox" id="speakToggle" checked /> DeeDee speaks aloud</label>
         <button class="link" id="stopBtn" hidden>⏹ Stop</button>
         <button class="link" id="clearBtn">Start over</button>
       </div>
@@ -177,6 +212,7 @@
   var clearBtn = document.getElementById('clearBtn');
   var stopBtn = document.getElementById('stopBtn');
   var banner = document.getElementById('banner');
+  var quickbar = document.getElementById('quickbar');
   var lockbar = document.getElementById('lockbar');
   var lockState = document.getElementById('lockState');
   var lockBtn = document.getElementById('lockBtn');
@@ -186,31 +222,34 @@
   var messages = [];
   var busy = false;
 
+  // Today's date (local) so DeeDee's "what's next" is grounded.
+  var TODAY = new Date().toISOString().slice(0, 10);
+
   // ---- Editing lock (passcode, stored on this device) ----
   var CONVEX_URL = 'https://tame-fennec-574.convex.cloud';
   var passcode = '';
-  try { passcode = localStorage.getItem('barbPasscode') || ''; } catch (e) {}
+  try { passcode = localStorage.getItem('deedeePasscode') || ''; } catch (e) {}
 
   function updateLockUI() {
     if (passcode) {
       lockbar.className = 'lockbar on';
-      lockState.textContent = '🔓 Editing on — Barb can update the dashboard';
+      lockState.textContent = '🔓 Editing on — DeeDee can update the board';
       lockBtn.textContent = 'Lock';
     } else {
       lockbar.className = 'lockbar';
-      lockState.textContent = '🔒 Editing locked — Barb can read & advise';
+      lockState.textContent = '🔒 Editing locked — DeeDee can read & advise';
       lockBtn.textContent = 'Unlock editing';
     }
   }
   lockBtn.addEventListener('click', function () {
     if (passcode) {
       passcode = '';
-      try { localStorage.removeItem('barbPasscode'); } catch (e) {}
+      try { localStorage.removeItem('deedeePasscode'); } catch (e) {}
     } else {
-      var entered = window.prompt('Enter your editing passcode. (Barb checks it when she saves — a wrong one just means changes won’t stick.)');
+      var entered = window.prompt('Enter your editing passcode. (DeeDee checks it when she saves — a wrong one just means changes won’t stick.)');
       if (entered == null) return;
       passcode = entered.trim();
-      try { localStorage.setItem('barbPasscode', passcode); } catch (e) {}
+      try { localStorage.setItem('deedeePasscode', passcode); } catch (e) {}
     }
     updateLockUI();
   });
@@ -222,39 +261,78 @@
     setTimeout(function () { savedFlash.textContent = ''; }, 2500);
   }
 
-  // Snapshot of the dashboard so Barb answers real questions. Prefer the live
-  // Convex data; fall back to the static books.json if Convex isn't reachable.
-  var booksContext = '';
+  // Snapshot of the operations board so DeeDee answers from real data. Prefer
+  // the live Convex board; fall back to the static deedee/ops.json scaffold.
+  // Reading may be gated by a view passcode (DEEDEE_READ_PASSCODE) — if so, a
+  // "locked" error surfaces the passcode overlay before you can talk to her.
+  var opsContext = '';
+  var gate = document.getElementById('gate');
+  var gatePass = document.getElementById('gatePass');
+  var gateBtn = document.getElementById('gateBtn');
+  var gateErr = document.getElementById('gateErr');
   function withTimeout(p, ms) { return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, ms); })]); }
-  (function loadBooks() {
-    withTimeout(
+  function isLocked(e){ var m = String((e && (e.data || e.message)) || e || ''); return /locked/i.test(m); }
+
+  function queryBoard() {
+    return withTimeout(
       import('https://esm.sh/convex@1.29.1/browser').then(function (mod) {
         var c = new mod.ConvexHttpClient(CONVEX_URL);
-        return c.query('books:list', {});
-      }), 3000
-    )
-      .then(function (rows) {
-        if (rows && rows.length) { booksContext = JSON.stringify({ books: rows }); return; }
-        throw new Error('empty');
-      })
-      .catch(function () {
-        fetch('/barb/books.json', { cache: 'no-store' })
-          .then(function (r) { return r.ok ? r.text() : ''; })
-          .then(function (t) { booksContext = t || ''; })
-          .catch(function () {});
-      });
-  })();
+        return c.query('ops:getBoard', { passcode: passcode });
+      }), 4000
+    );
+  }
 
-  var GREETING = "Hi Billy — Barb here. Everything's filed and I've got it in front of me. Ask me where a book stands, what's next on a launch, or where you saved something. Which title are we looking at?";
+  function loadBoard() {
+    return queryBoard()
+      .then(function (b) {
+        gate.classList.remove('show');
+        if (b && typeof b === 'object') { opsContext = JSON.stringify(b); return true; }
+        // null → not seeded; use the static scaffold
+        return fetch('/deedee/ops.json', { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.text() : ''; })
+          .then(function (t) { opsContext = t || ''; return true; });
+      })
+      .catch(function (e) {
+        if (isLocked(e)) { gate.classList.add('show'); return false; }
+        // offline/unreachable → static scaffold, no gate
+        return fetch('/deedee/ops.json', { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.text() : ''; })
+          .then(function (t) { opsContext = t || ''; gate.classList.remove('show'); return true; })
+          .catch(function () { return true; });
+      });
+  }
+  loadBoard();
+
+  gateBtn.addEventListener('click', function () {
+    var entered = (gatePass.value || '').trim();
+    if (!entered) { gateErr.textContent = 'Enter your passcode.'; return; }
+    gateErr.textContent = 'Checking…';
+    passcode = entered;
+    queryBoard()
+      .then(function (b) {
+        try { localStorage.setItem('deedeePasscode', passcode); } catch (e) {}
+        if (b && typeof b === 'object') opsContext = JSON.stringify(b);
+        gateErr.textContent = '';
+        gate.classList.remove('show');
+        updateLockUI(); // one code: reading unlocked also enables editing
+      })
+      .catch(function (e) {
+        if (isLocked(e)) { gateErr.textContent = 'That passcode isn’t right.'; passcode = ''; }
+        else { gateErr.textContent = 'Couldn’t reach the board — try again.'; }
+      });
+  });
+  gatePass.addEventListener('keydown', function (e) { if (e.key === 'Enter') gateBtn.click(); });
+
+  var GREETING = "Hi Billy — DeeDee here. I've got the whole board in front of me: the podcast, recording days, the calendar, speaking invites, prayer requests, gifts, the newsletter, and everything in the pipeline. Ask me what's next, what you're forgetting, or where anything stands.";
 
   function showBanner(text) { banner.textContent = text; banner.hidden = false; }
 
   function addBubble(role, text) {
     var div = document.createElement('div');
-    div.className = 'msg ' + (role === 'assistant' ? 'barb' : 'you');
+    div.className = 'msg ' + (role === 'assistant' ? 'deedee' : 'you');
     var who = document.createElement('span');
     who.className = 'who';
-    who.textContent = role === 'assistant' ? 'Barb' : 'You';
+    who.textContent = role === 'assistant' ? 'DeeDee' : 'You';
     div.appendChild(who);
     div.appendChild(document.createTextNode(text));
     chat.appendChild(div);
@@ -262,12 +340,10 @@
     return div;
   }
 
-  // ---- Speech synthesis (Barb talks back — in a WOMAN'S voice) ----
-  // Browsers have no gender field, so we pick a female English voice by name.
-  // Voices load asynchronously on iOS, so we also listen for 'voiceschanged'.
-  var barbVoice = null;
+  // ---- Speech synthesis fallback (device voice) — female pick for DeeDee ----
+  var deedeeVoice = null;
   var FEMALE_PREF = ['samantha','karen','moira','tessa','victoria','allison','ava',
-    'susan','zoe','kate','serena','stephanie','fiona','nicky','martha','catherine',
+    'susan','zoe','kate','serena','stephanie','fiona','nicky','martha','catherine','emily',
     'google uk english female','google us english female','microsoft zira','microsoft aria','microsoft jenny'];
   var MALE_NAMES = ['aaron','daniel','arthur','gordon','oliver','tom','fred','rishi',
     'alex','nathan','reed','evan','eddy','ralph','albert','junior','rocko','grandpa',
@@ -279,14 +355,12 @@
     if (!voices.length) return null;
     var en = voices.filter(function (v) { return /^en/i.test(v.lang); });
     var pool = en.length ? en : voices;
-    // 1) prefer a known female voice name
     for (var i = 0; i < FEMALE_PREF.length; i++) {
       var want = FEMALE_PREF[i];
       for (var j = 0; j < pool.length; j++) {
         if (pool[j].name.toLowerCase().indexOf(want) !== -1) return pool[j];
       }
     }
-    // 2) otherwise any English voice that isn't a known male voice
     for (var k = 0; k < pool.length; k++) {
       var nm = pool[k].name.toLowerCase();
       var isMale = false;
@@ -295,33 +369,30 @@
       }
       if (!isMale) return pool[k];
     }
-    return pool[0] || null; // last resort
+    return pool[0] || null;
   }
-
-  function ensureVoice() { if (!barbVoice) barbVoice = pickVoice(); return barbVoice; }
-
+  function ensureVoice() { if (!deedeeVoice) deedeeVoice = pickVoice(); return deedeeVoice; }
   if ('speechSynthesis' in window) {
-    window.speechSynthesis.onvoiceschanged = function () { barbVoice = pickVoice(); };
+    window.speechSynthesis.onvoiceschanged = function () { deedeeVoice = pickVoice(); };
     ensureVoice();
   }
 
-  // Stop control shared by every playback path (ElevenLabs, greeting, browser TTS).
+  // Stop control shared by every playback path (ElevenLabs + browser TTS).
   var currentAudio = null;
   function showStop(on) { if (stopBtn) stopBtn.hidden = !on; }
   function stopSpeaking() {
     try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
     if (currentAudio) { try { currentAudio.pause(); } catch (e) {} currentAudio = null; }
-    try { greetingAudio.pause(); } catch (e) {}
     showStop(false);
   }
 
-  // Speak a reply: try the ElevenLabs server voice, fall back to the device voice.
+  // Speak a reply: try the ElevenLabs "Emily" server voice, fall back to device.
   function speak(text) {
     if (!speakToggle.checked) return;
     stopSpeaking();
     fetch('/api/tts', {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ text: text, agent: 'barb' })
+      body: JSON.stringify({ text: text, agent: 'deedee' })
     })
       .then(function (r) { return r.ok ? r.blob() : null; })
       .then(function (blob) {
@@ -336,7 +407,6 @@
       .catch(function () { speakBrowser(text); });
   }
 
-  // Device (browser) voice — fallback when ElevenLabs isn't configured or errors.
   function speakBrowser(text) {
     if (!speakToggle.checked) return;
     if (!('speechSynthesis' in window)) return;
@@ -345,14 +415,14 @@
       var u = new SpeechSynthesisUtterance(text);
       var v = ensureVoice();
       if (v) { u.voice = v; u.lang = v.lang; }
-      u.rate = 1.0; u.pitch = 1.05; // slightly higher = warmer, more feminine
+      u.rate = 1.0; u.pitch = 1.05;
       u.onend = function () { showStop(false); };
       showStop(true);
       window.speechSynthesis.speak(u);
     } catch (e) { showStop(false); }
   }
 
-  // ---- Send to Barb ----
+  // ---- Send to DeeDee ----
   function send(text) {
     text = (text || '').trim();
     if (!text || busy) return;
@@ -361,39 +431,43 @@
     messages.push({ role: 'user', content: text });
     textInput.value = '';
 
-    var typing = addBubble('assistant', 'Barb is checking…');
+    var typing = addBubble('assistant', 'DeeDee is checking the board…');
     typing.classList.add('typing');
 
-    fetch('/api/barb', {
+    fetch('/api/deedee', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ messages: messages, books: booksContext, passcode: passcode })
+      body: JSON.stringify({ messages: messages, ops: opsContext, today: TODAY, passcode: passcode })
     })
     .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
     .then(function (res) {
       typing.remove();
       if (!res.ok || res.d.error) {
-        var msg = (res.d && res.d.error) ? res.d.error : 'Barb is unavailable right now.';
+        var msg = (res.d && res.d.error) ? res.d.error : 'DeeDee is unavailable right now.';
         addBubble('assistant', msg);
         return;
       }
       var reply = res.d.reply || '(no reply)';
       addBubble('assistant', reply);
       messages.push({ role: 'assistant', content: reply });
-      // If Barb changed the dashboard, refresh our snapshot and flash "saved".
+      // If DeeDee changed the board, refresh our snapshot and flash "saved".
       if (res.d.changed) flashSaved();
-      if (res.d.books && res.d.books.length) booksContext = JSON.stringify({ books: res.d.books });
+      if (res.d.ops && typeof res.d.ops === 'object') opsContext = JSON.stringify(res.d.ops);
       speak(reply);
     })
     .catch(function () {
       typing.remove();
-      addBubble('assistant', "I couldn't reach the server. If this is running locally, Barb needs to be deployed (with the AI key set) to answer.");
+      addBubble('assistant', "I couldn't reach the server. If this is running locally, DeeDee needs to be deployed (with the AI key set) to answer.");
     })
     .finally(function () { busy = false; });
   }
 
   sendBtn.addEventListener('click', function () { send(textInput.value); });
   textInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') send(textInput.value); });
+  quickbar.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    send(b.getAttribute('data-q'));
+  });
 
   if (stopBtn) stopBtn.addEventListener('click', stopSpeaking);
   clearBtn.addEventListener('click', function () {
@@ -402,7 +476,7 @@
     showGreeting();
   });
 
-  // ---- Speech recognition (you talk to Barb) ----
+  // ---- Speech recognition (you talk to DeeDee) ----
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   var recog = null, listening = false;
 
@@ -429,34 +503,21 @@
   } else {
     micBtn.disabled = true;
     micBtn.style.opacity = '.5';
-    micHint.textContent = 'Voice input works best in Chrome or on Android. You can type to Barb here.';
+    micHint.textContent = 'Voice input works best in Chrome or on Android. You can type to DeeDee here.';
     showBanner('Tip: for talking out loud, open this page in Chrome or the Chrome app. Typing works everywhere.');
   }
 
-  // ---- Pre-generated greeting in Barb's real voice (Higgsfield preset: Emily) ----
-  // Only the fixed greeting is pre-rendered; live replies use the device voice.
-  var greetingAudio = new Audio('/barb-greeting-v2.mp3');
-  greetingAudio.preload = 'auto';
-  function playGreeting() {
-    stopSpeaking();
-    try { greetingAudio.currentTime = 0; } catch (e) {}
-    currentAudio = greetingAudio;
-    greetingAudio.onended = function () { showStop(false); };
-    showStop(true);
-    var p = greetingAudio.play();
-    if (p && typeof p.catch === 'function') p.catch(function () { showStop(false); });
-  }
+  // ---- Greeting (spoken live in DeeDee's Emily voice, with browser fallback) ----
   function showGreeting() {
     var g = addBubble('assistant', GREETING);
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'replay';
     b.textContent = '🔊 Hear it';
-    b.addEventListener('click', playGreeting);
+    b.addEventListener('click', function () { speak(GREETING); });
     g.appendChild(document.createElement('br'));
     g.appendChild(b);
   }
 
-  // Greeting
   showGreeting();
 })();
 </script>

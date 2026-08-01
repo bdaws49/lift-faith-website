@@ -92,6 +92,18 @@ export default defineSchema({
     updatedBy: v.optional(v.string()), // e.g. "Barb (chat)"
   }).index("by_slug", ["slug"]),
 
+  // Operations board — DeeDee's ministry operations, stored as a SINGLE row
+  // (key "board"). The eight areas (podcast schedule, recording days,
+  // publishing calendar, speaking invitations, prayer requests, donations,
+  // newsletter schedule, content pipeline) live in the flexible `data` object,
+  // mirroring deedee/ops.json. Writes are passcode-gated (DEEDEE_PASSCODE).
+  opsBoard: defineTable({
+    key: v.string(), // always "board" — one row
+    data: v.any(), // the full structured board (same shape as deedee/ops.json)
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.string()), // e.g. "DeeDee (chat)"
+  }).index("by_key", ["key"]),
+
   // Prayer requests (for community feature - future)
   prayerRequests: defineTable({
     userId: v.id("users"),
