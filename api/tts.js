@@ -32,7 +32,9 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const apiKey = process.env.ELEVENLABS_API_KEY;
+  // Read the ElevenLabs key. `liftfaith` is a fallback alias for the same key,
+  // to match an existing Vercel env var of that name.
+  const apiKey = process.env.ELEVENLABS_API_KEY || process.env.liftfaith;
   if (!apiKey) {
     // Not configured yet — the page will fall back to the browser voice.
     res.status(501).json({ error: "TTS not configured." });
