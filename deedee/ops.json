@@ -1,0 +1,78 @@
+{
+  "_comment": "DeeDee's single source of truth for ministry operations. One record for the whole operation, split into eight areas. The visual dashboard (operations-dashboard.html) reads this file, and deedee/dashboard.md is the human-readable mirror. Keep them in sync. Never invent a value — unknowns are TODO. See deedee/README.md.",
+  "ministry": "Lift Faith — Under the Scope with Pastor Billy Daws",
+  "owner": "Billy Daws",
+  "updated": "2026-08-01",
+  "statusFlows": {
+    "podcast": ["planned", "scripted", "recorded", "edited", "scheduled", "published"],
+    "recordingDay": ["tentative", "confirmed", "done"],
+    "speaking": ["invited", "accepted", "declined", "confirmed", "done"],
+    "prayer": ["open", "praying", "followed-up", "answered", "closed"],
+    "donation": ["received", "thanked", "receipted"],
+    "newsletter": ["planned", "drafting", "ready", "sent"],
+    "pipeline": ["idea", "in progress", "review", "done", "published"]
+  },
+  "podcastSchedule": {
+    "cadence": "TODO — set the regular publish day (e.g. weekly on Wednesdays)",
+    "episodes": [
+      {
+        "number": null,
+        "title": "Habakkuk — When God Seems Silent",
+        "topicOrPassage": "Habakkuk",
+        "guest": null,
+        "status": "scripted",
+        "targetPublish": "TODO",
+        "notes": "Script drafted by Abe — see abe/output/2026-07-31-habakkuk/podcast-script.md",
+        "assets": "abe/output/2026-07-31-habakkuk/"
+      }
+    ]
+  },
+  "recordingDays": [
+    {
+      "date": "TODO",
+      "recording": ["Habakkuk episode"],
+      "location": "TODO",
+      "prep": "Finalize script, set up mic/room",
+      "status": "tentative",
+      "notes": "First recording day not yet set"
+    }
+  ],
+  "publishingCalendar": [
+    {
+      "date": "TODO",
+      "channel": "podcast",
+      "item": "Habakkuk episode",
+      "status": "planned",
+      "notes": "Depends on recording day"
+    }
+  ],
+  "speakingInvitations": [],
+  "prayerRequests": [],
+  "donations": {
+    "periodLabel": "2026",
+    "runningTotal": 0,
+    "items": []
+  },
+  "newsletterSchedule": {
+    "cadence": "TODO — set the regular send day (e.g. monthly, first Monday)",
+    "issues": []
+  },
+  "contentPipeline": [
+    {
+      "piece": "Habakkuk podcast episode",
+      "type": "podcast",
+      "stage": "in progress",
+      "owner": "Billy / Abe",
+      "due": "TODO",
+      "notes": "Script done (Abe); needs recording → edit → publish"
+    },
+    {
+      "piece": "Lift Your Eyes: 30 Days of Strength from Psalm 121",
+      "type": "book",
+      "stage": "in progress",
+      "owner": "Billy / Barb",
+      "due": "2026-09-15 (launch target)",
+      "notes": "Tracked in detail by Barb — barb/books.json"
+    }
+  ]
+}

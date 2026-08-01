@@ -36,6 +36,19 @@ Lift is a faith-based subscription service that provides daily biblical encourag
   `/talk-to-barb` (a.k.a. `/barb`) — which can *edit* the dashboard once unlocked
   with a passcode. Books live in Convex (`convex/books.ts`, live source of truth)
   seeded from `barb/books.json`. Setup: `TALK-TO-BARB-SETUP.md`.
+- **Chloe** — Research Agent (`.claude/agents/chloe.md`, `chloe/`). Your digital
+  seminary research partner — say "prepare everything on Romans 8" for a full
+  brief (history, outline, word studies, cross-refs, maps, archaeology,
+  illustrations, quotes, application, hard passages, discussion questions). Talk
+  to Chloe at `/talk-to-chloe` (a.k.a. `/chloe`).
+- **DeeDee** — Ministry Operations Agent (`.claude/agents/deedee.md`, `deedee/`).
+  Runs the day-to-day from one calendar-and-board: podcast schedule, recording
+  days, publishing calendar, speaking invitations, prayer requests, donations,
+  newsletter schedule, and the content pipeline — so you always know what's done
+  and what's next. Two web apps: the **operations board** at `/operations`, and
+  **Talk to DeeDee** (mic + chat, ElevenLabs *Emily* voice) at `/talk-to-deedee`
+  (a.k.a. `/deedee`). Source of truth: `deedee/ops.json` (mirrored to
+  `deedee/dashboard.md`). Setup: `TALK-TO-DEEDEE-SETUP.md`.
 
 ### Planned Features 🚧
 - Airtable data collection integration

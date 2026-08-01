@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Operations Board — DeeDee</title>
+<meta name="robots" content="noindex" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="DeeDee" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#8B1538" />
+<link rel="apple-touch-icon" href="/deedee-apple-touch-v1.png" />
+<link rel="icon" type="image/svg+xml" href="/deedee-icon-v1.svg" />
+<link rel="icon" type="image/png" sizes="192x192" href="/deedee-icon-192-v1.png" />
+<link rel="manifest" href="/deedee-manifest.webmanifest" />
+<style>
+  :root {
+    --burgundy: #8B1538;
+    --burgundy-deep: #5C0F28;
+    --cream: #f7f3ee;
+    --ink: #2b2b2b;
+    --muted: #6b6b6b;
+    --line: #e7d9cc;
+    --card: #ffffff;
+    --ok: #2e7d54;
+    --warn: #b8860b;
+    --todo: #b0431f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    color: var(--ink);
+    background: linear-gradient(160deg, #fbf8f4 0%, #f1e7ea 100%);
+    min-height: 100dvh;
+  }
+  header {
+    background: linear-gradient(135deg, var(--burgundy), var(--burgundy-deep));
+    color: #fff; padding: 22px 20px; text-align: center;
+    padding-top: calc(22px + env(safe-area-inset-top));
+    box-shadow: 0 2px 10px rgba(0,0,0,.15);
+  }
+  header h1 { margin: 0; font-size: 1.5rem; letter-spacing: .3px; }
+  header p { margin: 6px 0 0; font-size: .9rem; opacity: .92; font-style: italic; }
+  header .meta { margin-top: 8px; font-size: .78rem; opacity: .8; font-style: normal; }
+  .agent-nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px auto 0; }
+  .agent-nav a { color: #fff; font-size: .76rem; text-decoration: none; opacity: .92;
+    border: 1px solid rgba(255,255,255,.5); border-radius: 999px; padding: 4px 11px; }
+  .agent-nav a:hover { background: rgba(255,255,255,.15); }
+  .agent-nav a.current { background: rgba(255,255,255,.22); font-weight: bold; opacity: 1; }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 22px 16px 60px; }
+
+  .summary { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+  .stat {
+    flex: 1 1 130px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  }
+  .stat .n { font-size: 1.7rem; color: var(--burgundy); font-weight: bold; }
+  .stat .l { font-size: .78rem; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+
+  .next {
+    background: linear-gradient(135deg, #fff, #fdf3f6); border: 1px solid #eccdd6;
+    border-left: 6px solid var(--burgundy); border-radius: 14px; padding: 18px 22px;
+    margin-bottom: 24px; box-shadow: 0 2px 10px rgba(139,21,56,.08);
+  }
+  .next h2 { margin: 0 0 10px; font-size: 1.15rem; color: var(--burgundy-deep); }
+  .next ol { margin: 0; padding-left: 20px; }
+  .next li { margin: 6px 0; line-height: 1.5; }
+  .next .none { color: var(--muted); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 18px 22px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  }
+  .card h2 { margin: 0 0 4px; font-size: 1.2rem; color: var(--burgundy-deep); }
+  .card .cadence { font-size: .82rem; color: var(--muted); margin: 0 0 12px; font-style: italic; }
+  .card .empty-row { color: var(--muted); font-size: .9rem; padding: 6px 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #efe6db; vertical-align: top; }
+  th { font-size: .7rem; text-transform: uppercase; letter-spacing: .6px; color: var(--muted);
+       font-family: -apple-system, Arial, sans-serif; }
+  tr:last-child td { border-bottom: none; }
+
+  .pill {
+    display: inline-block; font-size: .68rem; letter-spacing: .5px; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 999px; font-family: -apple-system, Arial, sans-serif; font-weight: 600;
+    background: #f7e9ee; color: var(--burgundy);
+  }
+  .pill.ok { background: #e5efe9; color: var(--ok); }
+  .pill.warn { background: #fdf1e3; color: var(--warn); }
+  .pill.todo { background: #fdeae2; color: var(--todo); }
+  .todoish { color: var(--todo); }
+  .owed { color: var(--todo); font-weight: bold; }
+  .path { font-family: ui-monospace, Menlo, monospace; font-size: .8rem; color: var(--muted); word-break: break-all; }
+
+  footer { text-align: center; color: var(--muted); font-size: .82rem; padding: 10px 16px 30px; }
+  footer a { color: var(--burgundy); }
+  .empty, .error {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 26px; text-align: center; color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Operations Board</h1>
+  <p>Kept by DeeDee — the whole ministry, what's done and what's next.</p>
+  <div class="meta" id="meta"></div>
+  <nav class="agent-nav">
+    <a href="/abe">🎙️ Abe</a>
+    <a href="/chloe">🔎 Chloe</a>
+    <a href="/barb">📚 Barb</a>
+    <a href="/deedee">📅 DeeDee</a>
+    <a class="current" href="/operations" aria-current="page">🗂️ Board</a>
+  </nav>
+</header>
+
+<main>
+  <div id="next"></div>
+  <div class="summary" id="summary"></div>
+  <div id="board"><div class="empty">Loading the board…</div></div>
+</main>
+
+<footer>
+  Source of truth: <span class="path">deedee/ops.json</span> · kept by DeeDee.
+  &nbsp;·&nbsp; <a href="/talk-to-deedee">📅 Talk to DeeDee</a>
+  &nbsp;·&nbsp; <a href="/dashboard">📚 Publishing</a>
+  &nbsp;·&nbsp; <a href="/">Lift Faith home</a>
+</footer>
+
+<script>
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+var TODAY = new Date().toISOString().slice(0,10);
+
+function isTodo(v){
+  var t = String(v==null?"":v).trim().toLowerCase();
+  return t === "" || t === "todo" || t === "—" || t === "tbd";
+}
+function fmtDate(v){ return isTodo(v) ? '<span class="todoish">TODO</span>' : esc(v); }
+// a real, comparable date? (YYYY-MM-DD prefix)
+function realDate(v){ var m = String(v||"").match(/^\d{4}-\d{2}-\d{2}/); return m ? m[0] : null; }
+
+function statusPill(s, doneWords){
+  var t = String(s||"").toLowerCase();
+  var cls = "";
+  if (doneWords.some(function(w){ return t.indexOf(w) !== -1; })) cls = "ok";
+  else if (isTodo(s)) cls = "todo";
+  else if (/(idea|planned|invited|tentative|open|received|drafting|in progress|review)/.test(t)) cls = "warn";
+  return '<span class="pill ' + cls + '">' + esc(s || "—") + '</span>';
+}
+
+function card(title, cadence, inner){
+  return '<div class="card"><h2>' + esc(title) + '</h2>' +
+    (cadence ? '<p class="cadence">' + cadence + '</p>' : '') + inner + '</div>';
+}
+function rows(headers, body){
+  if (!body) return '<div class="empty-row">Nothing recorded yet.</div>';
+  return '<table><thead><tr>' + headers.map(function(h){ return '<th>' + esc(h) + '</th>'; }).join('') +
+    '</tr></thead><tbody>' + body + '</tbody></table>';
+}
+
+function buildNext(ops){
+  var items = [];
+  var pod = (ops.podcastSchedule && ops.podcastSchedule.episodes) || [];
+  var recs = ops.recordingDays || [];
+  var spk = ops.speakingInvitations || [];
+  var pray = ops.prayerRequests || [];
+  var don = (ops.donations && ops.donations.items) || [];
+  var news = (ops.newsletterSchedule && ops.newsletterSchedule.issues) || [];
+
+  // next recording day (not done)
+  var nextRec = recs.filter(function(r){ return String(r.status).toLowerCase() !== "done"; })[0];
+  if (nextRec) {
+    items.push("Recording day: <strong>" + (isTodo(nextRec.date) ? "no date set yet" : esc(nextRec.date)) +
+      "</strong> — " + esc((nextRec.recording || []).join(", ") || "TODO") +
+      (nextRec.prep ? " · prep: " + esc(nextRec.prep) : ""));
+  }
+  // podcast not yet published
+  var unpub = pod.filter(function(e){ return String(e.status).toLowerCase() !== "published"; });
+  if (unpub.length) {
+    var e0 = unpub[0];
+    items.push("Podcast: <strong>" + esc(e0.title || "next episode") + "</strong> is " + esc(e0.status) +
+      " — publishes " + (isTodo(e0.targetPublish) ? "TBD" : esc(e0.targetPublish)));
+  }
+  // confirmed upcoming speaking
+  var upSpk = spk.filter(function(s){ return String(s.status).toLowerCase() === "confirmed"; });
+  if (upSpk.length) items.push("Speaking: <strong>" + esc(upSpk[0].event || upSpk[0].host) + "</strong> on " + fmtDate(upSpk[0].date));
+  var pendSpk = spk.filter(function(s){ return ["invited","accepted"].indexOf(String(s.status).toLowerCase()) !== -1; });
+  if (pendSpk.length) items.push(pendSpk.length + " speaking invite(s) awaiting a yes/no");
+  // next newsletter
+  var nextNews = news.filter(function(n){ return String(n.status).toLowerCase() !== "sent"; })[0];
+  if (nextNews) items.push("Newsletter: <strong>#" + esc(nextNews.issue) + "</strong> (" + esc(nextNews.status) +
+    ") — sends " + fmtDate(nextNews.sendDate));
+  // thank-yous owed
+  var owed = don.filter(function(d){ return String(d.status).toLowerCase() === "received"; });
+  if (owed.length) items.push('<span class="owed">' + owed.length + " thank-you(s) owed</span> for recent gifts");
+  // open prayer follow-ups
+  var follows = pray.filter(function(p){ var s = String(p.status).toLowerCase(); return (s === "open" || s === "praying") && p.followUp && !isTodo(p.followUp); });
+  if (follows.length) items.push(follows.length + " prayer follow-up(s) you promised");
+
+  var inner = items.length
+    ? '<ol>' + items.map(function(i){ return '<li>' + i + '</li>'; }).join('') + '</ol>'
+    : '<p class="none">The board is quiet — add recording days, episodes, gifts, and requests and DeeDee will keep this list honest.</p>';
+  return '<div class="next"><h2>⏭️ What\'s next</h2>' + inner + '</div>';
+}
+
+function buildSummary(ops){
+  var pod = (ops.podcastSchedule && ops.podcastSchedule.episodes) || [];
+  var recs = ops.recordingDays || [];
+  var pray = ops.prayerRequests || [];
+  var don = (ops.donations && ops.donations.items) || [];
+  var pipe = ops.contentPipeline || [];
+  var owed = don.filter(function(d){ return String(d.status).toLowerCase() === "received"; }).length;
+  var openPray = pray.filter(function(p){ var s=String(p.status).toLowerCase(); return s==="open"||s==="praying"; }).length;
+  var upcomingRec = recs.filter(function(r){ return String(r.status).toLowerCase() !== "done"; }).length;
+  var inFlight = pipe.filter(function(p){ var s=String(p.stage).toLowerCase(); return s!=="published"&&s!=="done"; }).length;
+  var total = (ops.donations && ops.donations.runningTotal) || 0;
+  var cards = [
+    {n: pod.length, l: "Episodes"},
+    {n: upcomingRec, l: "Recording days"},
+    {n: inFlight, l: "In pipeline"},
+    {n: openPray, l: "Open prayers"},
+    {n: owed, l: "Thank-yous owed"},
+    {n: "$" + Number(total).toLocaleString(), l: "Given (" + esc((ops.donations && ops.donations.periodLabel) || "") + ")"}
+  ];
+  return cards.map(function(c){ return '<div class="stat"><div class="n">' + c.n + '</div><div class="l">' + esc(c.l) + '</div></div>'; }).join('');
+}
+
+function render(ops){
+  document.getElementById("meta").textContent = "Last updated " + (ops.updated || "—") + " · " + (ops.ministry || "");
+  document.getElementById("next").innerHTML = buildNext(ops);
+  document.getElementById("summary").innerHTML = buildSummary(ops);
+
+  var out = [];
+
+  // Podcast
+  var pod = (ops.podcastSchedule && ops.podcastSchedule.episodes) || [];
+  out.push(card("🎙️ Podcast schedule",
+    "Cadence: " + esc((ops.podcastSchedule && ops.podcastSchedule.cadence) || "TODO"),
+    rows(["#","Title","Passage","Guest","Status","Publishes"], pod.map(function(e){
+      return '<tr><td>' + esc(e.number==null?"—":e.number) + '</td><td>' + esc(e.title||"—") +
+        '</td><td>' + esc(e.topicOrPassage||"—") + '</td><td>' + esc(e.guest||"—") + '</td><td>' +
+        statusPill(e.status, ["published"]) + '</td><td>' + fmtDate(e.targetPublish) + '</td></tr>';
+    }).join(""))));
+
+  // Recording days
+  var recs = ops.recordingDays || [];
+  out.push(card("🎬 Recording days", "",
+    rows(["Date","Recording","Location","Status","Prep"], recs.map(function(r){
+      return '<tr><td>' + fmtDate(r.date) + '</td><td>' + esc((r.recording||[]).join(", ")||"—") +
+        '</td><td>' + esc(r.location||"—") + '</td><td>' + statusPill(r.status, ["done"]) +
+        '</td><td>' + esc(r.prep||"—") + '</td></tr>';
+    }).join(""))));
+
+  // Publishing calendar
+  var cal = ops.publishingCalendar || [];
+  out.push(card("🗓️ Publishing calendar", "",
+    rows(["Date","Channel","Item","Status"], cal.map(function(c){
+      return '<tr><td>' + fmtDate(c.date) + '</td><td>' + esc(c.channel||"—") +
+        '</td><td>' + esc(c.item||"—") + '</td><td>' + statusPill(c.status, ["published","live","sent"]) + '</td></tr>';
+    }).join(""))));
+
+  // Speaking
+  var spk = ops.speakingInvitations || [];
+  out.push(card("🎤 Speaking invitations", "",
+    rows(["Host / Event","Date","Location","Status"], spk.map(function(s){
+      var name = [s.host, s.event].filter(Boolean).map(esc).join(" — ") || "—";
+      return '<tr><td>' + name + '</td><td>' + fmtDate(s.date) + '</td><td>' + esc(s.location||"—") +
+        '</td><td>' + statusPill(s.status, ["confirmed","done"]) + '</td></tr>';
+    }).join(""))));
+
+  // Prayer (care: honor anonymity / private)
+  var pray = ops.prayerRequests || [];
+  out.push(card("🙏 Prayer requests", "Handled with care — anonymous stays anonymous.",
+    rows(["Request","Received","Status","Follow-up"], pray.map(function(p){
+      var who = p.private ? "(private)" : (p.who || "");
+      var label = [p.request, who].filter(Boolean).map(esc).join(" · ") || "—";
+      return '<tr><td>' + label + '</td><td>' + fmtDate(p.received) + '</td><td>' +
+        statusPill(p.status, ["answered","closed","followed-up"]) + '</td><td>' + esc(p.followUp||"—") + '</td></tr>';
+    }).join(""))));
+
+  // Donations (care)
+  var don = (ops.donations && ops.donations.items) || [];
+  out.push(card("💝 Donations",
+    "Period " + esc((ops.donations && ops.donations.periodLabel) || "") + " · total $" +
+      Number((ops.donations && ops.donations.runningTotal) || 0).toLocaleString(),
+    rows(["Donor","Amount","Date","Channel","Thank-you"], don.map(function(d){
+      return '<tr><td>' + esc(d.donor||"anonymous") + '</td><td>$' + esc(Number(d.amount||0).toLocaleString()) +
+        '</td><td>' + fmtDate(d.date) + '</td><td>' + esc(d.channel||"—") + '</td><td>' +
+        statusPill(d.status, ["thanked","receipted"]) + '</td></tr>';
+    }).join(""))));
+
+  // Newsletter
+  var news = (ops.newsletterSchedule && ops.newsletterSchedule.issues) || [];
+  out.push(card("📰 Newsletter schedule",
+    "Cadence: " + esc((ops.newsletterSchedule && ops.newsletterSchedule.cadence) || "TODO"),
+    rows(["Issue","Send date","Theme","Status"], news.map(function(n){
+      return '<tr><td>#' + esc(n.issue||"—") + '</td><td>' + fmtDate(n.sendDate) + '</td><td>' +
+        esc(n.theme||"—") + '</td><td>' + statusPill(n.status, ["sent","ready"]) + '</td></tr>';
+    }).join(""))));
+
+  // Pipeline
+  var pipe = ops.contentPipeline || [];
+  out.push(card("🧩 Content pipeline", "",
+    rows(["Piece","Type","Stage","Owner","Due"], pipe.map(function(p){
+      return '<tr><td>' + esc(p.piece||"—") + '</td><td>' + esc(p.type||"—") + '</td><td>' +
+        statusPill(p.stage, ["done","published"]) + '</td><td>' + esc(p.owner||"—") + '</td><td>' +
+        fmtDate(p.due) + '</td></tr>';
+    }).join(""))));
+
+  document.getElementById("board").innerHTML = out.join("");
+}
+
+fetch("/deedee/ops.json", {cache:"no-store"})
+  .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+  .then(render)
+  .catch(function(err){
+    document.getElementById("board").innerHTML =
+      '<div class="error">Couldn\'t load the board (' + esc(err.message) + ').<br>' +
+      'On the live site this loads automatically. Opening the file locally? Serve the folder over http ' +
+      '(e.g. <span class="path">npx serve</span>) — browsers block fetch on file://.</div>';
+  });
+</script>
+</body>
+</html>
