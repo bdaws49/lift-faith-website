@@ -102,9 +102,37 @@
     background: var(--card); border: 1px solid var(--line); border-radius: 14px;
     padding: 26px; text-align: center; color: var(--muted);
   }
+
+  /* passcode gate overlay */
+  .gate { position: fixed; inset: 0; z-index: 50; display: none;
+    background: linear-gradient(160deg, #fbf8f4 0%, #f1e7ea 100%);
+    align-items: center; justify-content: center; padding: 24px; }
+  .gate.show { display: flex; }
+  .gate-card { background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+    padding: 30px 28px; max-width: 380px; width: 100%; text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,.12); }
+  .gate-card .lock { font-size: 2.4rem; }
+  .gate-card h2 { margin: 10px 0 6px; color: var(--burgundy-deep); font-size: 1.25rem; }
+  .gate-card p { margin: 0 0 16px; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+  .gate-card input { width: 100%; padding: 12px 14px; border: 1px solid #d8c6b8; border-radius: 12px;
+    font-family: inherit; font-size: 1rem; margin-bottom: 12px; }
+  .gate-card button { width: 100%; padding: 12px; border: none; border-radius: 12px; cursor: pointer;
+    background: var(--burgundy); color: #fff; font-family: inherit; font-size: 1rem; }
+  .gate-card .err { color: var(--todo); font-size: .85rem; min-height: 1.1em; margin: 2px 0 8px; }
 </style>
 </head>
 <body>
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="lock">🔒</div>
+    <h2>This board is private</h2>
+    <p>It holds prayer requests and giving. Enter the view passcode to see it.</p>
+    <input id="gatePass" type="password" placeholder="View passcode" autocomplete="current-password" />
+    <div class="err" id="gateErr"></div>
+    <button id="gateBtn">View board</button>
+  </div>
+</div>
+
 <header>
   <h1>Operations Board</h1>
   <p>Kept by DeeDee — the whole ministry, what's done and what's next.</p>
@@ -315,38 +343,81 @@ function render(ops){
 }
 
 // Prefer the live Convex board (what DeeDee edits from the chat app); fall back
-// to the static deedee/ops.json snapshot if Convex isn't reachable/seeded.
+// to the static deedee/ops.json scaffold if Convex isn't reachable/seeded.
+// Reading may be gated by a view passcode (DEEDEE_READ_PASSCODE) — if so, a
+// "locked" error surfaces the passcode overlay.
 var CONVEX_URL = "https://tame-fennec-574.convex.cloud";
 function withTimeout(p, ms){ return Promise.race([p, new Promise(function(_,rej){ setTimeout(function(){ rej(new Error("timeout")); }, ms); })]); }
 
-async function loadBoard(){
-  try {
-    var b = await withTimeout((async function(){
-      var mod = await import("https://esm.sh/convex@1.29.1/browser");
-      var c = new mod.ConvexHttpClient(CONVEX_URL);
-      return await c.query("ops:getBoard", {});
-    })(), 3000);
-    if (b && typeof b === "object") return { ops: b, source: "live" };
-  } catch (e) { /* fall back to the static snapshot */ }
-  var r = await fetch("/deedee/ops.json", {cache:"no-store"});
-  if (!r.ok) throw new Error("HTTP " + r.status);
-  return { ops: await r.json(), source: "file" };
+var passcode = "";
+try { passcode = localStorage.getItem("deedeePasscode") || ""; } catch (e) {}
+
+var gate = document.getElementById("gate");
+var gatePass = document.getElementById("gatePass");
+var gateBtn = document.getElementById("gateBtn");
+var gateErr = document.getElementById("gateErr");
+
+function isLocked(e){ var m = String((e && (e.data || e.message)) || e || ""); return /locked/i.test(m); }
+
+// Try the live Convex board with the current passcode.
+function queryBoard(){
+  return withTimeout((async function(){
+    var mod = await import("https://esm.sh/convex@1.29.1/browser");
+    var c = new mod.ConvexHttpClient(CONVEX_URL);
+    return await c.query("ops:getBoard", { passcode: passcode });
+  })(), 4000);
 }
 
-loadBoard()
-  .then(function(res){
-    render(res.ops);
-    if (res.source === "live") {
-      var m = document.getElementById("meta");
-      m.textContent = "🟢 Live · " + m.textContent;
-    }
-  })
-  .catch(function(err){
+function showBoard(ops, live){
+  render(ops);
+  if (live) { var m = document.getElementById("meta"); m.textContent = "🟢 Live · " + m.textContent; }
+}
+
+async function loadBoard(){
+  var locked = false;
+  try {
+    var b = await queryBoard();
+    if (b && typeof b === "object") { gate.classList.remove("show"); showBoard(b, true); return; }
+    // null → not seeded yet; fall through to the static scaffold
+  } catch (e) {
+    if (isLocked(e)) { locked = true; }
+    // other errors (offline/unreachable) → fall through to the static scaffold
+  }
+  if (locked) { gate.classList.add("show"); return; }
+
+  // Open (no read gate configured) or Convex unreachable → static scaffold.
+  try {
+    var r = await fetch("/deedee/ops.json", {cache:"no-store"});
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    gate.classList.remove("show");
+    showBoard(await r.json(), false);
+  } catch (err) {
     document.getElementById("board").innerHTML =
       '<div class="error">Couldn\'t load the board (' + esc(err.message) + ').<br>' +
       'On the live site this loads automatically. Opening the file locally? Serve the folder over http ' +
       '(e.g. <span class="path">npx serve</span>) — browsers block fetch on file://.</div>';
-  });
+  }
+}
+
+gateBtn.addEventListener("click", async function(){
+  var entered = (gatePass.value || "").trim();
+  if (!entered) { gateErr.textContent = "Enter your view passcode."; return; }
+  gateErr.textContent = "Checking…";
+  passcode = entered;
+  try {
+    var b = await queryBoard();
+    try { localStorage.setItem("deedeePasscode", passcode); } catch (e) {}
+    gateErr.textContent = "";
+    gate.classList.remove("show");
+    showBoard(b && typeof b === "object" ? b : {}, true);
+  } catch (e) {
+    if (isLocked(e)) { gateErr.textContent = "That passcode isn’t right."; passcode = ""; }
+    else { gateErr.textContent = "Couldn’t reach the board — try again."; }
+  }
+});
+gatePass.addEventListener("keydown", function(e){ if (e.key === "Enter") gateBtn.click(); });
+
+loadBoard();
 </script>
 </body>
 </html>

@@ -139,10 +139,38 @@ what `/operations` shows (Convex) as authoritative.
   `claude-opus-5` for more depth at higher cost.
 - `DEEDEE_VOICE_ID` (Vercel) — her ElevenLabs voice. Default Emily.
 
-## Privacy
+## Privacy & the read gate (the board holds prayer requests + giving)
 
-The page is `noindex`, but anyone with the link can open it and read the board —
-which includes **prayer requests and donations**. Keep the link private. DeeDee
-honors "anonymous" and keeps private notes private, but the raw `ops.json` is
-readable by anyone who can reach `/operations`. Want reading locked to just you?
-Say so and a read gate can be added.
+The board is sensitive, so reading it can be locked behind a **view passcode**.
+
+### Lock viewing
+Set a read passcode in Convex:
+
+```
+npx convex env set DEEDEE_READ_PASSCODE "your-view-code"
+```
+
+Once it's set, `/operations` and `/talk-to-deedee` show a passcode screen before
+revealing anything, and `ops:getBoard` refuses to return the board without the
+code. If it isn't set, viewing stays open (nothing changes until you opt in).
+
+**One code for everything (simplest):** set `DEEDEE_READ_PASSCODE` and
+`DEEDEE_PASSCODE` to the **same** value — then one passcode both views and edits,
+and the "Unlock editing" bar lights up automatically once you're in. Want a
+separate view-only code (e.g. so a helper can read but not edit)? Give them
+different values; the view code shows the board, the edit code is still required
+to save.
+
+The passcode is stored only on that device (localStorage), so you enter it once
+per phone/browser.
+
+### One honest caveat — keep `deedee/ops.json` a scaffold
+This is a static site, so the seed file `deedee/ops.json` is reachable directly
+at `/deedee/ops.json` and the read gate can't cover a raw static file. That's why
+**real prayer requests and donations should live in Convex** (added through the
+chat once unlocked), and `deedee/ops.json` should stay a non-sensitive scaffold —
+structure and TODOs, not names and amounts. DeeDee (the agent) is told to keep
+sensitive detail out of that file. The gate then protects the live board, which
+is where the sensitive data actually accumulates.
+
+The pages are also `noindex`. Keep the link private regardless.

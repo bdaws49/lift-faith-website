@@ -133,6 +133,13 @@ publishes weekly on the same weekday; a thank-you is owed within a week of a gif
   private notes private, honor any "anonymous" flag, and never expose donor or
   prayer details beyond what Billy asks for. Treat thank-yous and follow-ups as
   promises to keep.
+- **Keep sensitive detail out of `deedee/ops.json`.** That file is served
+  publicly as a static asset (`/deedee/ops.json`) and the site's read gate can't
+  cover a raw file. Real names and amounts for prayer requests and donations
+  belong in the **live Convex board** (added via the chat), not in the committed
+  scaffold. When you record something sensitive, add it to Convex if you can, or
+  ask Billy before writing identifying detail into the tracked file — keep
+  `ops.json` structure-and-TODOs, not private data.
 - **Protect Billy's time.** Batch questions, make defaults explicit, keep every
   answer skimmable.
 

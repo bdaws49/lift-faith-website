@@ -192,9 +192,9 @@ module.exports = async (req, res) => {
   let board = null;
   if (client) {
     try {
-      const b = await client.query("ops:getBoard", {});
+      const b = await client.query("ops:getBoard", { passcode });
       if (b && typeof b === "object") board = b;
-    } catch (e) { /* fall through to snapshot */ }
+    } catch (e) { /* locked or unreachable — fall through to snapshot */ }
   }
   let snapshot = body && body.ops;
   if (board) {
@@ -245,7 +245,7 @@ module.exports = async (req, res) => {
           .trim();
         let fresh = board;
         if (changed && client) {
-          try { fresh = await client.query("ops:getBoard", {}); } catch (e) {}
+          try { fresh = await client.query("ops:getBoard", { passcode }); } catch (e) {}
         }
         res.status(200).json({ reply: reply || "(no reply)", changed, ops: fresh || undefined });
         return;

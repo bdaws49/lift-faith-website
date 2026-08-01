@@ -32,6 +32,22 @@ function assertUnlocked(passcode?: string) {
   }
 }
 
+// Optional READ gate. The board holds sensitive prayer requests and donations,
+// so reading can be locked behind its own passcode:
+//   npx convex env set DEEDEE_READ_PASSCODE "view-code"
+// If DEEDEE_READ_PASSCODE isn't set, reading stays OPEN (nothing breaks before
+// you opt in). Tip: set it to the same value as DEEDEE_PASSCODE and one code
+// both views and edits.
+function assertCanRead(passcode?: string) {
+  const expected = process.env.DEEDEE_READ_PASSCODE;
+  if (!expected) return; // reads open until a read passcode is configured
+  if ((passcode || "") !== expected) {
+    const err: any = new Error("locked");
+    err.data = "locked";
+    throw err;
+  }
+}
+
 function today(): string {
   return new Date(Date.now()).toISOString().slice(0, 10);
 }
@@ -142,9 +158,12 @@ async function loadBoardRow(ctx: any) {
 // ---- reads (open) --------------------------------------------------------
 
 // The whole board, in the same shape as deedee/ops.json. Null if not seeded.
+// Reading is gated by DEEDEE_READ_PASSCODE when that env var is set (throws
+// "locked" on a missing/wrong passcode); otherwise reads are open.
 export const getBoard = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { passcode: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    assertCanRead(args.passcode);
     const row = await loadBoardRow(ctx);
     return row ? row.data : null;
   },

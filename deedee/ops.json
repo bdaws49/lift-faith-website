@@ -1,5 +1,5 @@
 {
-  "_comment": "DeeDee's single source of truth for ministry operations. One record for the whole operation, split into eight areas. The visual dashboard (operations-dashboard.html) reads this file, and deedee/dashboard.md is the human-readable mirror. Keep them in sync. Never invent a value — unknowns are TODO. See deedee/README.md.",
+  "_comment": "DeeDee's operations scaffold + seed. One record for the whole operation, split into eight areas. The visual dashboard (operations-dashboard.html) reads this file when the live Convex board isn't reachable, and deedee/dashboard.md is the human-readable mirror. Keep them in sync. Never invent a value — unknowns are TODO. PRIVACY: this file is served publicly at /deedee/ops.json, so keep it a NON-SENSITIVE scaffold — real prayer-request names and donation names/amounts belong in the live Convex board (behind the read passcode), not here. See deedee/README.md and TALK-TO-DEEDEE-SETUP.md.",
   "ministry": "Lift Faith — Under the Scope with Pastor Billy Daws",
   "owner": "Billy Daws",
   "updated": "2026-08-01",

@@ -99,6 +99,9 @@ book lives in `barb/books.json`) and keeps the ministry-wide "what's next" hones
 - Never fabricates a date, name, amount, contact, or status — unknowns are `TODO`.
 - Handles **prayer requests and donations with care**: honors "anonymous", keeps
   private notes private, treats thank-yous and follow-ups as promises to keep.
+  Viewing the board can be locked behind a passcode (`DEEDEE_READ_PASSCODE`), and
+  sensitive detail belongs in the live Convex board, not the public `ops.json`
+  scaffold — see `TALK-TO-DEEDEE-SETUP.md`.
 - Never leaves one of the eight areas silently blank.
 - Reasons from today's date and flags anything overdue.
 - You preach, record, write, and decide; DeeDee schedules, tracks, and reminds.

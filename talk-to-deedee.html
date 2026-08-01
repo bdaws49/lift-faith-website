@@ -123,9 +123,37 @@
   .lockbar.on { background: #e9f3ec; color: #2e7d54; border-bottom-color: #cfe6d6; }
   .lockbar.on button { color: #2e7d54; }
   .saved-flash { color: #2e7d54; font-weight: bold; margin-left: 6px; }
+
+  /* passcode gate overlay (shown only when reading is locked) */
+  .gate { position: fixed; inset: 0; z-index: 50; display: none;
+    background: linear-gradient(160deg, #fbf8f4 0%, #f1e7ea 100%);
+    align-items: center; justify-content: center; padding: 24px; }
+  .gate.show { display: flex; }
+  .gate-card { background: #fff; border: 1px solid #eaddd0; border-radius: 18px;
+    padding: 30px 28px; max-width: 380px; width: 100%; text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,.12); }
+  .gate-card .lock { font-size: 2.4rem; }
+  .gate-card h2 { margin: 10px 0 6px; color: var(--burgundy-deep); font-size: 1.25rem; }
+  .gate-card p { margin: 0 0 16px; color: #6b5b52; font-size: .9rem; line-height: 1.5; }
+  .gate-card input { width: 100%; padding: 12px 14px; border: 1px solid #d8c6b8; border-radius: 12px;
+    font-family: inherit; font-size: 1rem; margin-bottom: 12px; }
+  .gate-card button { width: 100%; padding: 12px; border: none; border-radius: 12px; cursor: pointer;
+    background: var(--burgundy); color: #fff; font-family: inherit; font-size: 1rem; }
+  .gate-card .err { color: #b0431f; font-size: .85rem; min-height: 1.1em; margin: 2px 0 8px; }
 </style>
 </head>
 <body>
+  <div class="gate" id="gate">
+    <div class="gate-card">
+      <div class="lock">🔒</div>
+      <h2>This board is private</h2>
+      <p>DeeDee's board holds prayer requests and giving. Enter the passcode to talk to her about it.</p>
+      <input id="gatePass" type="password" placeholder="Passcode" autocomplete="current-password" />
+      <div class="err" id="gateErr"></div>
+      <button id="gateBtn">Unlock</button>
+    </div>
+  </div>
+
   <header>
     <h1>Talk to DeeDee</h1>
     <p>Your ministry operations manager — what's done, what's next</p>
@@ -234,27 +262,66 @@
   }
 
   // Snapshot of the operations board so DeeDee answers from real data. Prefer
-  // the live Convex board; fall back to the static deedee/ops.json.
+  // the live Convex board; fall back to the static deedee/ops.json scaffold.
+  // Reading may be gated by a view passcode (DEEDEE_READ_PASSCODE) — if so, a
+  // "locked" error surfaces the passcode overlay before you can talk to her.
   var opsContext = '';
+  var gate = document.getElementById('gate');
+  var gatePass = document.getElementById('gatePass');
+  var gateBtn = document.getElementById('gateBtn');
+  var gateErr = document.getElementById('gateErr');
   function withTimeout(p, ms) { return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, ms); })]); }
-  (function loadBoard() {
-    withTimeout(
+  function isLocked(e){ var m = String((e && (e.data || e.message)) || e || ''); return /locked/i.test(m); }
+
+  function queryBoard() {
+    return withTimeout(
       import('https://esm.sh/convex@1.29.1/browser').then(function (mod) {
         var c = new mod.ConvexHttpClient(CONVEX_URL);
-        return c.query('ops:getBoard', {});
-      }), 3000
-    )
+        return c.query('ops:getBoard', { passcode: passcode });
+      }), 4000
+    );
+  }
+
+  function loadBoard() {
+    return queryBoard()
       .then(function (b) {
-        if (b && typeof b === 'object') { opsContext = JSON.stringify(b); return; }
-        throw new Error('empty');
-      })
-      .catch(function () {
-        fetch('/deedee/ops.json', { cache: 'no-store' })
+        gate.classList.remove('show');
+        if (b && typeof b === 'object') { opsContext = JSON.stringify(b); return true; }
+        // null → not seeded; use the static scaffold
+        return fetch('/deedee/ops.json', { cache: 'no-store' })
           .then(function (r) { return r.ok ? r.text() : ''; })
-          .then(function (t) { opsContext = t || ''; })
-          .catch(function () {});
+          .then(function (t) { opsContext = t || ''; return true; });
+      })
+      .catch(function (e) {
+        if (isLocked(e)) { gate.classList.add('show'); return false; }
+        // offline/unreachable → static scaffold, no gate
+        return fetch('/deedee/ops.json', { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.text() : ''; })
+          .then(function (t) { opsContext = t || ''; gate.classList.remove('show'); return true; })
+          .catch(function () { return true; });
       });
-  })();
+  }
+  loadBoard();
+
+  gateBtn.addEventListener('click', function () {
+    var entered = (gatePass.value || '').trim();
+    if (!entered) { gateErr.textContent = 'Enter your passcode.'; return; }
+    gateErr.textContent = 'Checking…';
+    passcode = entered;
+    queryBoard()
+      .then(function (b) {
+        try { localStorage.setItem('deedeePasscode', passcode); } catch (e) {}
+        if (b && typeof b === 'object') opsContext = JSON.stringify(b);
+        gateErr.textContent = '';
+        gate.classList.remove('show');
+        updateLockUI(); // one code: reading unlocked also enables editing
+      })
+      .catch(function (e) {
+        if (isLocked(e)) { gateErr.textContent = 'That passcode isn’t right.'; passcode = ''; }
+        else { gateErr.textContent = 'Couldn’t reach the board — try again.'; }
+      });
+  });
+  gatePass.addEventListener('keydown', function (e) { if (e.key === 'Enter') gateBtn.click(); });
 
   var GREETING = "Hi Billy — DeeDee here. I've got the whole board in front of me: the podcast, recording days, the calendar, speaking invites, prayer requests, gifts, the newsletter, and everything in the pipeline. Ask me what's next, what you're forgetting, or where anything stands.";
 
