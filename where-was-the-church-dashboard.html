@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Where Was the Church — Episode Dashboard</title>
+<meta name="robots" content="noindex" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Where Was the Church" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#8B1538" />
+<style>
+  :root {
+    --burgundy: #8B1538;
+    --burgundy-deep: #5C0F28;
+    --ink: #2b2b2b;
+    --muted: #6b7280;
+    --line: #e7d9cc;
+    --card: #ffffff;
+    --bg1: #fbf8f4;
+    --bg2: #f1e7ea;
+    /* unit accents */
+    --u1: #2b6cb0; --u1-tint: #eaf1f9;   /* Tyranny — blue */
+    --u2: #b07d16; --u2-tint: #f8f1e0;   /* America — gold */
+    --u3: #c0392b; --u3-tint: #fbecea;   /* Culture — red */
+    --u4: #6d28d9; --u4-tint: #f1ebfb;   /* Church History — purple */
+    --u5: #2e7d54; --u5-tint: #e9f3ee;   /* Biblical Standard — green */
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    color: var(--ink);
+    background: linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%);
+    min-height: 100dvh;
+  }
+  .sans { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
+
+  header {
+    background: linear-gradient(135deg, var(--burgundy), var(--burgundy-deep));
+    color: #fff; padding: 22px 20px; text-align: center;
+    padding-top: calc(22px + env(safe-area-inset-top));
+    box-shadow: 0 2px 10px rgba(0,0,0,.15);
+  }
+  header h1 { margin: 0; font-size: 1.5rem; letter-spacing: .3px; }
+  header p { margin: 6px 0 0; font-size: .92rem; opacity: .92; font-style: italic; }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 20px 16px 70px; }
+
+  /* Stats row */
+  .stats { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .stat {
+    flex: 1 1 140px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  }
+  .stat .n { font-size: 1.6rem; color: var(--burgundy); font-weight: bold; }
+  .stat .l { font-size: .72rem; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+  .progress-wrap { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .progress-top { display: flex; justify-content: space-between; font-size: .8rem; color: var(--muted); margin-bottom: 8px; }
+  .bar { height: 10px; background: #eee5db; border-radius: 999px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--burgundy), var(--burgundy-deep)); width: 0; transition: width .3s; }
+
+  /* Toolbar */
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; }
+  .filters button, .actions button {
+    font-family: inherit; font-size: .82rem; cursor: pointer; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    padding: 7px 14px; transition: all .15s;
+  }
+  .filters button .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align: middle; }
+  .filters button.active { background: var(--burgundy); color: #fff; border-color: var(--burgundy); }
+  .filters button:hover:not(.active) { border-color: var(--burgundy); }
+  .actions { display: flex; gap: 6px; }
+  .actions button:hover { border-color: var(--burgundy); color: var(--burgundy); }
+  .showing { font-size: .78rem; color: var(--muted); margin: -6px 2px 14px; }
+
+  /* Unit */
+  .unit { border-radius: 16px; margin-bottom: 16px; overflow: hidden;
+    border: 1px solid var(--line); background: var(--card); box-shadow: 0 2px 10px rgba(0,0,0,.05);
+    border-left: 6px solid var(--uc, #ccc); }
+  .unit-head { display: flex; align-items: center; gap: 12px; cursor: pointer;
+    padding: 14px 18px; background: var(--ut, #fafafa); user-select: none; }
+  .unit-head .chev { transition: transform .2s; color: var(--uc); font-size: .9rem; }
+  .unit.collapsed .unit-head .chev { transform: rotate(-90deg); }
+  .unit-num { font-family: -apple-system, Arial, sans-serif; font-weight: 800; font-size: .8rem;
+    color: #fff; background: var(--uc); border-radius: 8px; padding: 3px 9px; letter-spacing: .5px; }
+  .unit-title { font-size: 1.12rem; font-weight: bold; color: var(--uc); }
+  .unit-theme { font-size: .8rem; color: var(--muted); font-style: italic; }
+  .unit-meta { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .unit-count { font-family: -apple-system, Arial, sans-serif; font-size: .78rem; color: var(--muted); white-space: nowrap; }
+  .unit-body { display: block; }
+  .unit.collapsed .unit-body { display: none; }
+
+  /* Episode */
+  .ep { border-top: 1px solid #f0e8de; }
+  .ep-head { display: flex; align-items: center; gap: 12px; padding: 12px 18px; cursor: pointer; user-select: none; }
+  .ep-head:hover { background: #fcfaf7; }
+  .ep-num { font-family: -apple-system, Arial, sans-serif; font-weight: 700; font-size: .82rem;
+    min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; background: var(--uc); border-radius: 8px; }
+  .ep-title { flex: 1; font-size: 1rem; line-height: 1.35; }
+  .ep-title .subj { color: var(--muted); font-size: .84rem; }
+  .ep-tags { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .daytag { font-family: -apple-system, Arial, sans-serif; font-size: .68rem; text-transform: uppercase; letter-spacing: .5px;
+    padding: 3px 8px; border-radius: 999px; background: #f2ede6; color: var(--muted); white-space: nowrap; }
+  .status { font-family: -apple-system, Arial, sans-serif; font-size: .68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .4px; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .status.planned { background: #eef1f4; color: #5b6570; }
+  .status.inprogress { background: #fdf1e3; color: #b07d16; }
+  .status.published { background: #e5efe9; color: #2e7d54; }
+  .ep-chev { color: var(--muted); font-size: .8rem; transition: transform .2s; }
+  .ep.open .ep-chev { transform: rotate(90deg); }
+
+  .ep-body { display: none; padding: 4px 18px 22px; background: var(--ut, #fafafa); }
+  .ep.open .ep-body { display: block; }
+
+  /* Production checklist */
+  .prod { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 18px; }
+  .prod label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+    font-family: -apple-system, Arial, sans-serif; font-size: .82rem; background: #fff; border: 1px solid var(--line);
+    border-radius: 999px; padding: 7px 13px; transition: all .15s; }
+  .prod label:hover { border-color: var(--uc); }
+  .prod input { accent-color: var(--uc); width: 16px; height: 16px; }
+  .prod label.done { background: var(--ut); border-color: var(--uc); color: var(--uc); font-weight: 600; }
+
+  .section-label { font-family: -apple-system, Arial, sans-serif; font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .8px; color: var(--muted); margin: 16px 0 8px; font-weight: 700; }
+
+  /* Verdict framework */
+  .verdict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; }
+  .field > span { font-family: -apple-system, Arial, sans-serif; font-size: .74rem; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+  .field > span .hint { font-weight: 400; color: var(--muted); }
+  textarea, input.text {
+    font-family: inherit; font-size: .92rem; color: var(--ink); background: #fff;
+    border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; width: 100%; resize: vertical;
+  }
+  textarea { min-height: 62px; line-height: 1.45; }
+  textarea:focus, input.text:focus { outline: none; border-color: var(--uc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--uc) 15%, transparent); }
+  .scriptures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .action-field { margin-top: 12px; background: var(--ut); border: 1px dashed var(--uc); border-radius: 12px; padding: 12px 14px; }
+  .action-field > span { font-family: -apple-system, Arial, sans-serif; font-size: .74rem; font-weight: 700; color: var(--uc); display:block; margin-bottom: 6px; }
+
+  /* Reel planner */
+  .reels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .reel { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px;
+    border-top: 3px solid var(--uc); }
+  .reel.cut { background: var(--ut); border-color: var(--uc); }
+  .reel-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .reel-tag { font-family: -apple-system, Arial, sans-serif; font-size: .72rem; font-weight: 700;
+    letter-spacing: .3px; color: var(--uc); }
+  .reel-cut { display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+    font-family: -apple-system, Arial, sans-serif; font-size: .68rem; color: var(--muted); white-space: nowrap; }
+  .reel-cut input { accent-color: var(--uc); width: 14px; height: 14px; }
+  .reel-cut.done { color: var(--uc); font-weight: 700; }
+  .reel textarea { min-height: 84px; font-size: .88rem; }
+
+  .meta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; margin-top: 6px; }
+  .meta-row .field { flex: 1 1 200px; }
+  .saved-note { font-family: -apple-system, Arial, sans-serif; font-size: .72rem; color: var(--muted); margin-top: 10px; font-style: italic; }
+
+  footer { text-align: center; color: var(--muted); font-size: .82rem; padding: 8px 16px 30px; }
+  footer a { color: var(--burgundy); }
+
+  @media (max-width: 680px) {
+    .verdict-grid { grid-template-columns: 1fr; }
+    .scriptures { grid-template-columns: 1fr; }
+    .reels { grid-template-columns: 1fr; }
+    .unit-theme { display: none; }
+    .ep-title .subj { display: block; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Where Was the Church</h1>
+  <p>with Pastor Billy Daws — 50 episodes across 5 units. Click any episode to work the Verdict.</p>
+</header>
+
+<main>
+  <div class="stats" id="stats"></div>
+  <div class="progress-wrap">
+    <div class="progress-top"><span>Overall progress</span><span id="progLabel">0 of 50 published</span></div>
+    <div class="bar"><span id="progBar"></span></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="filters" id="filters">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="planned"><span class="dot" style="background:#8b95a1"></span>Planned</button>
+      <button data-filter="inprogress"><span class="dot" style="background:#b07d16"></span>In progress</button>
+      <button data-filter="published"><span class="dot" style="background:#2e7d54"></span>Published</button>
+    </div>
+    <div class="actions">
+      <button id="expandAll" title="Expand every unit">Expand all</button>
+      <button id="collapseAll" title="Collapse every unit">Collapse all</button>
+      <button id="exportBtn" title="Download your data as a backup file">⬇ Export</button>
+      <button id="importBtn" title="Load data from a backup file">⬆ Import</button>
+      <button id="resetBtn" title="Clear all your entries and start fresh">Reset</button>
+      <input type="file" id="importFile" accept="application/json" hidden />
+    </div>
+  </div>
+  <div class="showing" id="showing"></div>
+
+  <div id="app"></div>
+</main>
+
+<footer>
+  Your entries are saved in this browser automatically. Use <strong>Export</strong> to back them up or move to another device.
+  &nbsp;·&nbsp; <a href="/">Lift Faith home</a>
+</footer>
+
+<script>
+"use strict";
+
+/* ---------- The show: 5 units, 10 episodes each ----------
+   Titles are starting points you can rename in each episode's panel. */
+var UNITS = [
+  { id:1, name:"Tyranny",          theme:"When the state became god",              cvar:"--u1", tvar:"--u1-tint" },
+  { id:2, name:"America",          theme:"A nation and its churches",              cvar:"--u2", tvar:"--u2-tint" },
+  { id:3, name:"Culture",          theme:"The tide the church swam in",            cvar:"--u3", tvar:"--u3-tint" },
+  { id:4, name:"Church History",   theme:"When the church wounded itself",         cvar:"--u4", tvar:"--u4-tint" },
+  { id:5, name:"Biblical Standard",theme:"What the church was always meant to be", cvar:"--u5", tvar:"--u5-tint" }
+];
+
+var SEED = [
+  // Unit 1 — Tyranny (blue)
+  {n:1,  unit:1, title:"Hitler & the Third Reich",            subj:"The German church under National Socialism"},
+  {n:2,  unit:1, title:"Stalin & the Soviet Terror",          subj:"Faith under enforced atheism"},
+  {n:3,  unit:1, title:"Mao & the Cultural Revolution",       subj:"The church driven underground"},
+  {n:4,  unit:1, title:"The Rwandan Genocide",                subj:"A Christian nation that turned on itself"},
+  {n:5,  unit:1, title:"Apartheid South Africa",              subj:"Scripture used to defend injustice"},
+  {n:6,  unit:1, title:"Pol Pot & the Killing Fields",        subj:"Cambodia's war on the faithful"},
+  {n:7,  unit:1, title:"The Armenian Genocide",               subj:"The first genocide of the modern age"},
+  {n:8,  unit:1, title:"Ceaușescu's Romania",                 subj:"Wurmbrand and the tortured church"},
+  {n:9,  unit:1, title:"North Korea",                         subj:"Worship of the state, today"},
+  {n:10, unit:1, title:"Idi Amin's Uganda",                   subj:"Martyrs under a modern tyrant"},
+  // Unit 2 — America (gold)
+  {n:11, unit:2, title:"Slavery & the Antebellum Church",     subj:"The pulpit on both sides of the chain"},
+  {n:12, unit:2, title:"The Civil Rights Movement",           subj:"The black church leads, the white church divides"},
+  {n:13, unit:2, title:"The Trail of Tears",                  subj:"The church and native peoples"},
+  {n:14, unit:2, title:"Prohibition",                         subj:"When the church legislated morality"},
+  {n:15, unit:2, title:"The Scopes Trial",                    subj:"Faith, science, and public retreat"},
+  {n:16, unit:2, title:"Japanese Internment",                 subj:"Silence during a wartime injustice"},
+  {n:17, unit:2, title:"The Great Awakenings",                subj:"When revival reshaped a nation"},
+  {n:18, unit:2, title:"The Abolition Movement",              subj:"Believers who broke the chains"},
+  {n:19, unit:2, title:"The Social Gospel",                   subj:"Mercy, justice, and mission drift"},
+  {n:20, unit:2, title:"Roe v. Wade & the Unborn",            subj:"The church confronts a culture of death"},
+  // Unit 3 — Culture (red)
+  {n:21, unit:3, title:"The Sexual Revolution",               subj:"The 1960s and the remaking of desire"},
+  {n:22, unit:3, title:"Hollywood & the Screen",              subj:"Who discipled the imagination?"},
+  {n:23, unit:3, title:"Rock, Rebellion & Music",             subj:"The soundtrack of a generation"},
+  {n:24, unit:3, title:"The Rise of Secularism",              subj:"How the West stopped believing"},
+  {n:25, unit:3, title:"Screens & Social Media",              subj:"Formation by algorithm"},
+  {n:26, unit:3, title:"Consumerism & the Prosperity Gospel", subj:"When abundance became the message"},
+  {n:27, unit:3, title:"The Pornography Epidemic",            subj:"A hidden war in the pew"},
+  {n:28, unit:3, title:"Outrage & Cancel Culture",            subj:"Grace in an unforgiving age"},
+  {n:29, unit:3, title:"The Sexual Identity Revolution",      subj:"Truth and love under pressure"},
+  {n:30, unit:3, title:"Abortion in the Culture",             subj:"Conviction beyond the courtroom"},
+  // Unit 4 — Church History (purple)
+  {n:31, unit:4, title:"The Crusades",                        subj:"The sword in the name of the cross"},
+  {n:32, unit:4, title:"The Spanish Inquisition",             subj:"Orthodoxy enforced by torture"},
+  {n:33, unit:4, title:"The Reformation",                     subj:"A church split to be renewed"},
+  {n:34, unit:4, title:"The Great Schism",                    subj:"East and West divide, 1054"},
+  {n:35, unit:4, title:"Constantine & Christendom",           subj:"When the church married the empire"},
+  {n:36, unit:4, title:"The Council of Nicaea",               subj:"Defining Christ, guarding the gospel"},
+  {n:37, unit:4, title:"Indulgences & Medieval Corruption",   subj:"Grace for sale"},
+  {n:38, unit:4, title:"The Salem Witch Trials",              subj:"Fear masquerading as faith"},
+  {n:39, unit:4, title:"Denominational Splits",               subj:"When brothers part ways"},
+  {n:40, unit:4, title:"Modern Church Scandals",              subj:"Power, platform, and the fall"},
+  // Unit 5 — Biblical Standard (green)
+  {n:41, unit:5, title:"What Is the Church?",                 subj:"Ekklesia — the called-out ones"},
+  {n:42, unit:5, title:"The Church in Acts",                  subj:"The blueprint in Jerusalem"},
+  {n:43, unit:5, title:"Persecution & the Martyrs",           subj:"The seed of the church"},
+  {n:44, unit:5, title:"The Prophetic Voice",                 subj:"Speaking truth to power"},
+  {n:45, unit:5, title:"The Poor & the Oppressed",            subj:"Pure religion, undefiled"},
+  {n:46, unit:5, title:"Holiness vs. Compromise",             subj:"In the world, not of it"},
+  {n:47, unit:5, title:"Unity & Division",                    subj:"That they may be one"},
+  {n:48, unit:5, title:"The Great Commission",                subj:"Sent to every nation"},
+  {n:49, unit:5, title:"Suffering & the Cross",               subj:"The way up is down"},
+  {n:50, unit:5, title:"The Bride of Christ",                 subj:"The church triumphant"}
+];
+
+var PROD_STEPS = [
+  {key:"researched", label:"Researched"},
+  {key:"scripted",   label:"Scripted"},
+  {key:"recorded",   label:"Recorded"},
+  {key:"edited",     label:"Edited"},
+  {key:"published",  label:"Published"}
+];
+
+var REELS = [
+  {k:"r1", l:"Reel 1", angle:"The Question", ph:"Open loop — pose the question, give no answer. “Where was the church when…” Hook in the first 2 seconds."},
+  {k:"r2", l:"Reel 2", angle:"The Fact",     ph:"The one gut-punch detail most people don’t know. Shocking, specific, true."},
+  {k:"r3", l:"Reel 3", angle:"The Verdict",  ph:"The “what we must not repeat” line + the one action. Your most shareable moment."}
+];
+var SOCIAL = [ {k:"youtube",l:"YouTube"}, {k:"instagram",l:"Instagram"}, {k:"tiktok",l:"TikTok"},
+               {k:"facebook",l:"Facebook"}, {k:"x",l:"X"} ];
+
+var STATUS_META = {
+  planned:    {label:"Planned",     icon:"📋", cls:"planned"},
+  inprogress: {label:"In progress", icon:"🎬", cls:"inprogress"},
+  published:  {label:"Published",   icon:"✅", cls:"published"}
+};
+
+var STORAGE_KEY = "wwtc-dashboard-v1";
+
+/* ---------- state ---------- */
+function blankEp(){
+  return {
+    title:"", subj:"", publishDate:"",
+    production:{researched:false,scripted:false,recorded:false,edited:false,published:false},
+    verdict:{gotRight:"",failed:"",faithful:"",mustNot:"",s1:"",s2:"",s3:"",action:""},
+    distribution:{ reels:{r1:false,r2:false,r3:false},
+                   reelScripts:{r1:"",r2:"",r3:""},
+                   social:{youtube:false,instagram:false,tiktok:false,facebook:false,x:false} }
+  };
+}
+function defaultState(){ return { version:1, episodes:{}, ui:{filter:"all", collapsedUnits:[]} }; }
+
+function load(){
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
+    var s = JSON.parse(raw);
+    if (!s || typeof s !== "object") return defaultState();
+    s.episodes = s.episodes || {};
+    s.ui = s.ui || {filter:"all", collapsedUnits:[]};
+    s.ui.filter = s.ui.filter || "all";
+    s.ui.collapsedUnits = s.ui.collapsedUnits || [];
+    return s;
+  } catch(e){ return defaultState(); }
+}
+var state = load();
+
+function save(){
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e){}
+}
+function epState(n){
+  if (!state.episodes[n]) state.episodes[n] = blankEp();
+  var e = state.episodes[n];
+  e.production = e.production || {};
+  e.verdict = e.verdict || {};
+  e.distribution = e.distribution || {};
+  e.distribution.reels = e.distribution.reels || {};
+  e.distribution.reelScripts = e.distribution.reelScripts || {};
+  e.distribution.social = e.distribution.social || {};
+  return e;
+}
+function seedFor(n){ for (var i=0;i<SEED.length;i++){ if (SEED[i].n===n) return SEED[i]; } return {n:n,unit:1,title:"Episode "+n,subj:""}; }
+
+function deriveStatus(n){
+  var p = epState(n).production;
+  if (p.published) return "published";
+  if (p.researched || p.scripted || p.recorded || p.edited) return "inprogress";
+  return "planned";
+}
+function publishDay(n){ return (n % 2 === 1) ? "Friday" : "Tuesday"; }
+function weekNo(n){ return Math.ceil(n/2); }
+function epTitle(n){ var s=epState(n); return (s.title && s.title.trim()) ? s.title : seedFor(n).title; }
+function epSubj(n){ var s=epState(n); return (s.subj && s.subj.trim()) ? s.subj : seedFor(n).subj; }
+
+/* ---------- helpers ---------- */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function setByPath(obj, path, val){
+  var parts = path.split("."); var o = obj;
+  for (var i=0;i<parts.length-1;i++){ if (o[parts[i]]==null) o[parts[i]]={}; o=o[parts[i]]; }
+  o[parts[parts.length-1]] = val;
+}
+
+/* ---------- render ---------- */
+function statusPill(n){
+  var st = STATUS_META[deriveStatus(n)];
+  return '<span class="status '+st.cls+'" data-status-for="'+n+'">'+st.icon+' '+st.label+'</span>';
+}
+
+function field(n, label, hint, path, val, kind){
+  var id = "f-"+n+"-"+path.replace(/\./g,"-");
+  var control = (kind==="input")
+    ? '<input class="text" id="'+id+'" data-ep="'+n+'" data-path="'+path+'" value="'+esc(val)+'" />'
+    : '<textarea id="'+id+'" data-ep="'+n+'" data-path="'+path+'">'+esc(val)+'</textarea>';
+  return '<label class="field"><span>'+esc(label)+(hint?' <span class="hint">'+esc(hint)+'</span>':'')+'</span>'+control+'</label>';
+}
+
+function renderEpBody(n){
+  var s = epState(n);
+  var prod = PROD_STEPS.map(function(step){
+    var on = !!s.production[step.key];
+    return '<label class="'+(on?'done':'')+'"><input type="checkbox" data-ep="'+n+'" data-prod="'+step.key+'"'+(on?' checked':'')+'/>'+esc(step.label)+'</label>';
+  }).join('<span style="align-self:center;color:#c9bdb0">→</span>');
+
+  var v = s.verdict;
+  var grid =
+    field(n,"✔ What the church got right","", "verdict.gotRight", v.gotRight) +
+    field(n,"✖ Where the church failed","", "verdict.failed", v.failed) +
+    field(n,"🕯 What faithful believers did","the remnant that stood", "verdict.faithful", v.faithful) +
+    field(n,"⛔ What we must not repeat","", "verdict.mustNot", v.mustNot);
+
+  var scriptures =
+    field(n,"Scripture 1","", "verdict.s1", v.s1, "input") +
+    field(n,"Scripture 2","", "verdict.s2", v.s2, "input") +
+    field(n,"Scripture 3","", "verdict.s3", v.s3, "input");
+
+  var action =
+    '<div class="action-field"><span>🎯 One action — what should the church do now?</span>'+
+    '<input class="text" data-ep="'+n+'" data-path="verdict.action" value="'+esc(v.action)+'" placeholder="One clear, doable step for the listener." /></div>';
+
+  var d = s.distribution;
+  var reels = REELS.map(function(r){
+    var on = !!d.reels[r.k];
+    var script = (d.reelScripts && d.reelScripts[r.k]) || "";
+    return '<div class="reel'+(on?' cut':'')+'">'+
+        '<div class="reel-top">'+
+          '<span class="reel-tag">'+esc(r.l)+' · '+esc(r.angle)+'</span>'+
+          '<label class="reel-cut '+(on?'done':'')+'"><input type="checkbox" data-ep="'+n+'" data-distgroup="reels" data-distkey="'+r.k+'"'+(on?' checked':'')+'/><span class="reel-cut-txt">'+(on?'Cut ✓':'Mark cut')+'</span></label>'+
+        '</div>'+
+        '<textarea data-ep="'+n+'" data-path="distribution.reelScripts.'+r.k+'" placeholder="'+esc(r.ph)+'">'+esc(script)+'</textarea>'+
+      '</div>';
+  }).join('');
+  var social = SOCIAL.map(function(p){
+    var on = !!d.social[p.k];
+    return '<label class="'+(on?'done':'')+'"><input type="checkbox" data-ep="'+n+'" data-distgroup="social" data-distkey="'+p.k+'"'+(on?' checked':'')+'/>'+esc(p.l)+'</label>';
+  }).join('');
+
+  var meta =
+    '<div class="meta-row">'+
+      field(n,"Episode title","rename freely","title", epTitle(n),"input")+
+      field(n,"One-line subject","","subj", epSubj(n),"input")+
+      field(n,"Publish date","optional — day is "+publishDay(n),"publishDate", s.publishDate,"input")+
+    '</div>';
+
+  return ''+
+    '<div class="ep-body">'+
+      '<div class="section-label">Production checklist</div>'+
+      '<div class="prod">'+prod+'</div>'+
+      '<div class="section-label">The Verdict</div>'+
+      '<div class="verdict-grid">'+grid+'</div>'+
+      '<div class="section-label">Three Scriptures</div>'+
+      '<div class="scriptures">'+scriptures+'</div>'+
+      action+
+      '<div class="section-label">Short reels &nbsp;·&nbsp; <span style="font-weight:400;text-transform:none;letter-spacing:0">draft 3 hooks, then mark each one cut</span></div>'+
+      '<div class="reels">'+reels+'</div>'+
+      '<div class="section-label">Posted to social</div>'+
+      '<div class="prod">'+social+'</div>'+
+      '<div class="section-label">Episode details</div>'+
+      meta+
+      '<div class="saved-note">Saved automatically as you type.</div>'+
+    '</div>';
+}
+
+function renderEp(n){
+  var seed = seedFor(n);
+  return ''+
+    '<div class="ep" data-ep-row="'+n+'" data-status="'+deriveStatus(n)+'">'+
+      '<div class="ep-head" data-ep-toggle="'+n+'">'+
+        '<span class="ep-num">'+n+'</span>'+
+        '<span class="ep-title"><span data-title-for="'+n+'">'+esc(epTitle(n))+'</span> <span class="subj" data-subj-for="'+n+'">'+esc(epSubj(n))+'</span></span>'+
+        '<span class="ep-tags">'+
+          '<span class="daytag" title="Week '+weekNo(n)+'">'+publishDay(n)+'</span>'+
+          statusPill(n)+
+          '<span class="ep-chev">▶</span>'+
+        '</span>'+
+      '</div>'+
+      renderEpBody(n)+
+    '</div>';
+}
+
+function renderUnit(u){
+  var eps = SEED.filter(function(e){ return e.unit===u.id; });
+  var collapsed = state.ui.collapsedUnits.indexOf(u.id) !== -1;
+  var body = eps.map(function(e){ return renderEp(e.n); }).join('');
+  return ''+
+    '<section class="unit '+(collapsed?'collapsed':'')+'" data-unit="'+u.id+'" '+
+      'style="--uc:var('+u.cvar+');--ut:var('+u.tvar+')">'+
+      '<div class="unit-head" data-unit-toggle="'+u.id+'">'+
+        '<span class="chev">▼</span>'+
+        '<span class="unit-num">Unit '+u.id+'</span>'+
+        '<span class="unit-title">'+esc(u.name)+'</span>'+
+        '<span class="unit-theme">'+esc(u.theme)+'</span>'+
+        '<span class="unit-meta"><span class="unit-count" data-unit-count="'+u.id+'"></span></span>'+
+      '</div>'+
+      '<div class="unit-body">'+body+'</div>'+
+    '</section>';
+}
+
+function renderAll(){
+  document.getElementById("app").innerHTML = UNITS.map(renderUnit).join('');
+  applyFilter();
+  updateStats();
+  updateAllUnitCounts();
+}
+
+/* ---------- live updates (no full re-render, keeps focus) ---------- */
+function refreshEpStatus(n){
+  var st = STATUS_META[deriveStatus(n)];
+  var row = document.querySelector('[data-ep-row="'+n+'"]');
+  if (row) row.setAttribute("data-status", deriveStatus(n));
+  var pill = document.querySelector('[data-status-for="'+n+'"]');
+  if (pill){ pill.className = "status "+st.cls; pill.textContent = st.icon+" "+st.label; }
+}
+function updateUnitCount(uid){
+  var eps = SEED.filter(function(e){ return e.unit===uid; });
+  var pub = eps.filter(function(e){ return deriveStatus(e.n)==="published"; }).length;
+  var el = document.querySelector('[data-unit-count="'+uid+'"]');
+  if (el) el.textContent = pub+" / "+eps.length+" published";
+}
+function updateAllUnitCounts(){ UNITS.forEach(function(u){ updateUnitCount(u.id); }); }
+
+function updateStats(){
+  var total = SEED.length;
+  var pub = 0, prog = 0, plan = 0;
+  SEED.forEach(function(e){
+    var s = deriveStatus(e.n);
+    if (s==="published") pub++; else if (s==="inprogress") prog++; else plan++;
+  });
+  var cards = [
+    {n: total, l:"Total Episodes"},
+    {n: UNITS.length, l:"Units"},
+    {n: "Tue & Fri", l:"Schedule · 2/wk"},
+    {n: prog, l:"In Progress"},
+    {n: pub+" / "+total, l:"Published"}
+  ];
+  document.getElementById("stats").innerHTML = cards.map(function(c){
+    return '<div class="stat"><div class="n">'+c.n+'</div><div class="l sans">'+esc(c.l)+'</div></div>';
+  }).join('');
+  var pct = Math.round(pub/total*100);
+  document.getElementById("progBar").style.width = pct+"%";
+  document.getElementById("progLabel").textContent = pub+" of "+total+" published ("+pct+"%)";
+}
+
+/* ---------- filtering ---------- */
+function applyFilter(){
+  var f = state.ui.filter || "all";
+  document.querySelectorAll('#filters button').forEach(function(b){
+    b.classList.toggle("active", b.getAttribute("data-filter")===f);
+  });
+  var shown = 0;
+  document.querySelectorAll('[data-ep-row]').forEach(function(row){
+    var match = (f==="all") || (row.getAttribute("data-status")===f);
+    row.style.display = match ? "" : "none";
+    if (match) shown++;
+  });
+  // Hide units with no matching episodes (when a filter is active); force them
+  // expanded so matches are visible; restore collapse state under "all".
+  document.querySelectorAll('.unit').forEach(function(unit){
+    var uid = parseInt(unit.getAttribute("data-unit"),10);
+    var anyVisible = false;
+    unit.querySelectorAll('[data-ep-row]').forEach(function(r){ if (r.style.display!=="none") anyVisible=true; });
+    if (f==="all"){
+      unit.style.display = "";
+      unit.classList.toggle("collapsed", state.ui.collapsedUnits.indexOf(uid)!==-1);
+    } else {
+      unit.style.display = anyVisible ? "" : "none";
+      unit.classList.remove("collapsed");
+    }
+  });
+  var note = document.getElementById("showing");
+  note.textContent = (f==="all") ? "Showing all "+shown+" episodes"
+    : "Showing "+shown+" "+({planned:"planned",inprogress:"in-progress",published:"published"}[f])+" episode"+(shown===1?"":"s");
+}
+
+/* ---------- events ---------- */
+document.getElementById("app").addEventListener("click", function(ev){
+  var ut = ev.target.closest("[data-unit-toggle]");
+  if (ut){
+    var uid = parseInt(ut.getAttribute("data-unit-toggle"),10);
+    var unit = ut.closest(".unit");
+    unit.classList.toggle("collapsed");
+    var idx = state.ui.collapsedUnits.indexOf(uid);
+    if (unit.classList.contains("collapsed")){ if (idx===-1) state.ui.collapsedUnits.push(uid); }
+    else { if (idx!==-1) state.ui.collapsedUnits.splice(idx,1); }
+    save();
+    return;
+  }
+  var et = ev.target.closest("[data-ep-toggle]");
+  if (et){ et.closest(".ep").classList.toggle("open"); }
+});
+
+// text inputs / textareas
+document.getElementById("app").addEventListener("input", function(ev){
+  var t = ev.target;
+  if (t.hasAttribute("data-path")){
+    var n = t.getAttribute("data-ep");
+    var path = t.getAttribute("data-path");
+    setByPath(epState(n), path, t.value);
+    save();
+    if (path==="title"){ var el=document.querySelector('[data-title-for="'+n+'"]'); if(el) el.textContent = epTitle(n); }
+    if (path==="subj"){ var el2=document.querySelector('[data-subj-for="'+n+'"]'); if(el2) el2.textContent = epSubj(n); }
+  }
+});
+
+// production checkboxes
+document.getElementById("app").addEventListener("change", function(ev){
+  var t = ev.target;
+  if (t.hasAttribute("data-prod")){
+    var n = t.getAttribute("data-ep");
+    var key = t.getAttribute("data-prod");
+    epState(n).production[key] = t.checked;
+    t.closest("label").classList.toggle("done", t.checked);
+    save();
+    refreshEpStatus(n);
+    updateUnitCount(SEED_UNIT_OF(n));
+    updateStats();
+    applyFilter(); // keep filtered view honest
+  } else if (t.hasAttribute("data-distgroup")){
+    var en = t.getAttribute("data-ep");
+    var g = t.getAttribute("data-distgroup");
+    var k = t.getAttribute("data-distkey");
+    var dist = epState(en).distribution;
+    dist[g] = dist[g] || {};
+    dist[g][k] = t.checked;
+    t.closest("label").classList.toggle("done", t.checked);
+    if (g==="reels"){
+      var reelBox = t.closest(".reel");
+      if (reelBox) reelBox.classList.toggle("cut", t.checked);
+      var txt = t.closest("label").querySelector(".reel-cut-txt");
+      if (txt) txt.textContent = t.checked ? "Cut ✓" : "Mark cut";
+    }
+    save();
+  }
+});
+function SEED_UNIT_OF(n){ var s=seedFor(parseInt(n,10)); return s.unit; }
+
+// filters
+document.getElementById("filters").addEventListener("click", function(ev){
+  var b = ev.target.closest("button[data-filter]");
+  if (!b) return;
+  state.ui.filter = b.getAttribute("data-filter");
+  save();
+  applyFilter();
+});
+
+// expand / collapse all
+document.getElementById("expandAll").addEventListener("click", function(){
+  state.ui.collapsedUnits = []; save();
+  document.querySelectorAll(".unit").forEach(function(u){ u.classList.remove("collapsed"); });
+});
+document.getElementById("collapseAll").addEventListener("click", function(){
+  state.ui.collapsedUnits = UNITS.map(function(u){return u.id;}); save();
+  document.querySelectorAll(".unit").forEach(function(u){ u.classList.add("collapsed"); });
+});
+
+// export / import / reset
+document.getElementById("exportBtn").addEventListener("click", function(){
+  var blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = "where-was-the-church-data.json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+document.getElementById("importBtn").addEventListener("click", function(){ document.getElementById("importFile").click(); });
+document.getElementById("importFile").addEventListener("change", function(ev){
+  var file = ev.target.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    try {
+      var s = JSON.parse(reader.result);
+      if (!s || typeof s!=="object" || !s.episodes) throw new Error("Not a valid backup file.");
+      state = s; state.ui = state.ui || {filter:"all",collapsedUnits:[]};
+      save(); renderAll();
+      alert("Imported your saved data.");
+    } catch(e){ alert("Couldn't import that file: "+e.message); }
+  };
+  reader.readAsText(file);
+  ev.target.value = "";
+});
+document.getElementById("resetBtn").addEventListener("click", function(){
+  if (!confirm("Clear ALL your entries (verdicts, checklists, dates) and start fresh? Export first if you want a backup.")) return;
+  state = defaultState(); save(); renderAll();
+});
+
+renderAll();
+</script>
+</body>
+</html>
