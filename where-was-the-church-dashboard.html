@@ -144,6 +144,20 @@
   .action-field { margin-top: 12px; background: var(--ut); border: 1px dashed var(--uc); border-radius: 12px; padding: 12px 14px; }
   .action-field > span { font-family: -apple-system, Arial, sans-serif; font-size: .74rem; font-weight: 700; color: var(--uc); display:block; margin-bottom: 6px; }
 
+  /* Reel planner */
+  .reels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .reel { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px;
+    border-top: 3px solid var(--uc); }
+  .reel.cut { background: var(--ut); border-color: var(--uc); }
+  .reel-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .reel-tag { font-family: -apple-system, Arial, sans-serif; font-size: .72rem; font-weight: 700;
+    letter-spacing: .3px; color: var(--uc); }
+  .reel-cut { display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+    font-family: -apple-system, Arial, sans-serif; font-size: .68rem; color: var(--muted); white-space: nowrap; }
+  .reel-cut input { accent-color: var(--uc); width: 14px; height: 14px; }
+  .reel-cut.done { color: var(--uc); font-weight: 700; }
+  .reel textarea { min-height: 84px; font-size: .88rem; }
+
   .meta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; margin-top: 6px; }
   .meta-row .field { flex: 1 1 200px; }
   .saved-note { font-family: -apple-system, Arial, sans-serif; font-size: .72rem; color: var(--muted); margin-top: 10px; font-style: italic; }
@@ -154,6 +168,7 @@
   @media (max-width: 680px) {
     .verdict-grid { grid-template-columns: 1fr; }
     .scriptures { grid-template-columns: 1fr; }
+    .reels { grid-template-columns: 1fr; }
     .unit-theme { display: none; }
     .ep-title .subj { display: block; }
   }
@@ -277,7 +292,11 @@ var PROD_STEPS = [
   {key:"published",  label:"Published"}
 ];
 
-var REELS = [ {k:"r1",l:"Reel 1"}, {k:"r2",l:"Reel 2"}, {k:"r3",l:"Reel 3"} ];
+var REELS = [
+  {k:"r1", l:"Reel 1", angle:"The Question", ph:"Open loop — pose the question, give no answer. “Where was the church when…” Hook in the first 2 seconds."},
+  {k:"r2", l:"Reel 2", angle:"The Fact",     ph:"The one gut-punch detail most people don’t know. Shocking, specific, true."},
+  {k:"r3", l:"Reel 3", angle:"The Verdict",  ph:"The “what we must not repeat” line + the one action. Your most shareable moment."}
+];
 var SOCIAL = [ {k:"youtube",l:"YouTube"}, {k:"instagram",l:"Instagram"}, {k:"tiktok",l:"TikTok"},
                {k:"facebook",l:"Facebook"}, {k:"x",l:"X"} ];
 
@@ -296,6 +315,7 @@ function blankEp(){
     production:{researched:false,scripted:false,recorded:false,edited:false,published:false},
     verdict:{gotRight:"",failed:"",faithful:"",mustNot:"",s1:"",s2:"",s3:"",action:""},
     distribution:{ reels:{r1:false,r2:false,r3:false},
+                   reelScripts:{r1:"",r2:"",r3:""},
                    social:{youtube:false,instagram:false,tiktok:false,facebook:false,x:false} }
   };
 }
@@ -326,6 +346,7 @@ function epState(n){
   e.verdict = e.verdict || {};
   e.distribution = e.distribution || {};
   e.distribution.reels = e.distribution.reels || {};
+  e.distribution.reelScripts = e.distribution.reelScripts || {};
   e.distribution.social = e.distribution.social || {};
   return e;
 }
@@ -390,7 +411,14 @@ function renderEpBody(n){
   var d = s.distribution;
   var reels = REELS.map(function(r){
     var on = !!d.reels[r.k];
-    return '<label class="'+(on?'done':'')+'"><input type="checkbox" data-ep="'+n+'" data-distgroup="reels" data-distkey="'+r.k+'"'+(on?' checked':'')+'/>'+esc(r.l)+'</label>';
+    var script = (d.reelScripts && d.reelScripts[r.k]) || "";
+    return '<div class="reel'+(on?' cut':'')+'">'+
+        '<div class="reel-top">'+
+          '<span class="reel-tag">'+esc(r.l)+' · '+esc(r.angle)+'</span>'+
+          '<label class="reel-cut '+(on?'done':'')+'"><input type="checkbox" data-ep="'+n+'" data-distgroup="reels" data-distkey="'+r.k+'"'+(on?' checked':'')+'/><span class="reel-cut-txt">'+(on?'Cut ✓':'Mark cut')+'</span></label>'+
+        '</div>'+
+        '<textarea data-ep="'+n+'" data-path="distribution.reelScripts.'+r.k+'" placeholder="'+esc(r.ph)+'">'+esc(script)+'</textarea>'+
+      '</div>';
   }).join('');
   var social = SOCIAL.map(function(p){
     var on = !!d.social[p.k];
@@ -413,8 +441,8 @@ function renderEpBody(n){
       '<div class="section-label">Three Scriptures</div>'+
       '<div class="scriptures">'+scriptures+'</div>'+
       action+
-      '<div class="section-label">Short reels &nbsp;·&nbsp; <span style="font-weight:400;text-transform:none;letter-spacing:0">cut 3 vertical clips per episode</span></div>'+
-      '<div class="prod">'+reels+'</div>'+
+      '<div class="section-label">Short reels &nbsp;·&nbsp; <span style="font-weight:400;text-transform:none;letter-spacing:0">draft 3 hooks, then mark each one cut</span></div>'+
+      '<div class="reels">'+reels+'</div>'+
       '<div class="section-label">Posted to social</div>'+
       '<div class="prod">'+social+'</div>'+
       '<div class="section-label">Episode details</div>'+
@@ -585,6 +613,12 @@ document.getElementById("app").addEventListener("change", function(ev){
     dist[g] = dist[g] || {};
     dist[g][k] = t.checked;
     t.closest("label").classList.toggle("done", t.checked);
+    if (g==="reels"){
+      var reelBox = t.closest(".reel");
+      if (reelBox) reelBox.classList.toggle("cut", t.checked);
+      var txt = t.closest("label").querySelector(".reel-cut-txt");
+      if (txt) txt.textContent = t.checked ? "Cut ✓" : "Mark cut";
+    }
     save();
   }
 });
