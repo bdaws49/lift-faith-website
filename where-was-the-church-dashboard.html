@@ -162,6 +162,26 @@
   .reel-cut.done { color: var(--uc); font-weight: 700; }
   .reel textarea { min-height: 84px; font-size: .88rem; }
 
+  /* AI generate */
+  .cv-setting { font-family: -apple-system, Arial, sans-serif; font-size: .82rem; color: var(--muted);
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px;
+    margin-bottom: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .cv-setting input { width: 90px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font-family: inherit; font-size: .9rem; }
+  .cv-setting .hint { font-weight: 400; color: var(--muted); flex: 1 1 200px; }
+  .ai-gen { background: linear-gradient(135deg, #fff, #f4f7fb); border: 1px solid #d8e2ef;
+    border-left: 4px solid var(--u1); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+  .ai-actions { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+  .gen-btn { font-family: -apple-system, Arial, sans-serif; font-size: .9rem; font-weight: 600; cursor: pointer;
+    border: none; border-radius: 10px; padding: 9px 16px; color: #fff; background: var(--u1); transition: opacity .15s; }
+  .gen-btn:hover { opacity: .9; }
+  .gen-btn:disabled { opacity: .5; cursor: default; }
+  .gen-status { font-family: -apple-system, Arial, sans-serif; font-size: .8rem; color: var(--muted); }
+  .gen-status.err { color: var(--todo); }
+  .part { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+  .script-area { min-height: 150px; }
+  .charcount { font-family: -apple-system, Arial, sans-serif; font-size: .72rem; color: var(--muted); margin: -4px 0 10px; text-align: right; }
+  .charcount.over { color: var(--todo); font-weight: 700; }
+
   .meta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; margin-top: 6px; }
   .meta-row .field { flex: 1 1 200px; }
   .saved-note { font-family: -apple-system, Arial, sans-serif; font-size: .72rem; color: var(--muted); margin-top: 10px; font-style: italic; }
@@ -208,6 +228,12 @@
     </div>
   </div>
   <div class="showing" id="showing"></div>
+
+  <div class="cv-setting">
+    🎙️ <label for="cvLimit">Clone-voice character limit per part:</label>
+    <input id="cvLimit" type="number" min="500" max="40000" step="100" />
+    <span class="hint">the most your voice tool reads in one generation — each part is written to fit</span>
+  </div>
 
   <div id="app"></div>
 </main>
@@ -332,15 +358,16 @@ var STORAGE_KEY = "wwtc-dashboard-v1";
 /* ---------- state ---------- */
 function blankEp(){
   return {
-    title:"", subj:"", publishDate:"",
+    title:"", subj:"", publishDate:"", brief:"",
     production:{researched:false,scripted:false,recorded:false,edited:false,published:false},
     verdict:{gotRight:"",failed:"",faithful:"",mustNot:"",s1:"",s2:"",s3:"",action:""},
+    parts:{ p1:{title:"",script:"",description:""}, p2:{title:"",script:"",description:""} },
     distribution:{ reels:{r1:false,r2:false,r3:false},
                    reelScripts:{r1:"",r2:"",r3:""},
                    social:{youtube:false,instagram:false,tiktok:false,facebook:false,x:false} }
   };
 }
-function defaultState(){ return { version:1, episodes:{}, ui:{filter:"all", collapsedUnits:[]} }; }
+function defaultState(){ return { version:1, episodes:{}, ui:{filter:"all", collapsedUnits:[], cloneVoiceLimit:5000} }; }
 
 function load(){
   try {
@@ -352,6 +379,7 @@ function load(){
     s.ui = s.ui || {filter:"all", collapsedUnits:[]};
     s.ui.filter = s.ui.filter || "all";
     s.ui.collapsedUnits = s.ui.collapsedUnits || [];
+    s.ui.cloneVoiceLimit = s.ui.cloneVoiceLimit || 5000;
     return s;
   } catch(e){ return defaultState(); }
 }
@@ -369,6 +397,10 @@ function epState(n){
   e.distribution.reels = e.distribution.reels || {};
   e.distribution.reelScripts = e.distribution.reelScripts || {};
   e.distribution.social = e.distribution.social || {};
+  if (e.brief == null) e.brief = "";
+  e.parts = e.parts || {};
+  e.parts.p1 = e.parts.p1 || {title:"",script:"",description:""};
+  e.parts.p2 = e.parts.p2 || {title:"",script:"",description:""};
   return e;
 }
 function seedFor(n){ for (var i=0;i<SEED.length;i++){ if (SEED[i].n===n) return SEED[i]; } return {n:n,unit:1,title:"Episode "+n,subj:""}; }
@@ -404,6 +436,19 @@ function field(n, label, hint, path, val, kind){
     ? '<input class="text" id="'+id+'" data-ep="'+n+'" data-path="'+path+'" value="'+esc(val)+'" />'
     : '<textarea id="'+id+'" data-ep="'+n+'" data-path="'+path+'">'+esc(val)+'</textarea>';
   return '<label class="field"><span>'+esc(label)+(hint?' <span class="hint">'+esc(hint)+'</span>':'')+'</span>'+control+'</label>';
+}
+
+function partBlock(n, key, s){
+  var p = (s.parts && s.parts[key]) || {};
+  return '<div class="part">'+
+    '<label class="field"><span>Title <span class="hint">&le; 100 chars</span></span>'+
+      '<input class="text" data-ep="'+n+'" data-path="parts.'+key+'.title" value="'+esc(p.title||"")+'" /></label>'+
+    '<label class="field"><span>Script <span class="hint">what the clone-voice reads for this part</span></span>'+
+      '<textarea class="script-area" data-ep="'+n+'" data-path="parts.'+key+'.script" data-count="'+n+'-'+key+'">'+esc(p.script||"")+'</textarea></label>'+
+    '<div class="charcount" data-charcount="'+n+'-'+key+'"></div>'+
+    '<label class="field"><span>Description / show notes <span class="hint">&le; 5000 chars</span></span>'+
+      '<textarea data-ep="'+n+'" data-path="parts.'+key+'.description">'+esc(p.description||"")+'</textarea></label>'+
+  '</div>';
 }
 
 function renderEpBody(n){
@@ -446,6 +491,21 @@ function renderEpBody(n){
     return '<label class="'+(on?'done':'')+'"><input type="checkbox" data-ep="'+n+'" data-distgroup="social" data-distkey="'+p.k+'"'+(on?' checked':'')+'/>'+esc(p.l)+'</label>';
   }).join('');
 
+  var ai =
+    '<div class="section-label">Draft with AI</div>'+
+    '<div class="ai-gen">'+
+      '<label class="field"><span>Topic / angle <span class="hint">a sentence or two — Claude writes both parts from this, to your clone-voice limit</span></span>'+
+        '<textarea data-ep="'+n+'" data-path="brief" placeholder="e.g. Stalin&#39;s war on the church, 1929–1939 — churches closed, clergy killed, and the believers who kept the faith underground.">'+esc(s.brief||"")+'</textarea></label>'+
+      '<div class="ai-actions"><button class="gen-btn" data-gen="'+n+'">✨ Generate two-part draft</button>'+
+        '<span class="gen-status" data-genstatus="'+n+'"></span></div>'+
+    '</div>';
+
+  var parts =
+    '<div class="section-label">Part 1 <span style="font-weight:400;text-transform:none;letter-spacing:0">— voiced as one clone-voice generation</span></div>'+
+    partBlock(n,"p1",s)+
+    '<div class="section-label">Part 2</div>'+
+    partBlock(n,"p2",s);
+
   var meta =
     '<div class="meta-row">'+
       field(n,"Episode title","rename freely","title", epTitle(n),"input")+
@@ -455,6 +515,7 @@ function renderEpBody(n){
 
   return ''+
     '<div class="ep-body">'+
+      ai+
       '<div class="section-label">Production checklist</div>'+
       '<div class="prod">'+prod+'</div>'+
       '<div class="section-label">The Verdict</div>'+
@@ -462,6 +523,7 @@ function renderEpBody(n){
       '<div class="section-label">Three Scriptures</div>'+
       '<div class="scriptures">'+scriptures+'</div>'+
       action+
+      parts+
       '<div class="section-label">Short reels &nbsp;·&nbsp; <span style="font-weight:400;text-transform:none;letter-spacing:0">draft 3 hooks, then mark each one cut</span></div>'+
       '<div class="reels">'+reels+'</div>'+
       '<div class="section-label">Posted to social</div>'+
@@ -512,6 +574,7 @@ function renderAll(){
   applyFilter();
   updateStats();
   updateAllUnitCounts();
+  updateAllCharCounts();
 }
 
 /* ---------- live updates (no full re-render, keeps focus) ---------- */
@@ -529,6 +592,59 @@ function updateUnitCount(uid){
   if (el) el.textContent = pub+" / "+eps.length+" published";
 }
 function updateAllUnitCounts(){ UNITS.forEach(function(u){ updateUnitCount(u.id); }); }
+
+function updateCharCount(n, key){
+  var el = document.querySelector('[data-charcount="'+n+'-'+key+'"]');
+  if (!el) return;
+  var lim = (state.ui && state.ui.cloneVoiceLimit) || 5000;
+  var p = (epState(n).parts && epState(n).parts[key]) || {};
+  var len = (p.script || "").length;
+  el.textContent = len.toLocaleString() + " / " + lim.toLocaleString() + " characters" + (len > lim ? " — over the clone-voice limit" : "");
+  el.classList.toggle("over", len > lim);
+}
+function updateAllCharCounts(){ SEED.forEach(function(e){ updateCharCount(e.n,"p1"); updateCharCount(e.n,"p2"); }); }
+
+function openEpisode(n){
+  var row = document.querySelector('[data-ep-row="'+n+'"]');
+  if (!row) return;
+  var unit = row.closest(".unit"); if (unit) unit.classList.remove("collapsed");
+  row.classList.add("open");
+  row.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+async function generateEpisode(n){
+  var st = document.querySelector('[data-genstatus="'+n+'"]');
+  var btn = document.querySelector('[data-gen="'+n+'"]');
+  var brief = (epState(n).brief || "").trim();
+  if (!brief){ if (st){ st.textContent = "Add a topic / angle first."; st.classList.add("err"); } return; }
+  if (btn) btn.disabled = true;
+  if (st){ st.textContent = "Generating both parts… this takes 30–60s."; st.classList.remove("err"); }
+  var seed = seedFor(n);
+  var unit = UNITS.filter(function(u){ return u.id === seed.unit; })[0];
+  try {
+    var r = await fetch("/api/episode", {
+      method:"POST", headers:{"content-type":"application/json"},
+      body: JSON.stringify({ topic: brief, title: epTitle(n), unit: unit ? unit.name : "",
+        event: epSubj(n), scriptLimit: (state.ui.cloneVoiceLimit || 5000) })
+    });
+    var data = await r.json().catch(function(){ return {}; });
+    if (!r.ok || !data.draft){
+      if (st){ st.textContent = (data && data.error) || "Generation failed — try again."; st.classList.add("err"); }
+      if (btn) btn.disabled = false; return;
+    }
+    var d = data.draft, e = epState(n);
+    if (d.verdict){ for (var k in d.verdict){ if (d.verdict[k] != null) e.verdict[k] = String(d.verdict[k]); } }
+    if (d.reels){ ["r1","r2","r3"].forEach(function(rk){ if (d.reels[rk] != null) e.distribution.reelScripts[rk] = String(d.reels[rk]); }); }
+    if (d.part1) e.parts.p1 = { title:String(d.part1.title||""), script:String(d.part1.script||""), description:String(d.part1.description||"") };
+    if (d.part2) e.parts.p2 = { title:String(d.part2.title||""), script:String(d.part2.script||""), description:String(d.part2.description||"") };
+    save();
+    renderAll();
+    openEpisode(n);
+  } catch (err){
+    if (st){ st.textContent = "Couldn't reach the generator. Are you on the live site? (It won't run from a local file.)"; st.classList.add("err"); }
+    if (btn) btn.disabled = false;
+  }
+}
 
 function updateStats(){
   var total = SEED.length;
@@ -585,6 +701,8 @@ function applyFilter(){
 
 /* ---------- events ---------- */
 document.getElementById("app").addEventListener("click", function(ev){
+  var gen = ev.target.closest("[data-gen]");
+  if (gen){ ev.stopPropagation(); generateEpisode(parseInt(gen.getAttribute("data-gen"),10)); return; }
   var ut = ev.target.closest("[data-unit-toggle]");
   if (ut){
     var uid = parseInt(ut.getAttribute("data-unit-toggle"),10);
@@ -610,6 +728,8 @@ document.getElementById("app").addEventListener("input", function(ev){
     save();
     if (path==="title"){ var el=document.querySelector('[data-title-for="'+n+'"]'); if(el) el.textContent = epTitle(n); }
     if (path==="subj"){ var el2=document.querySelector('[data-subj-for="'+n+'"]'); if(el2) el2.textContent = epSubj(n); }
+    var mScript = path.match(/^parts\.(p1|p2)\.script$/);
+    if (mScript){ updateCharCount(n, mScript[1]); }
   }
 });
 
@@ -705,6 +825,17 @@ function applySeedDefaults(){
     state.episodes[s.n] = e;
   });
 }
+// Clone-voice character limit — this sets how long each part can be.
+var cvInput = document.getElementById("cvLimit");
+cvInput.value = (state.ui.cloneVoiceLimit || 5000);
+cvInput.addEventListener("change", function(){
+  var v = Math.max(500, Math.min(40000, parseInt(cvInput.value, 10) || 5000));
+  cvInput.value = v;
+  state.ui.cloneVoiceLimit = v;
+  save();
+  updateAllCharCounts();
+});
+
 applySeedDefaults();
 renderAll();
 </script>
