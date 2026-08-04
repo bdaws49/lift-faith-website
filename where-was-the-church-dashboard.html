@@ -3,17 +3,16 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Operations Board — DeeDee</title>
+<title>Where Was the Church — Show Board</title>
 <meta name="robots" content="noindex" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="DeeDee" />
+<meta name="apple-mobile-web-app-title" content="Where Was the Church" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#8B1538" />
 <link rel="apple-touch-icon" href="/deedee-apple-touch-v1.png" />
 <link rel="icon" type="image/svg+xml" href="/deedee-icon-v1.svg" />
 <link rel="icon" type="image/png" sizes="192x192" href="/deedee-icon-192-v1.png" />
-<link rel="manifest" href="/deedee-manifest.webmanifest" />
 <style>
   :root {
     --burgundy: #8B1538;
@@ -26,6 +25,8 @@
     --ok: #2e7d54;
     --warn: #b8860b;
     --todo: #b0431f;
+    --right: #2e7d54;
+    --wrong: #b0431f;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
@@ -93,7 +94,12 @@
   .pill.warn { background: #fdf1e3; color: var(--warn); }
   .pill.todo { background: #fdeae2; color: var(--todo); }
   .todoish { color: var(--todo); }
-  .owed { color: var(--todo); font-weight: bold; }
+  .verdict { font-size: .86rem; line-height: 1.45; }
+  .verdict .right { color: var(--right); }
+  .verdict .wrong { color: var(--wrong); }
+  .verdict .lesson { color: var(--burgundy-deep); font-style: italic; }
+  .verdict .lbl { font-family: -apple-system, Arial, sans-serif; font-size: .64rem; text-transform: uppercase;
+    letter-spacing: .5px; font-weight: 700; margin-right: 5px; }
   .path { font-family: ui-monospace, Menlo, monospace; font-size: .8rem; color: var(--muted); word-break: break-all; }
 
   footer { text-align: center; color: var(--muted); font-size: .82rem; padding: 10px 16px 30px; }
@@ -102,48 +108,20 @@
     background: var(--card); border: 1px solid var(--line); border-radius: 14px;
     padding: 26px; text-align: center; color: var(--muted);
   }
-
-  /* passcode gate overlay */
-  .gate { position: fixed; inset: 0; z-index: 50; display: none;
-    background: linear-gradient(160deg, #fbf8f4 0%, #f1e7ea 100%);
-    align-items: center; justify-content: center; padding: 24px; }
-  .gate.show { display: flex; }
-  .gate-card { background: var(--card); border: 1px solid var(--line); border-radius: 18px;
-    padding: 30px 28px; max-width: 380px; width: 100%; text-align: center;
-    box-shadow: 0 10px 40px rgba(0,0,0,.12); }
-  .gate-card .lock { font-size: 2.4rem; }
-  .gate-card h2 { margin: 10px 0 6px; color: var(--burgundy-deep); font-size: 1.25rem; }
-  .gate-card p { margin: 0 0 16px; color: var(--muted); font-size: .9rem; line-height: 1.5; }
-  .gate-card input { width: 100%; padding: 12px 14px; border: 1px solid #d8c6b8; border-radius: 12px;
-    font-family: inherit; font-size: 1rem; margin-bottom: 12px; }
-  .gate-card button { width: 100%; padding: 12px; border: none; border-radius: 12px; cursor: pointer;
-    background: var(--burgundy); color: #fff; font-family: inherit; font-size: 1rem; }
-  .gate-card .err { color: var(--todo); font-size: .85rem; min-height: 1.1em; margin: 2px 0 8px; }
 </style>
 </head>
 <body>
-<div class="gate" id="gate">
-  <div class="gate-card">
-    <div class="lock">🔒</div>
-    <h2>This board is private</h2>
-    <p>It holds prayer requests and giving. Enter the view passcode to see it.</p>
-    <input id="gatePass" type="password" placeholder="View passcode" autocomplete="current-password" />
-    <div class="err" id="gateErr"></div>
-    <button id="gateBtn">View board</button>
-  </div>
-</div>
-
 <header>
-  <h1>Operations Board</h1>
-  <p>Kept by DeeDee — the whole ministry, what's done and what's next.</p>
+  <h1>Where Was the Church</h1>
+  <p>A show board for the history podcast — episodes, recording, and what's next.</p>
   <div class="meta" id="meta"></div>
   <nav class="agent-nav">
     <a href="/abe">🎙️ Abe</a>
     <a href="/chloe">🔎 Chloe</a>
     <a href="/barb">📚 Barb</a>
     <a href="/deedee">📅 DeeDee</a>
-    <a class="current" href="/operations" aria-current="page">🗂️ Board</a>
-    <a href="/where-was-the-church">⛪ Where Was the Church</a>
+    <a href="/operations">🗂️ Under the Scope</a>
+    <a class="current" href="/where-was-the-church" aria-current="page">⛪ Where Was the Church</a>
   </nav>
 </header>
 
@@ -154,30 +132,28 @@
 </main>
 
 <footer>
-  Source of truth: <span class="path">deedee/ops.json</span> · kept by DeeDee.
+  Source of truth: <span class="path">where-was-the-church/ops.json</span>.
+  &nbsp;·&nbsp; <a href="/operations">🗂️ Under the Scope board</a>
   &nbsp;·&nbsp; <a href="/talk-to-deedee">📅 Talk to DeeDee</a>
-  &nbsp;·&nbsp; <a href="/dashboard">📚 Publishing</a>
   &nbsp;·&nbsp; <a href="/">Lift Faith home</a>
 </footer>
 
 <script>
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-var TODAY = new Date().toISOString().slice(0,10);
 
 function isTodo(v){
   var t = String(v==null?"":v).trim().toLowerCase();
   return t === "" || t === "todo" || t === "—" || t === "tbd";
 }
 function fmtDate(v){ return isTodo(v) ? '<span class="todoish">TODO</span>' : esc(v); }
-// a real, comparable date? (YYYY-MM-DD prefix)
-function realDate(v){ var m = String(v||"").match(/^\d{4}-\d{2}-\d{2}/); return m ? m[0] : null; }
+function fmt(v){ return isTodo(v) ? '<span class="todoish">TODO</span>' : esc(v); }
 
 function statusPill(s, doneWords){
   var t = String(s||"").toLowerCase();
   var cls = "";
   if (doneWords.some(function(w){ return t.indexOf(w) !== -1; })) cls = "ok";
   else if (isTodo(s)) cls = "todo";
-  else if (/(idea|planned|invited|tentative|open|received|drafting|in progress|review)/.test(t)) cls = "warn";
+  else if (/(idea|planned|invited|tentative|open|received|drafting|in progress|review|researched|scripted|recorded|edited|scheduled)/.test(t)) cls = "warn";
   return '<span class="pill ' + cls + '">' + esc(s || "—") + '</span>';
 }
 
@@ -191,88 +167,87 @@ function rows(headers, body){
     '</tr></thead><tbody>' + body + '</tbody></table>';
 }
 
+// The right/wrong/lesson verdict cell — the heart of this show.
+function verdict(e){
+  var parts = [];
+  parts.push('<div class="right"><span class="lbl">Right</span>' + fmt(e.didRight) + '</div>');
+  parts.push('<div class="wrong"><span class="lbl">Wrong</span>' + fmt(e.didWrong) + '</div>');
+  if (!isTodo(e.lesson)) parts.push('<div class="lesson"><span class="lbl">Lesson</span>' + esc(e.lesson) + '</div>');
+  return '<div class="verdict">' + parts.join('') + '</div>';
+}
+
 function buildNext(ops){
   var items = [];
-  var pod = (ops.podcastSchedule && ops.podcastSchedule.episodes) || [];
+  var eps = (ops.episodeSchedule && ops.episodeSchedule.episodes) || [];
   var recs = ops.recordingDays || [];
   var spk = ops.speakingInvitations || [];
-  var pray = ops.prayerRequests || [];
-  var don = (ops.donations && ops.donations.items) || [];
   var news = (ops.newsletterSchedule && ops.newsletterSchedule.issues) || [];
 
-  // next recording day (not done)
   var nextRec = recs.filter(function(r){ return String(r.status).toLowerCase() !== "done"; })[0];
   if (nextRec) {
     items.push("Recording day: <strong>" + (isTodo(nextRec.date) ? "no date set yet" : esc(nextRec.date)) +
       "</strong> — " + esc((nextRec.recording || []).join(", ") || "TODO") +
       (nextRec.prep ? " · prep: " + esc(nextRec.prep) : ""));
   }
-  // podcast not yet published
-  var unpub = pod.filter(function(e){ return String(e.status).toLowerCase() !== "published"; });
+  var unpub = eps.filter(function(e){ return String(e.status).toLowerCase() !== "published"; });
   if (unpub.length) {
     var e0 = unpub[0];
-    items.push("Podcast: <strong>" + esc(e0.title || "next episode") + "</strong> is " + esc(e0.status) +
+    items.push("Next episode: <strong>" + esc(e0.title || "next episode") + "</strong> is " + esc(e0.status) +
       " — publishes " + (isTodo(e0.targetPublish) ? "TBD" : esc(e0.targetPublish)));
   }
-  // confirmed upcoming speaking
+  var needAnalysis = eps.filter(function(e){ return isTodo(e.didRight) || isTodo(e.didWrong); });
+  if (needAnalysis.length) items.push(needAnalysis.length + " episode(s) still need the <strong>right / wrong</strong> analysis written");
+
   var upSpk = spk.filter(function(s){ return String(s.status).toLowerCase() === "confirmed"; });
   if (upSpk.length) items.push("Speaking: <strong>" + esc(upSpk[0].event || upSpk[0].host) + "</strong> on " + fmtDate(upSpk[0].date));
   var pendSpk = spk.filter(function(s){ return ["invited","accepted"].indexOf(String(s.status).toLowerCase()) !== -1; });
   if (pendSpk.length) items.push(pendSpk.length + " speaking invite(s) awaiting a yes/no");
-  // next newsletter
+
   var nextNews = news.filter(function(n){ return String(n.status).toLowerCase() !== "sent"; })[0];
   if (nextNews) items.push("Newsletter: <strong>#" + esc(nextNews.issue) + "</strong> (" + esc(nextNews.status) +
     ") — sends " + fmtDate(nextNews.sendDate));
-  // thank-yous owed
-  var owed = don.filter(function(d){ return String(d.status).toLowerCase() === "received"; });
-  if (owed.length) items.push('<span class="owed">' + owed.length + " thank-you(s) owed</span> for recent gifts");
-  // open prayer follow-ups
-  var follows = pray.filter(function(p){ var s = String(p.status).toLowerCase(); return (s === "open" || s === "praying") && p.followUp && !isTodo(p.followUp); });
-  if (follows.length) items.push(follows.length + " prayer follow-up(s) you promised");
 
   var inner = items.length
     ? '<ol>' + items.map(function(i){ return '<li>' + i + '</li>'; }).join('') + '</ol>'
-    : '<p class="none">The board is quiet — add recording days, episodes, gifts, and requests and DeeDee will keep this list honest.</p>';
+    : '<p class="none">The board is quiet — add episode ideas, recording days, and a publish cadence to fill this in.</p>';
   return '<div class="next"><h2>⏭️ What\'s next</h2>' + inner + '</div>';
 }
 
 function buildSummary(ops){
-  var pod = (ops.podcastSchedule && ops.podcastSchedule.episodes) || [];
+  var eps = (ops.episodeSchedule && ops.episodeSchedule.episodes) || [];
   var recs = ops.recordingDays || [];
-  var pray = ops.prayerRequests || [];
-  var don = (ops.donations && ops.donations.items) || [];
   var pipe = ops.contentPipeline || [];
-  var owed = don.filter(function(d){ return String(d.status).toLowerCase() === "received"; }).length;
-  var openPray = pray.filter(function(p){ var s=String(p.status).toLowerCase(); return s==="open"||s==="praying"; }).length;
+  var published = eps.filter(function(e){ return String(e.status).toLowerCase() === "published"; }).length;
   var upcomingRec = recs.filter(function(r){ return String(r.status).toLowerCase() !== "done"; }).length;
   var inFlight = pipe.filter(function(p){ var s=String(p.stage).toLowerCase(); return s!=="published"&&s!=="done"; }).length;
-  var total = (ops.donations && ops.donations.runningTotal) || 0;
+  var needAnalysis = eps.filter(function(e){ return isTodo(e.didRight) || isTodo(e.didWrong); }).length;
   var cards = [
-    {n: pod.length, l: "Episodes"},
+    {n: eps.length, l: "Episodes / ideas"},
+    {n: published, l: "Published"},
     {n: upcomingRec, l: "Recording days"},
     {n: inFlight, l: "In pipeline"},
-    {n: openPray, l: "Open prayers"},
-    {n: owed, l: "Thank-yous owed"},
-    {n: "$" + Number(total).toLocaleString(), l: "Given (" + esc((ops.donations && ops.donations.periodLabel) || "") + ")"}
+    {n: needAnalysis, l: "Analyses to write"}
   ];
   return cards.map(function(c){ return '<div class="stat"><div class="n">' + c.n + '</div><div class="l">' + esc(c.l) + '</div></div>'; }).join('');
 }
 
 function render(ops){
-  document.getElementById("meta").textContent = "Last updated " + (ops.updated || "—") + " · " + (ops.ministry || "");
+  document.getElementById("meta").textContent =
+    "Last updated " + (ops.updated || "—") + " · " + (ops.show || "");
   document.getElementById("next").innerHTML = buildNext(ops);
   document.getElementById("summary").innerHTML = buildSummary(ops);
 
   var out = [];
 
-  // Podcast
-  var pod = (ops.podcastSchedule && ops.podcastSchedule.episodes) || [];
-  out.push(card("🎙️ Podcast schedule",
-    "Cadence: " + esc((ops.podcastSchedule && ops.podcastSchedule.cadence) || "TODO"),
-    rows(["#","Title","Passage","Guest","Status","Publishes"], pod.map(function(e){
+  // Episodes — history-focused, with the right/wrong verdict
+  var eps = (ops.episodeSchedule && ops.episodeSchedule.episodes) || [];
+  out.push(card("⛪ Episode schedule",
+    "Cadence: " + esc((ops.episodeSchedule && ops.episodeSchedule.cadence) || "TODO"),
+    rows(["#","Title","Era","Event","Status","Publishes","What we did right / wrong"], eps.map(function(e){
       return '<tr><td>' + esc(e.number==null?"—":e.number) + '</td><td>' + esc(e.title||"—") +
-        '</td><td>' + esc(e.topicOrPassage||"—") + '</td><td>' + esc(e.guest||"—") + '</td><td>' +
-        statusPill(e.status, ["published"]) + '</td><td>' + fmtDate(e.targetPublish) + '</td></tr>';
+        '</td><td>' + fmt(e.era) + '</td><td>' + esc(e.event||"—") + '</td><td>' +
+        statusPill(e.status, ["published"]) + '</td><td>' + fmtDate(e.targetPublish) + '</td><td>' +
+        verdict(e) + '</td></tr>';
     }).join(""))));
 
   // Recording days
@@ -301,27 +276,6 @@ function render(ops){
         '</td><td>' + statusPill(s.status, ["confirmed","done"]) + '</td></tr>';
     }).join(""))));
 
-  // Prayer (care: honor anonymity / private)
-  var pray = ops.prayerRequests || [];
-  out.push(card("🙏 Prayer requests", "Handled with care — anonymous stays anonymous.",
-    rows(["Request","Received","Status","Follow-up"], pray.map(function(p){
-      var who = p.private ? "(private)" : (p.who || "");
-      var label = [p.request, who].filter(Boolean).map(esc).join(" · ") || "—";
-      return '<tr><td>' + label + '</td><td>' + fmtDate(p.received) + '</td><td>' +
-        statusPill(p.status, ["answered","closed","followed-up"]) + '</td><td>' + esc(p.followUp||"—") + '</td></tr>';
-    }).join(""))));
-
-  // Donations (care)
-  var don = (ops.donations && ops.donations.items) || [];
-  out.push(card("💝 Donations",
-    "Period " + esc((ops.donations && ops.donations.periodLabel) || "") + " · total $" +
-      Number((ops.donations && ops.donations.runningTotal) || 0).toLocaleString(),
-    rows(["Donor","Amount","Date","Channel","Thank-you"], don.map(function(d){
-      return '<tr><td>' + esc(d.donor||"anonymous") + '</td><td>$' + esc(Number(d.amount||0).toLocaleString()) +
-        '</td><td>' + fmtDate(d.date) + '</td><td>' + esc(d.channel||"—") + '</td><td>' +
-        statusPill(d.status, ["thanked","receipted"]) + '</td></tr>';
-    }).join(""))));
-
   // Newsletter
   var news = (ops.newsletterSchedule && ops.newsletterSchedule.issues) || [];
   out.push(card("📰 Newsletter schedule",
@@ -343,55 +297,12 @@ function render(ops){
   document.getElementById("board").innerHTML = out.join("");
 }
 
-// Prefer the live Convex board (what DeeDee edits from the chat app); fall back
-// to the static deedee/ops.json scaffold if Convex isn't reachable/seeded.
-// Reading may be gated by a view passcode (DEEDEE_READ_PASSCODE) — if so, a
-// "locked" error surfaces the passcode overlay.
-var CONVEX_URL = "https://tame-fennec-574.convex.cloud";
-function withTimeout(p, ms){ return Promise.race([p, new Promise(function(_,rej){ setTimeout(function(){ rej(new Error("timeout")); }, ms); })]); }
-
-var passcode = "";
-try { passcode = localStorage.getItem("deedeePasscode") || ""; } catch (e) {}
-
-var gate = document.getElementById("gate");
-var gatePass = document.getElementById("gatePass");
-var gateBtn = document.getElementById("gateBtn");
-var gateErr = document.getElementById("gateErr");
-
-function isLocked(e){ var m = String((e && (e.data || e.message)) || e || ""); return /locked/i.test(m); }
-
-// Try the live Convex board with the current passcode.
-function queryBoard(){
-  return withTimeout((async function(){
-    var mod = await import("https://esm.sh/convex@1.29.1/browser");
-    var c = new mod.ConvexHttpClient(CONVEX_URL);
-    return await c.query("ops:getBoard", { passcode: passcode });
-  })(), 4000);
-}
-
-function showBoard(ops, live){
-  render(ops);
-  if (live) { var m = document.getElementById("meta"); m.textContent = "🟢 Live · " + m.textContent; }
-}
-
+// Static board — reads the show's ops.json scaffold.
 async function loadBoard(){
-  var locked = false;
   try {
-    var b = await queryBoard();
-    if (b && typeof b === "object") { gate.classList.remove("show"); showBoard(b, true); return; }
-    // null → not seeded yet; fall through to the static scaffold
-  } catch (e) {
-    if (isLocked(e)) { locked = true; }
-    // other errors (offline/unreachable) → fall through to the static scaffold
-  }
-  if (locked) { gate.classList.add("show"); return; }
-
-  // Open (no read gate configured) or Convex unreachable → static scaffold.
-  try {
-    var r = await fetch("/deedee/ops.json", {cache:"no-store"});
+    var r = await fetch("/where-was-the-church/ops.json", {cache:"no-store"});
     if (!r.ok) throw new Error("HTTP " + r.status);
-    gate.classList.remove("show");
-    showBoard(await r.json(), false);
+    render(await r.json());
   } catch (err) {
     document.getElementById("board").innerHTML =
       '<div class="error">Couldn\'t load the board (' + esc(err.message) + ').<br>' +
@@ -399,24 +310,6 @@ async function loadBoard(){
       '(e.g. <span class="path">npx serve</span>) — browsers block fetch on file://.</div>';
   }
 }
-
-gateBtn.addEventListener("click", async function(){
-  var entered = (gatePass.value || "").trim();
-  if (!entered) { gateErr.textContent = "Enter your view passcode."; return; }
-  gateErr.textContent = "Checking…";
-  passcode = entered;
-  try {
-    var b = await queryBoard();
-    try { localStorage.setItem("deedeePasscode", passcode); } catch (e) {}
-    gateErr.textContent = "";
-    gate.classList.remove("show");
-    showBoard(b && typeof b === "object" ? b : {}, true);
-  } catch (e) {
-    if (isLocked(e)) { gateErr.textContent = "That passcode isn’t right."; passcode = ""; }
-    else { gateErr.textContent = "Couldn’t reach the board — try again."; }
-  }
-});
-gatePass.addEventListener("keydown", function(e){ if (e.key === "Enter") gateBtn.click(); });
 
 loadBoard();
 </script>
