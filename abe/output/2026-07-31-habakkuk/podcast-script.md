@@ -24,6 +24,15 @@ Habakkuk under the scope.
 
 ---
 
+## INTRO STING (title animation, ~0:08)
+
+> **[INSERT: `abe/assets/under-the-scope-intro-sting-v1.mp4`]** — the "Under the
+> Scope" title sting (scroll → open Bible → light → logo card). Duck any music
+> under the first words of the intro below; come in warm over its tail rather
+> than after a hard cut. Use this same sting on every episode.
+
+---
+
 ## INTRO (0:30–2:15)
 
 Welcome back to *Under the Scope*. I'm Billy Daws, and on this show we take the
