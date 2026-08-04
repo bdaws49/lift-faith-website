@@ -232,7 +232,24 @@ var UNITS = [
 
 var SEED = [
   // Unit 1 — Tyranny (blue)
-  {n:1,  unit:1, title:"Hitler & the Third Reich",            subj:"The German church under National Socialism"},
+  {n:1,  unit:1, title:"Hitler & the Third Reich",            subj:"The German church under National Socialism",
+    seedContent:{
+      verdict:{
+        gotRight:"A faithful remnant refused to bow. The Confessing Church and the 1934 Barmen Declaration confessed Christ alone as Lord over the church. Bonhoeffer, Niemöller, and Karl Barth resisted — some to death.",
+        failed:"The majority — the \"German Christians\" — fused cross and swastika, adopted the Aryan Paragraph (expelling clergy of Jewish descent), installed a Reich Bishop, and baptized Nazi nationalism as Christian. The wider church largely accommodated, and stayed silent through Kristallnacht and the Holocaust.",
+        faithful:"Signed the Barmen Declaration. Preached against the regime (Niemöller imprisoned 1938–45). Bonhoeffer joined the resistance and was executed in 1945. The White Rose students resisted; Bishop von Galen denounced the Nazi euthanasia program.",
+        mustNot:"Never wed the gospel to a political movement or nation. Never trade prophetic witness for state approval or cultural power. Never let nationalism wear the name of Christ. Never stay silent while the vulnerable are targeted.",
+        s1:"Acts 5:29 — We must obey God rather than men.",
+        s2:"Isaiah 5:20 — Woe to those who call evil good.",
+        s3:"Proverbs 31:8–9 — Speak up for those who cannot speak for themselves.",
+        action:"This week, name one place where your national or political loyalty has slipped ahead of your loyalty to Christ — and repent of it. Then speak up once for someone your culture treats as expendable."
+      },
+      reelScripts:{
+        r1:"When Hitler rose to power, where was the church? It was in the room — cheering.",
+        r2:"In 1933 the \"German Christians\" won two-thirds of the German church and hung the swastika next to the cross.",
+        r3:"When the church wraps the cross in a flag, it loses both. Bonhoeffer died proving it."
+      }
+    }},
   {n:2,  unit:1, title:"Stalin & the Soviet Terror",          subj:"Faith under enforced atheism"},
   {n:3,  unit:1, title:"Mao & the Cultural Revolution",       subj:"The church driven underground"},
   {n:4,  unit:1, title:"The Rwandan Genocide",                subj:"A Christian nation that turned on itself"},
@@ -674,9 +691,21 @@ document.getElementById("importFile").addEventListener("change", function(ev){
 });
 document.getElementById("resetBtn").addEventListener("click", function(){
   if (!confirm("Clear ALL your entries (verdicts, checklists, dates) and start fresh? Export first if you want a backup.")) return;
-  state = defaultState(); save(); renderAll();
+  state = defaultState(); save(); applySeedDefaults(); renderAll();
 });
 
+// Pre-load any episode that ships with starting content (e.g. Episode 1),
+// but only if the user hasn't already got their own entry saved for it.
+function applySeedDefaults(){
+  SEED.forEach(function(s){
+    if (!s.seedContent || state.episodes[s.n]) return;
+    var e = blankEp();
+    if (s.seedContent.verdict) { for (var k in s.seedContent.verdict) e.verdict[k] = s.seedContent.verdict[k]; }
+    if (s.seedContent.reelScripts) { for (var r in s.seedContent.reelScripts) e.distribution.reelScripts[r] = s.seedContent.reelScripts[r]; }
+    state.episodes[s.n] = e;
+  });
+}
+applySeedDefaults();
 renderAll();
 </script>
 </body>
