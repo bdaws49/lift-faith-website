@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Under the Scope — Episode Builder</title>
+<meta name="robots" content="noindex" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Under the Scope" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#8B1538" />
+<style>
+  :root {
+    /* matched to the original Where Was the Church dashboard (Lift burgundy) */
+    --gold: #8B1538; --gold-deep: #5C0F28; --gold-dark: #5C0F28;
+    --ink: #2b2b2b; --muted: #6b7280; --line: #e7d9cc; --card: #ffffff;
+    --bg1: #fbf8f4; --bg2: #f1e7ea;
+    --ok: #2e7d54; --warn: #b07d16; --todo: #b0431f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: var(--ink);
+    background: linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%); min-height: 100dvh; }
+  .sans { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
+
+  header { background: linear-gradient(135deg, #8B1538, #5C0F28); color: #fff; padding: 22px 20px; text-align: center;
+    padding-top: calc(22px + env(safe-area-inset-top)); box-shadow: 0 2px 10px rgba(0,0,0,.15); }
+  header h1 { margin: 0; font-size: 1.5rem; letter-spacing: .3px; }
+  header p { margin: 6px 0 0; font-size: .92rem; opacity: .94; font-style: italic; }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 20px 16px 70px; }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .stat { flex: 1 1 140px; background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 16px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .stat .n { font-size: 1.6rem; color: var(--gold-deep); font-weight: bold; }
+  .stat .l { font-size: .72rem; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+
+  .cv-setting { font-family: -apple-system, Arial, sans-serif; font-size: .82rem; color: var(--muted);
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px;
+    margin-bottom: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .cv-setting input { width: 90px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font-family: inherit; font-size: .9rem; }
+  .cv-setting .hint { font-weight: 400; flex: 1 1 200px; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; }
+  .filters button, .actions button { font-family: inherit; font-size: .82rem; cursor: pointer; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 7px 14px; transition: all .15s; }
+  .filters button.active { background: var(--gold-deep); color: #fff; border-color: var(--gold-deep); }
+  .filters button:hover:not(.active), .actions button:hover { border-color: var(--gold-deep); }
+  .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+  .add-btn { font-family: -apple-system, Arial, sans-serif; font-size: .9rem; font-weight: 700; cursor: pointer;
+    border: none; border-radius: 10px; padding: 9px 16px; color: #fff; background: var(--gold-deep); }
+  .add-btn:hover { opacity: .92; }
+  .showing { font-size: .78rem; color: var(--muted); margin: 4px 2px 14px; }
+
+  .ep { border-radius: 14px; margin-bottom: 12px; overflow: hidden; border: 1px solid var(--line);
+    background: var(--card); box-shadow: 0 2px 8px rgba(0,0,0,.05); border-left: 5px solid var(--gold); }
+  .ep-head { display: flex; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer; user-select: none; }
+  .ep-head:hover { background: #fdf7f9; }
+  .ep-num { font-family: -apple-system, Arial, sans-serif; font-weight: 700; font-size: .82rem; min-width: 30px; height: 30px;
+    display: inline-flex; align-items: center; justify-content: center; color: #fff; background: var(--gold); border-radius: 8px; }
+  .ep-title { flex: 1; font-size: 1.02rem; line-height: 1.35; }
+  .ep-title .subj { color: var(--muted); font-size: .84rem; }
+  .ep-tags { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .status { font-family: -apple-system, Arial, sans-serif; font-size: .68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .4px; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .status.planned { background: #eef1f4; color: #5b6570; }
+  .status.inprogress { background: #fdf1e3; color: #b07d16; }
+  .status.published { background: #e5efe9; color: #2e7d54; }
+  .ep-chev { color: var(--muted); font-size: .8rem; transition: transform .2s; }
+  .ep.open .ep-chev { transform: rotate(90deg); }
+  .ep-body { display: none; padding: 4px 16px 20px; background: #fcf7f4; }
+  .ep.open .ep-body { display: block; }
+
+  .section-label { font-family: -apple-system, Arial, sans-serif; font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .8px; color: var(--muted); margin: 16px 0 8px; font-weight: 700; }
+
+  .ai-gen { background: linear-gradient(135deg, #fff, #fdf3f6); border: 1px solid #eccdd6; border-left: 4px solid var(--gold);
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+  .ai-actions { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+  .gen-btn { font-family: -apple-system, Arial, sans-serif; font-size: .9rem; font-weight: 600; cursor: pointer;
+    border: none; border-radius: 10px; padding: 9px 16px; color: #fff; background: var(--gold-deep); }
+  .gen-btn:hover { opacity: .9; } .gen-btn:disabled { opacity: .5; cursor: default; }
+  .gen-status { font-family: -apple-system, Arial, sans-serif; font-size: .8rem; color: var(--muted); }
+  .gen-status.err { color: var(--todo); }
+
+  .framework-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; }
+  .field.wide { grid-column: 1 / -1; }
+  .field > span { font-family: -apple-system, Arial, sans-serif; font-size: .74rem; font-weight: 700; margin-bottom: 5px; }
+  .field > span .hint { font-weight: 400; color: var(--muted); }
+  textarea, input.text { font-family: inherit; font-size: .92rem; color: var(--ink); background: #fff;
+    border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; width: 100%; resize: vertical; }
+  textarea { min-height: 60px; line-height: 1.45; }
+  textarea:focus, input.text:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(139,21,56,.15); }
+
+  .prod { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; }
+  .prod label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-family: -apple-system, Arial, sans-serif;
+    font-size: .82rem; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; }
+  .prod input { accent-color: var(--gold); width: 16px; height: 16px; }
+  .prod label.done { background: #f7e9ee; border-color: var(--gold); color: var(--gold-deep); font-weight: 600; }
+
+  .reels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .reel { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; border-top: 3px solid var(--gold); }
+  .reel.cut { background: #f7e9ee; border-color: var(--gold); }
+  .reel-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .reel-tag { font-family: -apple-system, Arial, sans-serif; font-size: .72rem; font-weight: 700; color: var(--gold-deep); }
+  .reel-cut { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-family: -apple-system, Arial, sans-serif;
+    font-size: .68rem; color: var(--muted); white-space: nowrap; }
+  .reel-cut input { accent-color: var(--gold); width: 14px; height: 14px; }
+  .reel-cut.done { color: var(--gold-deep); font-weight: 700; }
+  .reel textarea { min-height: 82px; font-size: .88rem; }
+
+  .part { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+  .script-area { min-height: 150px; }
+  .charcount { font-family: -apple-system, Arial, sans-serif; font-size: .72rem; color: var(--muted); margin: -4px 0 10px; text-align: right; }
+  .charcount.over { color: var(--todo); font-weight: 700; }
+
+  .meta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; margin-top: 6px; }
+  .meta-row .field { flex: 1 1 200px; }
+  .ep-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+  .saved-note { font-family: -apple-system, Arial, sans-serif; font-size: .72rem; color: var(--muted); font-style: italic; }
+  .del-btn { font-family: -apple-system, Arial, sans-serif; font-size: .76rem; cursor: pointer; color: var(--todo);
+    background: none; border: 1px solid #e6c9bd; border-radius: 8px; padding: 6px 12px; }
+  .del-btn:hover { background: #fdeae2; }
+
+  .empty { background: var(--card); border: 1px dashed var(--line); border-radius: 14px; padding: 40px 24px; text-align: center; color: var(--muted); }
+
+  footer { text-align: center; color: var(--muted); font-size: .82rem; padding: 8px 16px 30px; }
+  footer a { color: var(--gold-deep); }
+
+  @media (max-width: 680px){ .framework-grid { grid-template-columns: 1fr; } .reels { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Under the Scope</h1>
+  <p>with Pastor Billy Daws — episode builder. Add an episode, drop in a passage, and draft it.</p>
+</header>
+
+<main>
+  <div class="stats" id="stats"></div>
+
+  <div class="cv-setting">
+    🎙️ <label for="cvLimit">Clone-voice character limit per part:</label>
+    <input id="cvLimit" type="number" min="500" max="40000" step="100" />
+    <span class="hint">the most your voice tool reads in one generation — each part is written to fit</span>
+  </div>
+
+  <div class="toolbar">
+    <div class="filters" id="filters">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="planned">Planned</button>
+      <button data-filter="inprogress">In progress</button>
+      <button data-filter="published">Published</button>
+    </div>
+    <div class="actions">
+      <button class="add-btn" id="addEp">＋ Add episode</button>
+      <button id="exportBtn" title="Download your data">⬇ Export</button>
+      <button id="importBtn" title="Load a backup">⬆ Import</button>
+      <button id="resetBtn" title="Clear everything">Reset</button>
+      <input type="file" id="importFile" accept="application/json" hidden />
+    </div>
+  </div>
+  <div class="showing" id="showing"></div>
+
+  <div id="app"></div>
+</main>
+
+<footer>
+  Your entries save in this browser automatically — use <strong>Export</strong> to back up or move devices.
+  &nbsp;·&nbsp; <a href="/where-was-the-church">⛪ Where Was the Church</a>
+  &nbsp;·&nbsp; <a href="/">Lift Faith home</a>
+</footer>
+
+<script>
+"use strict";
+
+var FRAMEWORK = [
+  {key:"passage",     label:"Passage",         hint:"the text you're teaching (NKJV)", wide:true},
+  {key:"bigIdea",     label:"Big idea",        hint:"the one main point", wide:true},
+  {key:"context",     label:"Context",         hint:"historical / literary background"},
+  {key:"keyWords",    label:"Key words",       hint:"word study"},
+  {key:"crossRefs",   label:"Cross-references", hint:""},
+  {key:"application", label:"Application",     hint:""},
+  {key:"takeaway",    label:"One takeaway",    hint:"a sentence to remember", wide:true}
+];
+var REELS = [
+  {k:"r1", l:"Reel 1", angle:"The Question", ph:"Open with the ache — a probing question. Hook in 2 seconds."},
+  {k:"r2", l:"Reel 2", angle:"The Truth",    ph:"A striking truth straight from the text."},
+  {k:"r3", l:"Reel 3", angle:"The Takeaway", ph:"The one line to remember — your most shareable moment."}
+];
+var SOCIAL = [ {k:"youtube",l:"YouTube"},{k:"instagram",l:"Instagram"},{k:"tiktok",l:"TikTok"},{k:"facebook",l:"Facebook"},{k:"x",l:"X"} ];
+var PROD_STEPS = [ {key:"researched",label:"Researched"},{key:"scripted",label:"Scripted"},{key:"recorded",label:"Recorded"},{key:"edited",label:"Edited"},{key:"published",label:"Published"} ];
+var STATUS_META = { planned:{label:"Planned",icon:"📋",cls:"planned"}, inprogress:{label:"In progress",icon:"🎬",cls:"inprogress"}, published:{label:"Published",icon:"✅",cls:"published"} };
+var STORAGE_KEY = "uts-dashboard-v1";
+
+function blankFramework(){ var o={}; FRAMEWORK.forEach(function(f){ o[f.key]=""; }); return o; }
+function blankEp(id){
+  return { id:id, title:"", passage:"", publishDate:"", brief:"",
+    framework: blankFramework(),
+    parts:{ p1:{title:"",script:"",description:""}, p2:{title:"",script:"",description:""} },
+    reelScripts:{r1:"",r2:"",r3:""}, reelsCut:{r1:false,r2:false,r3:false},
+    social:{youtube:false,instagram:false,tiktok:false,facebook:false,x:false},
+    production:{researched:false,scripted:false,recorded:false,edited:false,published:false} };
+}
+function defaultState(){ return { version:1, nextId:1, episodes:[], ui:{filter:"all", cloneVoiceLimit:5000} }; }
+
+function load(){
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
+    var s = JSON.parse(raw);
+    if (!s || typeof s !== "object") return defaultState();
+    s.episodes = Array.isArray(s.episodes) ? s.episodes : [];
+    s.nextId = s.nextId || (s.episodes.length + 1);
+    s.ui = s.ui || {}; s.ui.filter = s.ui.filter || "all"; s.ui.cloneVoiceLimit = s.ui.cloneVoiceLimit || 5000;
+    s.episodes.forEach(normalizeEp);
+    return s;
+  } catch(e){ return defaultState(); }
+}
+function normalizeEp(e){
+  e.framework = e.framework || {}; FRAMEWORK.forEach(function(f){ if (e.framework[f.key]==null) e.framework[f.key]=""; });
+  e.parts = e.parts || {}; e.parts.p1 = e.parts.p1 || {title:"",script:"",description:""}; e.parts.p2 = e.parts.p2 || {title:"",script:"",description:""};
+  e.reelScripts = e.reelScripts || {r1:"",r2:"",r3:""}; e.reelsCut = e.reelsCut || {r1:false,r2:false,r3:false};
+  e.social = e.social || {}; e.production = e.production || {};
+  if (e.brief==null) e.brief=""; if (e.publishDate==null) e.publishDate="";
+}
+var state = load();
+function save(){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e){} }
+function epById(id){ for (var i=0;i<state.episodes.length;i++){ if (String(state.episodes[i].id)===String(id)) return state.episodes[i]; } return null; }
+
+function deriveStatus(e){
+  var p = e.production || {};
+  if (p.published) return "published";
+  if (p.researched || p.scripted || p.recorded || p.edited) return "inprogress";
+  return "planned";
+}
+function epTitle(e){ return (e.title && e.title.trim()) ? e.title : "Untitled episode"; }
+
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function setByPath(obj, path, val){ var parts=path.split("."), o=obj; for (var i=0;i<parts.length-1;i++){ if (o[parts[i]]==null) o[parts[i]]={}; o=o[parts[i]]; } o[parts[parts.length-1]]=val; }
+
+function statusPill(e){ var st=STATUS_META[deriveStatus(e)]; return '<span class="status '+st.cls+'" data-status-for="'+e.id+'">'+st.icon+' '+st.label+'</span>'; }
+
+function field(id, label, hint, path, val, wide, kind){
+  var control = (kind==="input")
+    ? '<input class="text" data-ep="'+id+'" data-path="'+path+'" value="'+esc(val)+'" />'
+    : '<textarea data-ep="'+id+'" data-path="'+path+'">'+esc(val)+'</textarea>';
+  return '<label class="field'+(wide?' wide':'')+'"><span>'+esc(label)+(hint?' <span class="hint">'+esc(hint)+'</span>':'')+'</span>'+control+'</label>';
+}
+function partBlock(id, key, e){
+  var p = (e.parts && e.parts[key]) || {};
+  return '<div class="part">'+
+    '<label class="field"><span>Title <span class="hint">&le; 100 chars</span></span><input class="text" data-ep="'+id+'" data-path="parts.'+key+'.title" value="'+esc(p.title||"")+'" /></label>'+
+    '<label class="field"><span>Script <span class="hint">what the clone-voice reads for this part</span></span><textarea class="script-area" data-ep="'+id+'" data-path="parts.'+key+'.script">'+esc(p.script||"")+'</textarea></label>'+
+    '<div class="charcount" data-charcount="'+id+'-'+key+'"></div>'+
+    '<label class="field"><span>Description / show notes <span class="hint">&le; 5000 chars</span></span><textarea data-ep="'+id+'" data-path="parts.'+key+'.description">'+esc(p.description||"")+'</textarea></label>'+
+  '</div>';
+}
+
+function renderEp(e){
+  var fw = FRAMEWORK.map(function(f){ return field(e.id, f.label, f.hint, "framework."+f.key, e.framework[f.key], f.wide); }).join('');
+  var prod = PROD_STEPS.map(function(step){ var on=!!e.production[step.key];
+    return '<label class="'+(on?'done':'')+'"><input type="checkbox" data-ep="'+e.id+'" data-prod="'+step.key+'"'+(on?' checked':'')+'/>'+esc(step.label)+'</label>'; }).join('<span style="align-self:center;color:#e0cdd4">→</span>');
+  var reels = REELS.map(function(r){ var on=!!e.reelsCut[r.k]; var sc=(e.reelScripts&&e.reelScripts[r.k])||"";
+    return '<div class="reel'+(on?' cut':'')+'"><div class="reel-top"><span class="reel-tag">'+esc(r.l)+' · '+esc(r.angle)+'</span>'+
+      '<label class="reel-cut '+(on?'done':'')+'"><input type="checkbox" data-ep="'+e.id+'" data-reelcut="'+r.k+'"'+(on?' checked':'')+'/><span class="reel-cut-txt">'+(on?'Cut ✓':'Mark cut')+'</span></label></div>'+
+      '<textarea data-ep="'+e.id+'" data-path="reelScripts.'+r.k+'" placeholder="'+esc(r.ph)+'">'+esc(sc)+'</textarea></div>'; }).join('');
+  var social = SOCIAL.map(function(p){ var on=!!e.social[p.k];
+    return '<label class="'+(on?'done':'')+'"><input type="checkbox" data-ep="'+e.id+'" data-social="'+p.k+'"'+(on?' checked':'')+'/>'+esc(p.l)+'</label>'; }).join('');
+
+  return '<div class="ep" data-ep-row="'+e.id+'" data-status="'+deriveStatus(e)+'">'+
+    '<div class="ep-head" data-ep-toggle="'+e.id+'">'+
+      '<span class="ep-num">🔍</span>'+
+      '<span class="ep-title"><span data-title-for="'+e.id+'">'+esc(epTitle(e))+'</span> <span class="subj" data-subj-for="'+e.id+'">'+esc(e.passage||"")+'</span></span>'+
+      '<span class="ep-tags">'+statusPill(e)+'<span class="ep-chev">▶</span></span>'+
+    '</div>'+
+    '<div class="ep-body">'+
+      '<div class="section-label">Draft with AI</div>'+
+      '<div class="ai-gen"><label class="field"><span>Topic / passage <span class="hint">a sentence or two — Claude drafts both parts in your voice, to your clone-voice limit</span></span>'+
+        '<textarea data-ep="'+e.id+'" data-path="brief" placeholder="e.g. Habakkuk — holding on to faith when God seems silent.">'+esc(e.brief||"")+'</textarea></label>'+
+        '<div class="ai-actions"><button class="gen-btn" data-gen="'+e.id+'">✨ Generate two-part draft</button><span class="gen-status" data-genstatus="'+e.id+'"></span></div></div>'+
+      '<div class="section-label">Teaching framework</div>'+
+      '<div class="framework-grid">'+fw+'</div>'+
+      '<div class="section-label">Part 1 <span style="font-weight:400;text-transform:none;letter-spacing:0">— voiced as one clone-voice generation</span></div>'+
+      partBlock(e.id,"p1",e)+
+      '<div class="section-label">Part 2</div>'+
+      partBlock(e.id,"p2",e)+
+      '<div class="section-label">Short reels</div>'+
+      '<div class="reels">'+reels+'</div>'+
+      '<div class="section-label">Posted to social</div>'+
+      '<div class="prod">'+social+'</div>'+
+      '<div class="section-label">Production checklist</div>'+
+      '<div class="prod">'+prod+'</div>'+
+      '<div class="section-label">Episode details</div>'+
+      '<div class="meta-row">'+
+        field(e.id,"Episode title","","title", e.title,false,"input")+
+        field(e.id,"Passage (short)","","passage", e.passage,false,"input")+
+        field(e.id,"Publish date","optional","publishDate", e.publishDate,false,"input")+
+      '</div>'+
+      '<div class="ep-foot"><span class="saved-note">Saved automatically as you type.</span>'+
+        '<button class="del-btn" data-del="'+e.id+'">Delete episode</button></div>'+
+    '</div>'+
+  '</div>';
+}
+
+function render(){
+  var eps = state.episodes;
+  var app = document.getElementById("app");
+  if (!eps.length){ app.innerHTML = '<div class="empty">No episodes yet. Tap <strong>＋ Add episode</strong> to start your first one.</div>'; }
+  else { app.innerHTML = eps.map(renderEp).join(''); }
+  applyFilter();
+  updateStats();
+  updateAllCharCounts();
+}
+
+function updateStats(){
+  var eps = state.episodes, pub=0, prog=0, plan=0;
+  eps.forEach(function(e){ var s=deriveStatus(e); if(s==="published")pub++; else if(s==="inprogress")prog++; else plan++; });
+  var cards = [ {n:eps.length,l:"Episodes"},{n:prog,l:"In progress"},{n:pub,l:"Published"},{n:"Weekly",l:"Schedule"} ];
+  document.getElementById("stats").innerHTML = cards.map(function(c){ return '<div class="stat"><div class="n">'+c.n+'</div><div class="l sans">'+esc(c.l)+'</div></div>'; }).join('');
+}
+function refreshStatus(id){ var e=epById(id); if(!e) return; var st=STATUS_META[deriveStatus(e)];
+  var row=document.querySelector('[data-ep-row="'+id+'"]'); if(row) row.setAttribute("data-status",deriveStatus(e));
+  var pill=document.querySelector('[data-status-for="'+id+'"]'); if(pill){ pill.className="status "+st.cls; pill.textContent=st.icon+" "+st.label; } }
+function updateCharCount(id,key){ var el=document.querySelector('[data-charcount="'+id+'-'+key+'"]'); if(!el) return;
+  var lim=(state.ui&&state.ui.cloneVoiceLimit)||5000; var e=epById(id); var p=(e&&e.parts&&e.parts[key])||{}; var len=(p.script||"").length;
+  el.textContent=len.toLocaleString()+" / "+lim.toLocaleString()+" characters"+(len>lim?" — over the clone-voice limit":""); el.classList.toggle("over",len>lim); }
+function updateAllCharCounts(){ state.episodes.forEach(function(e){ updateCharCount(e.id,"p1"); updateCharCount(e.id,"p2"); }); }
+
+function applyFilter(){
+  var f = state.ui.filter || "all";
+  document.querySelectorAll('#filters button').forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-filter")===f); });
+  var shown=0;
+  document.querySelectorAll('[data-ep-row]').forEach(function(row){ var e=epById(row.getAttribute("data-ep-row"));
+    var match=(f==="all")||(deriveStatus(e)===f); row.style.display=match?"":"none"; if(match)shown++; });
+  document.getElementById("showing").textContent = state.episodes.length ? ("Showing "+shown+" of "+state.episodes.length+" episode"+(state.episodes.length===1?"":"s")) : "";
+}
+
+function openEpisode(id){ var row=document.querySelector('[data-ep-row="'+id+'"]'); if(!row) return; row.classList.add("open"); row.scrollIntoView({behavior:"smooth",block:"start"}); }
+
+async function generateEpisode(id){
+  var st=document.querySelector('[data-genstatus="'+id+'"]'); var btn=document.querySelector('[data-gen="'+id+'"]'); var e=epById(id);
+  var brief=(e.brief||"").trim();
+  if(!brief){ if(st){ st.textContent="Add a topic / passage first."; st.classList.add("err"); } return; }
+  if(btn) btn.disabled=true; if(st){ st.textContent="Generating both parts… this takes 30–60s."; st.classList.remove("err"); }
+  try {
+    var r=await fetch("/api/scope-episode",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({topic:brief, title:epTitle(e), passage:e.passage||"", scriptLimit:(state.ui.cloneVoiceLimit||5000)})});
+    var data=await r.json().catch(function(){return {};});
+    if(!r.ok || !data.draft){ if(st){ st.textContent=(data&&data.error)||"Generation failed — try again."; st.classList.add("err"); } if(btn) btn.disabled=false; return; }
+    var d=data.draft;
+    if(d.framework){ FRAMEWORK.forEach(function(f){ if(d.framework[f.key]!=null) e.framework[f.key]=String(d.framework[f.key]); }); }
+    if(d.reels){ ["r1","r2","r3"].forEach(function(rk){ if(d.reels[rk]!=null) e.reelScripts[rk]=String(d.reels[rk]); }); }
+    if(d.part1) e.parts.p1={title:String(d.part1.title||""),script:String(d.part1.script||""),description:String(d.part1.description||"")};
+    if(d.part2) e.parts.p2={title:String(d.part2.title||""),script:String(d.part2.script||""),description:String(d.part2.description||"")};
+    if(d.framework && d.framework.passage && !e.passage) e.passage=String(d.framework.passage).slice(0,60);
+    save(); render(); openEpisode(id);
+  } catch(err){ if(st){ st.textContent="Couldn't reach the generator. Are you on the live site? (It won't run from a local file.)"; st.classList.add("err"); } if(btn) btn.disabled=false; }
+}
+
+// ---- events ----
+document.getElementById("app").addEventListener("click", function(ev){
+  var gen=ev.target.closest("[data-gen]"); if(gen){ ev.stopPropagation(); generateEpisode(gen.getAttribute("data-gen")); return; }
+  var del=ev.target.closest("[data-del]"); if(del){ ev.stopPropagation();
+    if(confirm("Delete this episode? This can't be undone.")){ var id=del.getAttribute("data-del"); state.episodes=state.episodes.filter(function(e){ return String(e.id)!==String(id); }); save(); render(); } return; }
+  var et=ev.target.closest("[data-ep-toggle]"); if(et){ et.closest(".ep").classList.toggle("open"); }
+});
+document.getElementById("app").addEventListener("input", function(ev){
+  var t=ev.target; if(!t.hasAttribute("data-path")) return;
+  var id=t.getAttribute("data-ep"), path=t.getAttribute("data-path"), e=epById(id); if(!e) return;
+  setByPath(e, path, t.value); save();
+  if(path==="title"){ var el=document.querySelector('[data-title-for="'+id+'"]'); if(el) el.textContent=epTitle(e); }
+  if(path==="passage"){ var el2=document.querySelector('[data-subj-for="'+id+'"]'); if(el2) el2.textContent=e.passage||""; }
+  var m=path.match(/^parts\.(p1|p2)\.script$/); if(m) updateCharCount(id,m[1]);
+});
+document.getElementById("app").addEventListener("change", function(ev){
+  var t=ev.target, id=t.getAttribute("data-ep"), e=epById(id); if(!e) return;
+  if(t.hasAttribute("data-prod")){ e.production[t.getAttribute("data-prod")]=t.checked; t.closest("label").classList.toggle("done",t.checked); save(); refreshStatus(id); updateStats(); applyFilter(); }
+  else if(t.hasAttribute("data-social")){ e.social[t.getAttribute("data-social")]=t.checked; t.closest("label").classList.toggle("done",t.checked); save(); }
+  else if(t.hasAttribute("data-reelcut")){ var k=t.getAttribute("data-reelcut"); e.reelsCut[k]=t.checked;
+    t.closest("label").classList.toggle("done",t.checked); var box=t.closest(".reel"); if(box) box.classList.toggle("cut",t.checked);
+    var txt=t.closest("label").querySelector(".reel-cut-txt"); if(txt) txt.textContent=t.checked?"Cut ✓":"Mark cut"; save(); }
+});
+
+document.getElementById("addEp").addEventListener("click", function(){
+  var id=state.nextId++; var e=blankEp(id); state.episodes.push(e); save(); render(); openEpisode(id);
+});
+document.getElementById("filters").addEventListener("click", function(ev){ var b=ev.target.closest("button[data-filter]"); if(!b) return; state.ui.filter=b.getAttribute("data-filter"); save(); applyFilter(); });
+
+var cvInput=document.getElementById("cvLimit");
+cvInput.value=(state.ui.cloneVoiceLimit||5000);
+cvInput.addEventListener("change", function(){ var v=Math.max(500,Math.min(40000,parseInt(cvInput.value,10)||5000)); cvInput.value=v; state.ui.cloneVoiceLimit=v; save(); updateAllCharCounts(); });
+
+document.getElementById("exportBtn").addEventListener("click", function(){
+  var blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}); var url=URL.createObjectURL(blob);
+  var a=document.createElement("a"); a.href=url; a.download="under-the-scope-data.json"; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+});
+document.getElementById("importBtn").addEventListener("click", function(){ document.getElementById("importFile").click(); });
+document.getElementById("importFile").addEventListener("change", function(ev){
+  var file=ev.target.files[0]; if(!file) return; var reader=new FileReader();
+  reader.onload=function(){ try { var s=JSON.parse(reader.result); if(!s||!Array.isArray(s.episodes)) throw new Error("Not a valid backup file.");
+    state=s; state.ui=state.ui||{filter:"all",cloneVoiceLimit:5000}; state.nextId=state.nextId||(s.episodes.length+1); state.episodes.forEach(normalizeEp); save(); render(); alert("Imported your saved data."); }
+    catch(e){ alert("Couldn't import that file: "+e.message); } };
+  reader.readAsText(file); ev.target.value="";
+});
+document.getElementById("resetBtn").addEventListener("click", function(){
+  if(!confirm("Clear ALL episodes and start fresh? Export first if you want a backup.")) return; state=defaultState(); save(); render();
+});
+
+render();
+</script>
+</body>
+</html>
