@@ -1,0 +1,17 @@
+{
+  "name": "Where Was the Church",
+  "short_name": "Where Church",
+  "description": "Episode dashboard for Where Was the Church with Pastor Billy Daws — 50 episodes, the Verdict framework, and production tracking.",
+  "start_url": "/where-was-the-church",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14233a",
+  "theme_color": "#14233a",
+  "icons": [
+    { "src": "/wwtc-icon-192-v1.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/wwtc-icon-512-v1.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/wwtc-icon-192-v1.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/wwtc-icon-512-v1.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
