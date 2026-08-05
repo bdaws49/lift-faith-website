@@ -92,10 +92,14 @@ Rules:
 """
 
 
+SCRIPT_BUILD = "v3 — scripture read aloud + length floor"
+
+
 def run(project: Project, cfg: Config) -> None:
     cfg.require("openai_api_key")
     from openai import OpenAI
 
+    log("script", f"build {SCRIPT_BUILD}")
     client = OpenAI(api_key=cfg.openai_api_key)
     idea = project.data["idea"]
 
@@ -408,6 +412,7 @@ Do ALL of the following:
 2. CUT repetition. If two sentences make the same point, keep the sharper one and delete the other.
 3. Where the writing is vague about what actually happened, SHARPEN it into concrete, named, dated specifics, using ONLY facts you are certain are historically accurate. NEVER invent a fact, date, name, or quotation.
 4. Keep the voice reverent, plain, vivid, and accurate. Spoken words only: no URLs, no stage directions, and NEVER print labels, letters, numbers, or parentheses such as (a), (b), (1), or First/Second/Lastly, because every character is read aloud.
+5. LENGTH IS REQUIRED. This is a long-form teaching show. Part 1 and part2_body must EACH be long and full — at least 5,200 characters, aiming 6,000-6,800. If the draft you are given is thin, EXPAND it by adding more real, named, dated historical facts, scenes, and detail. NEVER shorten a part below this floor, and never pad with repetition or vague reflection.
 
 Return Part 2 IN PIECES so its verdict always lands last:
 - "part2_body": the faithful remnant and the reckoning, named and concrete and vivid. It MUST read the episode Scripture ALOUD as the biblical measure — name the reference and speak the verse words in full (use the exact Scripture given in the user message), then a sentence showing how that Word judged the church's choice. Contains NO verdict and NO call to action.
@@ -483,57 +488,88 @@ def _ensure_scripture_in_body(episode, body):
     return (body.rstrip() + "\n\n" + reading) if body else reading
 
 
+def _scripture_is_spoken(episode):
+    """True if the episode's verse actually appears in the spoken Part 2."""
+    sc = episode.get("scripture") or {}
+    text, ref = (sc.get("text") or "").strip(), _spoken_ref(sc.get("ref", ""))
+    if not text and not ref:
+        return False
+    p2 = re.sub(r"\s+", " ", (episode["segments"].get("part2", "") or "").lower())
+    probe = re.sub(r"\s+", " ", text.lower())[:24]
+    return bool((probe and probe in p2) or (ref and ref.lower() in p2))
+
+
 def _polish_episode(client, cfg, episode, focus_cliches=None):
     p1 = episode["segments"].get("part1", "")
     p2 = episode["segments"].get("part2", "")
     if not p1 or not p2:
         return
+
+    lo_c = (cfg.teaching_chars or [6000, 6800])[0]
+    floor1 = max(5200, lo_c - 800)       # Part 1 minimum
+    floor_body = floor1 - 1000           # part2_body minimum (verdict + action add the rest)
+
     extra = ""
     if focus_cliches:
         extra = ("\n\nThis draft STILL contains these banned words — remove every one and "
                  "rewrite with a concrete fact: " + ", ".join(sorted(set(focus_cliches))) + ".")
     _sc = episode.get("scripture") or {}
-    user = (
+    base_user = (
         f"Episode: {episode.get('title', '')}\n"
         f"Scripture (read this ALOUD in part2_body): {_sc.get('ref', '')} — \"{_sc.get('text', '')}\"\n"
         f"Summary: {episode.get('summary', '')}\n\n"
         f"Revise Part 1 and Part 2 per the rules and return the JSON.{extra}\n\n"
         f"=== PART 1 ===\n{p1}\n\n=== PART 2 ===\n{p2}"
     )
-    log("script", "editor pass: cleaning cliches, padding, and the verdict...")
-    try:
-        resp = client.chat.completions.create(
-            model=cfg.openai_model,
-            response_format={"type": "json_object"},
-            temperature=0.4,
-            max_tokens=8000,
-            messages=[{"role": "system", "content": EDITOR_SYSTEM},
-                      {"role": "user", "content": user}],
-        )
-        data = json.loads(resp.choices[0].message.content)
-    except Exception as exc:
-        log("script", f"editor pass skipped ({exc}); keeping current draft.")
-        return
+    log("script", f"editor pass: cleaning cliches + landing verdict + reading Scripture "
+                  f"(in: {len(p1)}/{len(p2)} chars)…")
 
-    np1 = _stringify(data.get("part1", "")).strip()
+    data, np1, body, verdict, action = None, "", "", "", ""
+    lengthen = ""
+    for attempt in range(2):
+        try:
+            resp = client.chat.completions.create(
+                model=cfg.openai_model,
+                response_format={"type": "json_object"},
+                temperature=0.4,
+                max_tokens=12000,
+                messages=[{"role": "system", "content": EDITOR_SYSTEM},
+                          {"role": "user", "content": base_user + lengthen}],
+            )
+            data = json.loads(resp.choices[0].message.content)
+        except Exception as exc:
+            log("script", f"editor pass skipped ({exc}); keeping current draft.")
+            return
+        np1 = _stringify(data.get("part1", "")).strip()
+        body = _stringify(data.get("part2_body", "")).strip()
+        verdict = _stringify(data.get("verdict", "")).strip()
+        action = _stringify(data.get("action", "")).strip()
+        if len(np1) >= floor1 and len(body) >= floor_body:
+            break
+        lengthen = (
+            f"\n\nYOUR LAST DRAFT WAS TOO SHORT. Part 1 must be at least {floor1} characters and "
+            f"part2_body at least {floor_body} characters. Do NOT trim — EXPAND both by adding more "
+            f"real, named, dated historical facts and scenes. Keep the Scripture read aloud inside "
+            f"part2_body, and keep the verdict and action OUT of part2_body.")
+        log("script", f"editor draft short ({len(np1)}/{len(body)}); asking once more to lengthen…")
+
     if len(np1) >= 1500:
         episode["segments"]["part1"] = _soften_words(np1)
 
-    # Assemble Part 2 in code so the verdict + action are ALWAYS last.
-    body = _stringify(data.get("part2_body", "")).strip()
-    verdict = _stringify(data.get("verdict", "")).strip()
-    action = _stringify(data.get("action", "")).strip()
+    # Assemble Part 2 in code so the verse is spoken and the verdict + action land LAST.
     if len(body) >= 1200 and verdict:
-        body = _ensure_scripture_in_body(episode, body)  # verse is spoken before the verdict
+        body = _ensure_scripture_in_body(episode, body)  # verse spoken before the verdict
         part2 = body + "\n\n" + verdict + ((" " + action) if action else "")
         episode["segments"]["part2"] = _soften_words(part2.strip())
     else:
-        alt = _stringify(data.get("part2", "")).strip()
+        alt = _stringify((data or {}).get("part2", "")).strip()
         if len(alt) >= 1500:
-            episode["segments"]["part2"] = _soften_words(alt)
+            # even the monolithic fallback must speak the verse
+            episode["segments"]["part2"] = _soften_words(_ensure_scripture_in_body(episode, alt))
 
-    reels = _clean_reels(episode, data.get("reels"))
+    reels = _clean_reels(episode, (data or {}).get("reels"))
     if reels:
         episode["reels"] = reels
     log("script", "editor pass done — "
-        f"Part 1/2 now {len(episode['segments']['part1'])}/{len(episode['segments']['part2'])} chars.")
+        f"Part 1/2 now {len(episode['segments']['part1'])}/{len(episode['segments']['part2'])} chars; "
+        f"scripture spoken: {'YES' if _scripture_is_spoken(episode) else 'NO'}.")
