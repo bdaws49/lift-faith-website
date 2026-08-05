@@ -56,14 +56,14 @@ Write a complete episode in this exact structure and return STRICT JSON:
   "title": "the event or subject, short and specific",
   "tagline": "one vivid sentence",
   "series": "the era/unit this belongs to, or empty string",
-  "scripture": { "ref": "Book chap:verse (KJV)", "text": "the verse text" },
+  "scripture": { "ref": "Book chap:verse (KJV)", "text": "the exact verse text" },
   "summary": "2-3 sentences on what this episode examines",
   "segments": {
     "hook":  "8-15 seconds. Name the subject plainly. One sharp line. Do NOT answer it.",
     "intro": "Welcome + name the show + the moment we are examining today.",
     "part1": "TELL THE HISTORY and where the church FAILED, concrete and scene by scene, with real names, dates, and numbers. Reporting, not a sermon. Do NOT moralize at length, do NOT preview the remnant, do NOT write a conclusion. End on ONE short turning line that points to Part 2. LONG and rich, see LENGTH.",
     "ad":    "A warm 20-30 second ad slot, follow the AD INSTRUCTION in the user message exactly.",
-    "part2": "Build it in three moves, then STOP. (1) The faithful remnant: named people and what they concretely did and risked. (2) THE VERDICT: exactly THREE short, sharp sentences naming what the church must never repeat, each tied to a concrete failure from Part 1. (3) ONE clear, doable action for the church today. Do NOT add closing paragraphs of general reflection after the action, the outro closes the show. LONG and rich, see LENGTH.",
+    "part2": "Build it in four moves, then STOP. (1) The faithful remnant: named people and what they concretely did and risked. (2) THE BIBLICAL MEASURE: read the episode Scripture ALOUD in Billy's voice — name the reference and speak the verse words in full — then show plainly, in a sentence or two, how that Word judged the exact choice the church faced. This is the heart of the show: history laid against Scripture. (3) THE VERDICT: exactly THREE short, sharp sentences naming what the church must never repeat, each tied to a concrete failure from Part 1. (4) ONE clear, doable action for the church today. Do NOT add closing paragraphs of general reflection after the action, the outro closes the show. LONG and rich, see LENGTH.",
     "outro": "Land it in one sober, hopeful breath, then invite them to follow the show."
   },
   "reels": [
@@ -73,6 +73,7 @@ Write a complete episode in this exact structure and return STRICT JSON:
 }
 
 Rules:
+- SCRIPTURE: the "scripture" verse must be one that directly judges the choice the church faced in THIS episode. It is READ ALOUD inside Part 2 (the Biblical Measure move), so it must be a real verse quoted accurately, not paraphrased. The same reference and words that appear in "scripture" must be spoken in the Part 2 text.
 - LENGTH: Part 1 and Part 2 each about 6,000-6,800 characters, CLOSE in length, never over 6,800.
   Fill length with SUBSTANCE, more named facts, dates, and story, NEVER by restating an idea or
   adding general reflection. If you are repeating yourself, you are done: add a new fact or stop.
@@ -409,7 +410,7 @@ Do ALL of the following:
 4. Keep the voice reverent, plain, vivid, and accurate. Spoken words only: no URLs, no stage directions, and NEVER print labels, letters, numbers, or parentheses such as (a), (b), (1), or First/Second/Lastly, because every character is read aloud.
 
 Return Part 2 IN PIECES so its verdict always lands last:
-- "part2_body": the faithful remnant and the reckoning, named and concrete and vivid, containing NO verdict and NO call to action.
+- "part2_body": the faithful remnant and the reckoning, named and concrete and vivid. It MUST read the episode Scripture ALOUD as the biblical measure — name the reference and speak the verse words in full (use the exact Scripture given in the user message), then a sentence showing how that Word judged the church's choice. Contains NO verdict and NO call to action.
 - "verdict": exactly THREE short, sharp spoken sentences of what the church must never repeat, each tied to a concrete failure. Plain prose, no labels.
 - "action": ONE clear, doable spoken sentence for the church today.
 Do not put the verdict or the action anywhere inside part2_body.
@@ -459,6 +460,29 @@ def _clean_reels(episode, proposed):
     return out[:3]
 
 
+def _spoken_ref(ref):
+    """The reference as it should be read aloud — drop a trailing (KJV)/(NKJV)."""
+    return re.sub(r"\s*\([^)]*\)\s*$", "", ref or "").strip()
+
+
+def _ensure_scripture_in_body(episode, body):
+    """Guarantee the episode Scripture is actually SPOKEN in Part 2. If the writer
+    and editor both left it out of the body, append a plain, reverent reading of it
+    so every episode measures the history against the Word — before the verdict."""
+    sc = episode.get("scripture") or {}
+    ref, text = _spoken_ref(sc.get("ref", "")), (sc.get("text") or "").strip()
+    if not ref or not text:
+        return body
+    norm = lambda s: re.sub(r"\s+", " ", (s or "").lower())
+    body_n = norm(body)
+    probe = norm(text)[:24]
+    if (probe and probe in body_n) or (norm(ref) and norm(ref) in body_n):
+        return body  # already read aloud somewhere in the body
+    reading = (f'Lay that against the Word. {ref} says, "{text}" '
+               f"That was the measure the church was handed — and the measure it was weighed by.")
+    return (body.rstrip() + "\n\n" + reading) if body else reading
+
+
 def _polish_episode(client, cfg, episode, focus_cliches=None):
     p1 = episode["segments"].get("part1", "")
     p2 = episode["segments"].get("part2", "")
@@ -468,9 +492,10 @@ def _polish_episode(client, cfg, episode, focus_cliches=None):
     if focus_cliches:
         extra = ("\n\nThis draft STILL contains these banned words — remove every one and "
                  "rewrite with a concrete fact: " + ", ".join(sorted(set(focus_cliches))) + ".")
+    _sc = episode.get("scripture") or {}
     user = (
         f"Episode: {episode.get('title', '')}\n"
-        f"Scripture: {(episode.get('scripture') or {}).get('ref', '')}\n"
+        f"Scripture (read this ALOUD in part2_body): {_sc.get('ref', '')} — \"{_sc.get('text', '')}\"\n"
         f"Summary: {episode.get('summary', '')}\n\n"
         f"Revise Part 1 and Part 2 per the rules and return the JSON.{extra}\n\n"
         f"=== PART 1 ===\n{p1}\n\n=== PART 2 ===\n{p2}"
@@ -499,6 +524,7 @@ def _polish_episode(client, cfg, episode, focus_cliches=None):
     verdict = _stringify(data.get("verdict", "")).strip()
     action = _stringify(data.get("action", "")).strip()
     if len(body) >= 1200 and verdict:
+        body = _ensure_scripture_in_body(episode, body)  # verse is spoken before the verdict
         part2 = body + "\n\n" + verdict + ((" " + action) if action else "")
         episode["segments"]["part2"] = _soften_words(part2.strip())
     else:
