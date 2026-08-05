@@ -92,7 +92,7 @@ Rules:
 """
 
 
-SCRIPT_BUILD = "v3 — scripture read aloud + length floor"
+SCRIPT_BUILD = "v4 — scripture aloud + additive length (grows to full teaching size)"
 
 
 def run(project: Project, cfg: Config) -> None:
@@ -243,70 +243,62 @@ def _voice_cast(cfg: Config) -> str:
     )
 
 
-def _ensure_teaching_length(client, cfg, episode, tries: int = 3) -> None:
-    """Bring any SHORT teaching part up into range — without touching a part that's
-    already long enough (so a good part can't be over-expanded past one clip)."""
-    lo_c, hi_c = (cfg.teaching_chars or [6000, 6800])[:2]
-    floor = max(4800, lo_c - 800)  # gentle floor: a solid-length part is never force-padded
-    for _ in range(tries):
-        c1 = len(episode["segments"].get("part1", ""))
-        c2 = len(episode["segments"].get("part2", ""))
-        need1, need2 = c1 < floor, c2 < floor
-        if not need1 and not need2:
+def _grow_text(client, cfg, episode, current, floor, label, max_rounds=7) -> str:
+    """Grow a block of teaching text to `floor` characters ADDITIVELY — ask only
+    for brand-new paragraphs and stack them on. gpt-4o reliably writes a small
+    delta but balks at emitting one giant block, so many small asks beat one big
+    'expand this'. Returns the grown text."""
+    _sc = episode.get("scripture") or {}
+    text = current or ""
+    for _ in range(max_rounds):
+        if len(text) >= floor:
             break
-        which = " and ".join(n for n, ok in (("Part 1", need1), ("Part 2", need2)) if ok)
-        log("script", f"teaching is {c1}/{c2} chars (target {lo_c}-{hi_c} each); expanding {which}…")
-        p1_note = "TOO SHORT — expand this" if need1 else "already good — keep unchanged"
-        p2_note = "TOO SHORT — expand this" if need2 else "already good — keep unchanged"
+        want = min(2200, max(900, floor - len(text)))  # realistic per-round delta
         try:
             resp = client.chat.completions.create(
                 model=cfg.openai_model,
                 response_format={"type": "json_object"},
                 temperature=0.7,
-                max_tokens=8000,
+                max_tokens=4000,
                 messages=[
                     {"role": "system", "content":
-                        "You lengthen a history podcast's teaching ONLY by adding new concrete facts, names, dates, and story, never by "
-                        "restating a point or adding general reflection. Keep it vivid and plain, no cliches like beacon, "
-                        "stand firm, vigilant, or light in the darkness. Keep the host's warm, plain voice."},
+                        "You continue a history podcast's teaching by writing NEW paragraphs of concrete, "
+                        "accurate history — real names, dates, places, numbers, and story. Never repeat "
+                        "anything already written; never add general reflection or cliches (no beacon, stand "
+                        "firm, vigilant, light in the darkness). Keep the host's warm, plain, vivid voice. "
+                        "Spoken words only — no headings, no URLs."},
                     {"role": "user", "content":
-                        f"Episode: {episode['title']}\n"
-                        f"Scripture: {episode['scripture'].get('ref', '')}\n"
+                        f"Episode: {episode.get('title', '')}\n"
+                        f"Scripture (do NOT quote it here — it is read later): {_sc.get('ref', '')}\n"
                         f"Summary: {episode.get('summary', '')}\n\n"
-                        f"Expand ONLY the part(s) marked TOO SHORT so each reaches "
-                        f"{lo_c}-{hi_c} characters. Do NOT exceed {hi_c} characters in either "
-                        f"part, and keep the two parts CLOSE in length. Leave a part marked "
-                        f"'keep unchanged' exactly as it is. Add real NEW paragraphs of concrete history (names, dates, specifics, story), not "
-                        f"padding. Then choose 3 short, punchy, VERBATIM quotes from the final "
-                        f"Part 1 and Part 2 for reels.\n\n"
-                        "Return JSON: {\"part1\":\"...\",\"part2\":\"...\","
-                        "\"reels\":[{\"quote\":\"...\",\"segment\":\"part1\"}]}\n\n"
-                        f"PART 1 ({p1_note}):\n{episode['segments'].get('part1', '')}\n\n"
-                        f"PART 2 ({p2_note}):\n{episode['segments'].get('part2', '')}"},
+                        f"Below is {label} SO FAR. Write about {want} more characters of BRAND-NEW material "
+                        f"that naturally continues it — further real events, named people, dates, and "
+                        f"specifics not yet mentioned. Do NOT restate, summarize, or conclude; do NOT write "
+                        f"a verdict or a call to action. Return JSON: {{\"more\":\"<only the new paragraphs>\"}}.\n\n"
+                        f"=== {label} SO FAR ===\n{text}"},
                 ],
             )
-            data = json.loads(resp.choices[0].message.content)
+            more = _stringify(json.loads(resp.choices[0].message.content).get("more", "")).strip()
         except Exception as exc:
-            log("script", f"expand step failed ({exc}); keeping current length.")
-            return
-        # Only replace a part we actually asked to expand — never overwrite a
-        # part that was already long enough (that's what caused the overshoot).
-        if need1 and data.get("part1"):
-            episode["segments"]["part1"] = _stringify(data["part1"]).strip()
-        if need2 and data.get("part2"):
-            episode["segments"]["part2"] = _stringify(data["part2"]).strip()
-        reels = data.get("reels")
-        if isinstance(reels, list) and reels:
-            clean = []
-            for r in reels:
-                if not isinstance(r, dict):
-                    r = {"quote": _stringify(r)}
-                r["quote"] = _stringify(r.get("quote", ""))
-                if r.get("segment") not in SEGMENTS:
-                    r["segment"] = "part1"
-                clean.append(r)
-            episode["reels"] = clean[:3]
+            log("script", f"grow step failed ({exc}); keeping current length.")
+            break
+        if len(more) < 200:
+            break  # the model has run out of new material
+        text = (text.rstrip() + "\n\n" + more).strip()
+        log("script", f"{label}: grew to {len(text)} chars")
+    return text
 
+
+def _ensure_teaching_length(client, cfg, episode, tries: int = 3) -> None:
+    """Bring each SHORT teaching part up into range, one part at a time, additively."""
+    lo_c, hi_c = (cfg.teaching_chars or [6000, 6800])[:2]
+    floor = max(5200, lo_c - 800)
+    for seg, label in (("part1", "Part 1"), ("part2", "Part 2")):
+        c = len(episode["segments"].get(seg, ""))
+        if c < floor:
+            log("script", f"{label} is {c} chars (target {lo_c}-{hi_c}); growing it…")
+            episode["segments"][seg] = _grow_text(
+                client, cfg, episode, episode["segments"].get(seg, ""), floor, label)
     c1 = len(episode["segments"].get("part1", ""))
     c2 = len(episode["segments"].get("part2", ""))
     log("script", f"teaching set to {c1} / {c2} characters (Part 1 / Part 2).")
@@ -524,40 +516,37 @@ def _polish_episode(client, cfg, episode, focus_cliches=None):
     log("script", f"editor pass: cleaning cliches + landing verdict + reading Scripture "
                   f"(in: {len(p1)}/{len(p2)} chars)…")
 
-    data, np1, body, verdict, action = None, "", "", "", ""
-    lengthen = ""
-    for attempt in range(2):
-        try:
-            resp = client.chat.completions.create(
-                model=cfg.openai_model,
-                response_format={"type": "json_object"},
-                temperature=0.4,
-                max_tokens=12000,
-                messages=[{"role": "system", "content": EDITOR_SYSTEM},
-                          {"role": "user", "content": base_user + lengthen}],
-            )
-            data = json.loads(resp.choices[0].message.content)
-        except Exception as exc:
-            log("script", f"editor pass skipped ({exc}); keeping current draft.")
-            return
-        np1 = _stringify(data.get("part1", "")).strip()
-        body = _stringify(data.get("part2_body", "")).strip()
-        verdict = _stringify(data.get("verdict", "")).strip()
-        action = _stringify(data.get("action", "")).strip()
-        if len(np1) >= floor1 and len(body) >= floor_body:
-            break
-        lengthen = (
-            f"\n\nYOUR LAST DRAFT WAS TOO SHORT. Part 1 must be at least {floor1} characters and "
-            f"part2_body at least {floor_body} characters. Do NOT trim — EXPAND both by adding more "
-            f"real, named, dated historical facts and scenes. Keep the Scripture read aloud inside "
-            f"part2_body, and keep the verdict and action OUT of part2_body.")
-        log("script", f"editor draft short ({len(np1)}/{len(body)}); asking once more to lengthen…")
+    # ONE editor pass to clean/structure — the editor tends to TIGHTEN, so length
+    # is restored afterward by additive growth (which the editor can't undo).
+    try:
+        resp = client.chat.completions.create(
+            model=cfg.openai_model,
+            response_format={"type": "json_object"},
+            temperature=0.4,
+            max_tokens=12000,
+            messages=[{"role": "system", "content": EDITOR_SYSTEM},
+                      {"role": "user", "content": base_user}],
+        )
+        data = json.loads(resp.choices[0].message.content)
+    except Exception as exc:
+        log("script", f"editor pass skipped ({exc}); keeping current draft.")
+        return
+    np1 = _stringify(data.get("part1", "")).strip()
+    body = _stringify(data.get("part2_body", "")).strip()
+    verdict = _stringify(data.get("verdict", "")).strip()
+    action = _stringify(data.get("action", "")).strip()
 
     if len(np1) >= 1500:
+        if len(np1) < floor1:
+            log("script", f"Part 1 short after edit ({len(np1)}); growing…")
+            np1 = _grow_text(client, cfg, episode, np1, floor1, "Part 1")
         episode["segments"]["part1"] = _soften_words(np1)
 
     # Assemble Part 2 in code so the verse is spoken and the verdict + action land LAST.
     if len(body) >= 1200 and verdict:
+        if len(body) < floor_body:
+            log("script", f"Part 2 short after edit ({len(body)}); growing…")
+            body = _grow_text(client, cfg, episode, body, floor_body, "Part 2")
         body = _ensure_scripture_in_body(episode, body)  # verse spoken before the verdict
         part2 = body + "\n\n" + verdict + ((" " + action) if action else "")
         episode["segments"]["part2"] = _soften_words(part2.strip())
