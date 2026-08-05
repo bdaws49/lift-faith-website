@@ -378,23 +378,46 @@ _BANNED_CLICHES = [
     "beacon", "light in the darkness", "city on a hill", "cautionary tale",
     "stand firm", "speak truth to power", "conscience of society",
     "conscience of the state", "no matter the cost", "vigilant", "vigilance",
-    "voice for the voiceless", "the very soul", "clarion call",
+    "voice for the voiceless", "the very soul", "clarion call", "siren call",
 ]
+
+# Deterministic swaps for single-word cliches the model keeps re-adding. Safe,
+# whole-word, and applied after the AI edit so they can never survive.
+_WORD_SWAPS = [
+    (r"\bever vigilant\b", "watchful"),
+    (r"\bvigilant\b", "watchful"),
+    (r"\bvigilance\b", "watchfulness"),
+    (r"\bsiren calls\b", "lures"),
+    (r"\bsiren call\b", "lure"),
+    (r"\bclarion call\b", "call"),
+]
+
+
+def _soften_words(text):
+    out = text or ""
+    for pat, repl in _WORD_SWAPS:
+        out = re.sub(pat, repl, out, flags=re.IGNORECASE)
+    return out
+
 
 EDITOR_SYSTEM = """You are a ruthless line editor for the history podcast "Where Was the Church" (host Pastor Billy Daws). You are given Part 1 and Part 2 of an episode script. Revise them to be excellent and return STRICT JSON.
 
 Do ALL of the following:
-1. DELETE every one of these cliches and any close cousin, rewriting that sentence with a concrete, specific fact (a name, date, number, place, or document) instead of another platitude:
-   beacon; light in the darkness; city on a hill; cautionary tale; stand firm; speak truth to power; conscience of society/state; no matter the cost; vigilant / vigilance; voice for the voiceless; the very soul of a nation; clarion call.
+1. DELETE every one of these cliches and any close cousin, rewriting that sentence with a concrete, specific fact instead of another platitude: beacon; light in the darkness; city on a hill; cautionary tale; stand firm; speak truth to power; conscience of society/state; no matter the cost; vigilant / vigilance; voice for the voiceless; the very soul of a nation; clarion call; siren call.
 2. CUT repetition. If two sentences make the same point, keep the sharper one and delete the other.
-3. Where the writing is vague about what actually happened, SHARPEN it into concrete, named, dated specifics, using ONLY facts you are certain are historically accurate. NEVER invent a fact, date, name, or quotation. If you cannot make it concrete truthfully, cut the vague sentence.
-4. PART 2 must END on the verdict, then STOP. Order it: the faithful remnant (named, concrete); then the VERDICT, exactly THREE short sharp sentences of what the church must never repeat, each tied to a concrete failure; then ONE clear, doable action for today. Write ALL of it as plain spoken prose. NEVER print labels, letters, numbers, or parentheses such as (a), (b), (1), nor First/Second/Lastly as headers, because every character is read aloud. State the verdict ONCE only, at the very end: delete any earlier duplicate verdict, and delete any general reflection after the action.
-5. Keep the voice reverent, plain, and vivid. Keep it accurate. Keep each part between 5,500 and 6,800 characters. Spoken words only: no URLs, no stage directions.
+3. Where the writing is vague about what actually happened, SHARPEN it into concrete, named, dated specifics, using ONLY facts you are certain are historically accurate. NEVER invent a fact, date, name, or quotation.
+4. Keep the voice reverent, plain, vivid, and accurate. Spoken words only: no URLs, no stage directions, and NEVER print labels, letters, numbers, or parentheses such as (a), (b), (1), or First/Second/Lastly, because every character is read aloud.
 
-Also choose exactly 3 short, punchy reel quotes, each taken VERBATIM (character for character) from your REVISED Part 1 or Part 2.
+Return Part 2 IN PIECES so its verdict always lands last:
+- "part2_body": the faithful remnant and the reckoning, named and concrete and vivid, containing NO verdict and NO call to action.
+- "verdict": exactly THREE short, sharp spoken sentences of what the church must never repeat, each tied to a concrete failure. Plain prose, no labels.
+- "action": ONE clear, doable spoken sentence for the church today.
+Do not put the verdict or the action anywhere inside part2_body.
+
+Also choose exactly 3 short, punchy reel quotes, each taken VERBATIM (character for character) from your revised Part 1 or part2_body.
 
 Return ONLY JSON:
-{"part1":"<revised part 1>","part2":"<revised part 2>","reels":[{"quote":"<verbatim>","segment":"part1"},{"quote":"<verbatim>","segment":"part2"},{"quote":"<verbatim>","segment":"part1"}]}"""
+{"part1":"<revised part 1>","part2_body":"<part 2 without verdict or action>","verdict":"<three sentences>","action":"<one sentence>","reels":[{"quote":"<verbatim>","segment":"part1"},{"quote":"<verbatim>","segment":"part2"},{"quote":"<verbatim>","segment":"part1"}]}"""
 
 
 def _sentences(text):
@@ -443,8 +466,8 @@ def _polish_episode(client, cfg, episode, focus_cliches=None):
         return
     extra = ""
     if focus_cliches:
-        extra = ("\n\nThis draft STILL contains these banned phrases — remove every "
-                 "one and rewrite with a concrete fact: " + ", ".join(sorted(set(focus_cliches))) + ".")
+        extra = ("\n\nThis draft STILL contains these banned words — remove every one and "
+                 "rewrite with a concrete fact: " + ", ".join(sorted(set(focus_cliches))) + ".")
     user = (
         f"Episode: {episode.get('title', '')}\n"
         f"Scripture: {(episode.get('scripture') or {}).get('ref', '')}\n"
@@ -466,13 +489,23 @@ def _polish_episode(client, cfg, episode, focus_cliches=None):
     except Exception as exc:
         log("script", f"editor pass skipped ({exc}); keeping current draft.")
         return
+
     np1 = _stringify(data.get("part1", "")).strip()
-    np2 = _stringify(data.get("part2", "")).strip()
-    # Only accept a substantial return (guard against a truncated/broken edit).
     if len(np1) >= 1500:
-        episode["segments"]["part1"] = np1
-    if len(np2) >= 1500:
-        episode["segments"]["part2"] = np2
+        episode["segments"]["part1"] = _soften_words(np1)
+
+    # Assemble Part 2 in code so the verdict + action are ALWAYS last.
+    body = _stringify(data.get("part2_body", "")).strip()
+    verdict = _stringify(data.get("verdict", "")).strip()
+    action = _stringify(data.get("action", "")).strip()
+    if len(body) >= 1200 and verdict:
+        part2 = body + "\n\n" + verdict + ((" " + action) if action else "")
+        episode["segments"]["part2"] = _soften_words(part2.strip())
+    else:
+        alt = _stringify(data.get("part2", "")).strip()
+        if len(alt) >= 1500:
+            episode["segments"]["part2"] = _soften_words(alt)
+
     reels = _clean_reels(episode, data.get("reels"))
     if reels:
         episode["reels"] = reels
