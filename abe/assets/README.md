@@ -70,11 +70,16 @@ the top of the script if needed.
 bash abe/assets/gather-podcast-material.sh apply
 ```
 
-Optional — point it at specific folders instead of the default sweep of
+Point it at specific folders instead of the default sweep of
 Desktop/Documents/Movies/Downloads/Music/Pictures and external drives:
 ```
 bash abe/assets/gather-podcast-material.sh apply  ~/Desktop ~/Movies /Volumes/BackupDrive
 ```
+**When you name folders explicitly, the keyword filter is turned off** and it
+gathers all media inside them — the right choice when your episodes live in
+topic-named folders (e.g. `where-was-the-church-main/`) that don't contain a
+podcast keyword. The keyword filter only applies to the blind whole-Mac sweep,
+to keep personal photos and home videos out.
 
 Notes:
 - Gathers video, audio, scripts/docs, and images whose path contains a podcast

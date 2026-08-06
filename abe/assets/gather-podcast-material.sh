@@ -56,13 +56,19 @@ case "${1:-}" in
 esac
 
 if [ "$#" -gt 0 ]; then
+  # You explicitly named folders -> trust them: gather ALL media inside, no
+  # keyword filter needed (handles topic-named folders like "where-was-the-church").
   ROOTS=( "$@" )
+  EXPLICIT=1
 else
+  # Blind sweep of the whole Mac -> require a keyword so we don't scoop up
+  # personal photos, home videos, and random documents.
   ROOTS=()
   for d in "$HOME/Desktop" "$HOME/Documents" "$HOME/Movies" "$HOME/Downloads" "$HOME/Music" "$HOME/Pictures"; do
     [ -d "$d" ] && ROOTS+=( "$d" )
   done
   for v in /Volumes/*; do [ -d "$v" ] && ROOTS+=( "$v" ); done
+  EXPLICIT=0
 fi
 
 # ---- find the Google Drive folder ------------------------------------------
@@ -145,7 +151,7 @@ for root in "${ROOTS[@]}"; do
     ext="${base##*.}"
     [ "$ext" = "$base" ] && continue                       # no extension
     cat="$(ext_category "$ext")"; [ -z "$cat" ] && continue
-    path_has_keyword "$f" || continue
+    [ "$EXPLICIT" -eq 1 ] || path_has_keyword "$f" || continue
     size="$(fsize "$f")"; [ -z "$size" ] && continue
     printf '%s\t%s\t%s\n' "$cat" "$size" "$f" >> "$CAND"
   done < <(find "$root" \
