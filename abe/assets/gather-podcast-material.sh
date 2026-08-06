@@ -130,10 +130,10 @@ episode_folder() {           # guess "Ep05" from a filename, else "_Unsorted"
 dest_for() {                 # category, filename -> relative destination path
   local cat="$1" base="$2" ep
   case "$cat" in
-    video) ep="$(episode_folder "$base")"; printf '01 – Episodes/%s/video/%s' "$ep" "$base" ;;
-    audio) ep="$(episode_folder "$base")"; printf '01 – Episodes/%s/audio/%s' "$ep" "$base" ;;
-    image) printf '04 – Thumbnails & Graphics/%s' "$base" ;;
-    doc)   printf '02 – Scripts & Notes/%s' "$base" ;;
+    video) ep="$(episode_folder "$base")"; printf '01 - Episodes/%s/video/%s' "$ep" "$base" ;;
+    audio) ep="$(episode_folder "$base")"; printf '01 - Episodes/%s/audio/%s' "$ep" "$base" ;;
+    image) printf '04 - Thumbnails & Graphics/%s' "$base" ;;
+    doc)   printf '02 - Scripts & Notes/%s' "$base" ;;
   esac
 }
 
@@ -243,15 +243,24 @@ uniq_dest() {
 }
 
 echo "Copying into: $DEST_ROOT"
-# Re-read the plan (KEEP rows) and copy.
+# Optional per-run size cap (GB) so a huge folder doesn't overflow a small local
+# disk while Google Drive uploads. 0 = unlimited. Re-run to continue where it
+# stopped (already-copied files are skipped).
+LIM=$(( ${MAXGB:-0} * 1000000000 )); COPIED_BYTES=0
 grep '^KEEP' "$PLAN" | while IFS="$(printf '\t')" read -r status cat size src rel; do
   dest="$DEST_ROOT/$rel"
-  mkdir -p "$(dirname "$dest")"
   if [ -f "$dest" ] && [ "$(fsize "$dest")" = "$size" ]; then
     continue                                               # already there, same size — skip
   fi
+  if [ "$LIM" -gt 0 ] && [ "$COPIED_BYTES" -gt 0 ] && [ $(( COPIED_BYTES + size )) -gt "$LIM" ]; then
+    echo ">> Batch cap (~${MAXGB} GB) reached. Let Google Drive finish uploading"
+    echo ">> (menu-bar icon says 'up to date'), then run the SAME command again to continue."
+    break
+  fi
+  mkdir -p "$(dirname "$dest")"
   [ -e "$dest" ] && dest="$(uniq_dest "$dest")"            # don't clobber a different file
   cp -p "$src" "$dest" 2>/dev/null || cp "$src" "$dest"    # -p may fail on Drive FS; fall back
+  COPIED_BYTES=$(( COPIED_BYTES + size ))
 done
 
 echo "---------------------------------------------------------------"
