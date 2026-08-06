@@ -1,0 +1,356 @@
+"""Stage 6 — Reels.
+
+For each of the three flagged quotes, find the exact word span in the transcript
+(this is the "scan"), cut that slice out of the full episode audio, and build a
+vertical 1080x1920 video with the quote captioned over a background — the reel
+background image if the images stage made one, otherwise the show's burgundy.
+
+Writes: reels/reel_1.mp4 … reel_3.mp4
+"""
+
+from __future__ import annotations
+
+import re
+import subprocess
+from pathlib import Path
+
+from ..config import Config, ffmpeg_bin, log
+from ..normalize import normalize_episode
+from ..project import Project
+
+BG_COLOR = "0x5C0F28"
+ACCENT = "0xC98BA0"
+PAD_BEFORE = 0.3
+PAD_AFTER = 0.8
+REEL_TARGET_SECONDS = 30   # aim for ~30s reels (overridable via show.json reel_seconds)
+MAX_REEL_SECONDS = 60
+FONT_CANDIDATES = [
+    "/System/Library/Fonts/Supplemental/Georgia.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+]
+
+
+def run(project: Project, cfg: Config) -> None:
+    episode = project.data.get("episode")
+    if episode:
+        normalize_episode(episode)
+    full = project.audio_dir / "full_episode.mp3"
+    transcript = episode.get("transcript") if episode else None
+    if not full.exists() or not transcript:
+        raise RuntimeError("Need the assembled episode and a transcript first.")
+
+    words = transcript["words"]
+    sent_cues = transcript.get("cues") or []
+    font = _find_font()
+    ffbin = ffmpeg_bin()
+    images_dir = project.root / "images"
+    made = []
+
+    target = float(getattr(cfg, "reel_seconds", 0) or REEL_TARGET_SECONDS)
+    ep_sec = episode.get("episode_seconds") or (words[-1]["end"] if words else 0)
+    for n, reel in enumerate(episode.get("reels", []), start=1):
+        span = _locate(words, reel["quote"])
+        if not span:
+            # The spoken (CloneVoice) audio didn't match the written quote closely
+            # enough — take the CLOSEST spot instead of dropping the reel. The
+            # on-screen captions come from the transcript, so they stay in sync.
+            span = _locate(words, reel["quote"], threshold=0.18)
+            if span:
+                log("reels", f"reel {n}: exact quote not in audio — using closest match.")
+        if not span:
+            log("reels", f"reel {n}: no usable match in audio, skipping.")
+            continue
+        # Grow the cut around the quote to ~30s, but snap the ends to whole
+        # sentences so the reel never starts or stops in the middle of one.
+        start, end = _window_snap(sent_cues, words, span[0], span[1], target, ep_sec)
+        dur = min(end - start, MAX_REEL_SECONDS)
+        stamp = _timestamp(start)
+        # Synced captions for everything spoken across the reel window.
+        cues = _reel_cues(words, start, start + dur)
+        bg = images_dir / f"reel_{n}.png"
+        # Safety net: if the images stage didn't leave a background, build a
+        # branded one now so the reel always carries the logo + title.
+        if not bg.exists():
+            from .. import covers
+            images_dir.mkdir(parents=True, exist_ok=True)
+            covers.reel_background(None, bg, episode.get("title", ""))
+        out = project.reels_dir / f"reel_{n}.mp4"
+
+        _render(ffbin, full, out, start, dur, stamp, cfg, font,
+                bg if bg.exists() else None, project, cues)
+        reel["file"] = out.name
+        reel["timestamp"] = stamp
+        made.append(out.name)
+        log("reels", f"reel {n} @ {stamp} ({dur:.0f}s, {len(cues)} caption lines) → {out.name}")
+
+    project.mark_done("reels")
+    project.save()
+    log("reels", f"cut {len(made)} reels.")
+
+
+def _locate(words: list[dict], quote: str,
+            threshold: float = 0.4) -> tuple[float, float] | None:
+    """Find the transcript span that best matches the quote.
+
+    Forgiving on purpose: the spoken (CloneVoice) version is often a little
+    longer or shorter than the written quote and swaps small words, so we try a
+    range of window sizes, score each by an F1 of word overlap (rewarding tight
+    spans that are mostly the quote's words), and then tighten the cut to the
+    first and last matched word.
+    """
+    target = _norm(quote)
+    if not target:
+        return None
+    # One cleaned token per transcript word, aligned 1:1 with `words`.
+    toks = [_norm_word(w["w"]) for w in words]
+    n = len(toks)
+    if n == 0:
+        return None
+    tgt_set = set(target)
+    L = len(target)
+
+    # Window sizes from ~0.6x to ~1.4x the quote length tolerate length drift.
+    sizes = sorted({min(n, max(3, int(L * m))) for m in (0.6, 0.8, 1.0, 1.2, 1.4)})
+    best, best_score = None, 0.0
+    for win in sizes:
+        for i in range(0, n - win + 1):
+            score = _score(toks[i:i + win], tgt_set, L)
+            if score > best_score:
+                best_score, best = score, (i, i + win)
+    if not best or best_score < threshold:
+        return None
+
+    i, j = best
+    # Trim to the first/last window token that is actually one of the quote's
+    # words, so the cut starts and ends on the quote, not filler around it.
+    hit = [k for k in range(i, j) if toks[k] and toks[k] in tgt_set]
+    if hit:
+        i, j = hit[0], hit[-1] + 1
+    return (words[i]["start"], words[min(j, len(words)) - 1]["end"])
+
+
+def _score(window: list[str], tgt_set: set, target_len: int) -> float:
+    """F1 of distinct-word overlap between a window and the quote's words."""
+    ws = {w for w in window if w}
+    matched = len(ws & tgt_set)
+    if not matched:
+        return 0.0
+    recall = matched / target_len
+    precision = matched / max(1, len([w for w in window if w]))
+    return 2 * recall * precision / (recall + precision)
+
+
+def _norm(text: str) -> list[str]:
+    """Clean a quote into a flat list of lowercase word tokens."""
+    return re.sub(r"[^\w\s]", "", (text or "").lower()).split()
+
+
+def _norm_word(word: str) -> str:
+    """Clean a single transcript word into one lowercase token (may be empty)."""
+    return re.sub(r"[^\w\s]", "", (word or "").lower()).strip()
+
+
+def _ends_sentence(text: str) -> bool:
+    """True if a cue's text ends a sentence (…. ! ?), ignoring trailing quotes."""
+    t = (text or "").rstrip().rstrip("\"'”’)")
+    return t.endswith((".", "!", "?", "…"))
+
+
+def _window_snap(cues, words, qs, qe, target, ep_sec) -> tuple[float, float]:
+    """Grow the cut to ~target seconds, snapping the ends to real sentence breaks.
+
+    Whisper splits long sentences into several segments (at commas/pauses), so a
+    segment boundary is not necessarily a sentence end. We only stop where a
+    segment's text actually ends with . ! or ? — so the reel never cuts off
+    mid-sentence. Falls back to a plain time window if the transcript has no
+    sentence punctuation to anchor to.
+    """
+    usable = [c for c in cues if c.get("start") is not None and c.get("end") is not None]
+    if not usable or not any(_ends_sentence(c.get("text", "")) for c in usable):
+        return _window_around(qs, qe, target, ep_sec)
+    usable.sort(key=lambda c: c["start"])
+    last = len(usable) - 1
+
+    # Segments the quote overlaps (or the nearest one if it lands in a gap).
+    idx = [i for i, c in enumerate(usable) if c["end"] > qs and c["start"] < qe]
+    if not idx:
+        mid = (qs + qe) / 2
+        idx = [min(range(len(usable)),
+                   key=lambda k: abs((usable[k]["start"] + usable[k]["end"]) / 2 - mid))]
+    lo, hi = min(idx), max(idx)
+
+    # Expand to the sentence the quote sits in: forward to a sentence end, and
+    # back to a sentence start (the segment after a previous sentence end).
+    while hi < last and not _ends_sentence(usable[hi]["text"]):
+        hi += 1
+    while lo > 0 and not _ends_sentence(usable[lo - 1]["text"]):
+        lo -= 1
+
+    def span():
+        return usable[hi]["end"] - usable[lo]["start"]
+
+    # Grow by WHOLE sentences to reach the target — favour follow-through first.
+    while span() < target:
+        grew = False
+        if hi < last:
+            nh = hi + 1
+            while nh < last and not _ends_sentence(usable[nh]["text"]):
+                nh += 1
+            if usable[nh]["end"] - usable[lo]["start"] <= MAX_REEL_SECONDS:
+                hi, grew = nh, True
+        if span() < target and lo > 0:
+            nl = lo - 1
+            while nl > 0 and not _ends_sentence(usable[nl - 1]["text"]):
+                nl -= 1
+            if usable[hi]["end"] - usable[nl]["start"] <= MAX_REEL_SECONDS:
+                lo, grew = nl, True
+        if not grew:
+            break
+
+    s = max(0.0, usable[lo]["start"] - 0.15)
+    e = usable[hi]["end"] + 0.35
+    if ep_sec:
+        e = min(e, ep_sec)
+    if e - s > MAX_REEL_SECONDS:
+        e = s + MAX_REEL_SECONDS
+    return s, e
+
+
+def _window_around(qs: float, qe: float, target: float, ep_sec: float) -> tuple[float, float]:
+    """Grow the [qs,qe] quote span to ~`target` seconds, centered a little early
+    so the quote lands up front and the reel carries the follow-through."""
+    qdur = max(0.0, qe - qs)
+    if qdur < target:
+        extra = target - qdur
+        lead = extra * 0.30           # a little context before the quote
+        s, e = qs - lead, qe + (extra - lead)
+    else:
+        s, e = qs, qe
+    s = max(0.0, s - PAD_BEFORE)
+    e = e + PAD_AFTER
+    if ep_sec:
+        e = min(e, ep_sec)
+    if e - s > MAX_REEL_SECONDS:
+        e = s + MAX_REEL_SECONDS
+    return s, e
+
+
+def _reel_cues(words, start, end, max_words=6, max_dur=2.4, max_gap=0.7):
+    """Group transcript words spoken in [start,end) into short, synced caption
+    lines (returned in reel-local time)."""
+    inwin = [w for w in words
+             if w.get("start") is not None and w["start"] < end and w["end"] > start]
+    groups, cur = [], []
+    for w in inwin:
+        if cur and (len(cur) >= max_words
+                    or w["end"] - cur[0]["start"] > max_dur
+                    or w["start"] - cur[-1]["end"] > max_gap):
+            groups.append(cur); cur = []
+        cur.append(w)
+    if cur:
+        groups.append(cur)
+    cues = []
+    for g in groups:
+        s = max(0.0, g[0]["start"] - start)
+        e = min(end - start, g[-1]["end"] - start)
+        if e <= s:
+            e = s + 0.4
+        text = " ".join((x["w"] or "").strip() for x in g).strip()
+        if text:
+            cues.append((s, e, text))
+    return cues
+
+
+def _render(ffbin, full, out, start, dur, stamp, cfg, font, bg: Path | None,
+            project: Project, cues) -> None:
+    # Synced captions as an ASS subtitle sized to the reel's exact pixels, so the
+    # font size and position are predictable (see _build_ass).
+    ass = project.reels_dir / f"_cap_{out.stem}.ass"
+    ass.write_text(_build_ass(cues, font))
+    esc = str(ass).replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
+
+    # Footer via a textfile so the timestamp's colon can't break the filter.
+    foot = project.reels_dir / f"_foot_{out.stem}.txt"
+    foot.write_text(f"{cfg.show_name}  ·  {stamp}")
+    fontarg = f":fontfile='{font}'" if font else ""
+
+    vf = (
+        f"subtitles='{esc}',"
+        f"drawtext=textfile='{foot}'{fontarg}:fontcolor={ACCENT}:fontsize=38:"
+        f"x=(w-text_w)/2:y=h-150"
+    )
+
+    if bg:
+        # Pre-built vertical background (already 1080x1920, darkened, with logo).
+        inputs = ["-loop", "1", "-t", f"{dur:.3f}", "-i", str(bg)]
+        pre = "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
+    else:
+        inputs = ["-f", "lavfi", "-i", f"color=c={BG_COLOR}:s=1080x1920:d={dur:.3f}"]
+        pre = ""
+
+    cmd = [ffbin, "-y", *inputs,
+           "-ss", f"{start:.3f}", "-t", f"{dur:.3f}", "-i", str(full),
+           "-vf", pre + vf,
+           "-map", "0:v", "-map", "1:a",
+           "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
+           "-c:a", "aac", "-b:a", "192k", "-shortest", str(out)]
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode != 0:
+        # Surface ffmpeg's own reason (last few lines) instead of a bare command.
+        tail = "\n    ".join(
+            [ln for ln in (proc.stderr or "").strip().splitlines() if ln][-6:]
+        )
+        raise RuntimeError(f"ffmpeg couldn't build reel {out.name}:\n    {tail}")
+
+
+def _build_ass(cues, font) -> str:
+    """A libass ASS subtitle sized to the reel (1080x1920): big, centered-lower,
+    bold captions with a strong outline. Pixel-exact because PlayRes = video size."""
+    name = _ass_fontname(font)
+    head = (
+        "[Script Info]\n"
+        "ScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\nWrapStyle: 0\n\n"
+        "[V4+ Styles]\n"
+        "Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BackColour, "
+        "Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, "
+        "BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
+        f"Style: Reel,{name},64,&H00FFFFFF,&H00000000,&H90000000,-1,0,0,0,100,100,"
+        "0,0,1,4,2,2,90,90,430,1\n\n"
+        "[Events]\n"
+        "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+    )
+    lines = []
+    for s, e, text in cues:
+        safe = text.replace("\n", " ").replace("{", "(").replace("}", ")")
+        lines.append(f"Dialogue: 0,{_ass_ts(s)},{_ass_ts(e)},Reel,,0,0,0,,{safe}")
+    return head + "\n".join(lines) + "\n"
+
+
+def _ass_ts(seconds: float) -> str:
+    seconds = max(0.0, seconds)
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = seconds % 60
+    return f"{h}:{m:02d}:{s:05.2f}"
+
+
+def _ass_fontname(font: str) -> str:
+    f = (font or "").lower()
+    if "georgia" in f:
+        return "Georgia"
+    if "dejavu" in f:
+        return "DejaVu Serif"
+    return "Georgia"
+
+
+def _find_font() -> str:
+    for f in FONT_CANDIDATES:
+        if Path(f).exists():
+            return f
+    return ""
+
+
+def _timestamp(seconds: float) -> str:
+    m, s = divmod(int(seconds), 60)
+    return f"{m}:{s:02d}"
