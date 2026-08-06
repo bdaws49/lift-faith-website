@@ -147,6 +147,7 @@ for root in "${ROOTS[@]}"; do
   while IFS= read -r -d '' f; do
     case "$f" in "$DEST_ROOT"/*) continue;; esac           # don't re-scan our own output folder
     [ "$f" = "$REPORT" ] && continue                       # don't gather our own report
+    case "$f" in *'/~$'* | *'/._'* | */.DS_Store) continue;; esac   # skip Word temp / macOS junk
     base="${f##*/}"
     ext="${base##*.}"
     [ "$ext" = "$base" ] && continue                       # no extension
