@@ -98,15 +98,18 @@ for ep in "$PARENT"/*/; do
   fi
   [ -z "$FPS" ] && FPS="30"; [ -z "$PIX" ] && PIX="yuv420p"
   [ -z "$AR" ] && AR="48000"; [ -z "$ACH" ] && ACH="2"
+  # If the episode is a very low frame rate (e.g. static image over audio),
+  # render at 30 fps so the animated intro card stays smooth, not choppy.
+  OUTFPS="$(awk -v f="$FPS" 'BEGIN{n=split(f,a,"/"); v=(n==2&&a[2]+0>0)?a[1]/a[2]:a[1]+0; if(v<24||v==0) print 30; else print f}')"
   case "$SAR" in ""|"N/A"|"0:1") SAR="1" ;; esac
   case "$ACH" in 1) LAYOUT="mono" ;; 6) LAYOUT="5.1" ;; *) LAYOUT="stereo"; ACH=2 ;; esac
   case "$VCODEC" in hevc|h265) VENC="libx265" ;; *) VENC="libx264" ;; esac
 
-  echo "MAKE  $epname  ->  ${W}x${H} @ ${FPS}fps"
+  echo "MAKE  $epname  ->  ${W}x${H} @ ${OUTFPS}fps"
   ffmpeg -v error -y -i "$STING" -i "$vid" -filter_complex "\
-[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=${SAR},fps=${FPS},format=${PIX}[cv];\
+[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=${SAR},fps=${OUTFPS},format=${PIX}[cv];\
 [0:a]aresample=${AR},aformat=sample_fmts=fltp:channel_layouts=${LAYOUT}[ca];\
-[1:v]setsar=${SAR},fps=${FPS},format=${PIX}[ev];\
+[1:v]setsar=${SAR},fps=${OUTFPS},format=${PIX}[ev];\
 [1:a]aresample=${AR},aformat=sample_fmts=fltp:channel_layouts=${LAYOUT}[ea];\
 [cv][ca][ev][ea]concat=n=2:v=1:a=1[v][a]" \
     -map "[v]" -map "[a]" -c:v "$VENC" -pix_fmt "$PIX" -crf "$CRF" -preset "$PRESET" \
