@@ -231,16 +231,27 @@ if [ "$MODE" != "apply" ]; then
   exit 0
 fi
 
+# pick a non-colliding destination when a *different* file already has that name
+uniq_dest() {
+  local d="$1" dir b stem ext n
+  [ -e "$d" ] || { printf '%s' "$d"; return; }
+  dir="$(dirname "$d")"; b="$(basename "$d")"
+  case "$b" in *.*) ext=".${b##*.}"; stem="${b%.*}" ;; *) ext=""; stem="$b" ;; esac
+  n=2
+  while [ -e "$dir/$stem ($n)$ext" ]; do n=$((n+1)); done
+  printf '%s' "$dir/$stem ($n)$ext"
+}
+
 echo "Copying into: $DEST_ROOT"
-copied=0; exists=0
 # Re-read the plan (KEEP rows) and copy.
 grep '^KEEP' "$PLAN" | while IFS="$(printf '\t')" read -r status cat size src rel; do
   dest="$DEST_ROOT/$rel"
   mkdir -p "$(dirname "$dest")"
   if [ -f "$dest" ] && [ "$(fsize "$dest")" = "$size" ]; then
-    exists=$((exists+1)); continue                         # already there, same size
+    continue                                               # already there, same size — skip
   fi
-  cp -p "$src" "$dest" && copied=$((copied+1))
+  [ -e "$dest" ] && dest="$(uniq_dest "$dest")"            # don't clobber a different file
+  cp -p "$src" "$dest" 2>/dev/null || cp "$src" "$dest"    # -p may fail on Drive FS; fall back
 done
 
 echo "---------------------------------------------------------------"
