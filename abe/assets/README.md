@@ -43,3 +43,43 @@ Each episode is fully re-rendered (so the card fuses cleanly), so budget a few
 minutes to about real-time per episode and let it run in the background for a
 whole season. Only needed for the **video** versions — the audio podcast feed
 doesn't use the card.
+
+---
+
+## `gather-podcast-material.sh` — collect + de-dupe + organize (macOS)
+
+Finds scattered podcast files across your Mac, removes duplicates by **actual
+file content** (not just filename), and copies one clean copy of each into an
+organized `Under the Scope/` folder inside Google Drive (which then syncs to the
+2 TB). It **never deletes or moves your originals — it only copies.**
+
+**Setup:** install Google Drive for Desktop and sign in (needed for the real run
+so the organized folder syncs). The dry run needs nothing.
+
+**1. Dry run first — looks, counts, finds duplicates, copies nothing:**
+```
+bash abe/assets/gather-podcast-material.sh
+```
+It prints a summary and writes a full report to
+`~/Desktop/under-the-scope-organize-report.txt`. Review it — confirm it's
+catching the right files (and not family photos). Tune the `KEYWORDS` list near
+the top of the script if needed.
+
+**2. When the plan looks right, do it for real:**
+```
+bash abe/assets/gather-podcast-material.sh apply
+```
+
+Optional — point it at specific folders instead of the default sweep of
+Desktop/Documents/Movies/Downloads/Music/Pictures and external drives:
+```
+bash abe/assets/gather-podcast-material.sh apply  ~/Desktop ~/Movies /Volumes/BackupDrive
+```
+
+Notes:
+- Gathers video, audio, scripts/docs, and images whose path contains a podcast
+  keyword; sorts videos/audio into `01 – Episodes/EpNN/` when it can read an
+  episode number from the filename, otherwise `_Unsorted` for you to drag later.
+- De-dupe is exact-content (SHA-256), so a copy named `episode5_FINAL_v2.mp4` is
+  recognized as the same file and only one copy is kept.
+- Safe to re-run: files already in the destination are skipped.
