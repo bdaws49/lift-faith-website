@@ -159,6 +159,38 @@ EOF
   echo "  + guide written"
 fi
 
+# ---- 4. One-click "New Episode" launcher -----------------------------------
+LAUNCH="$BASE/New Episode.command"
+if [ ! -f "$LAUNCH" ]; then
+cat > "$LAUNCH" <<'LAUNCHER'
+#!/bin/bash
+# Double-click to start a new episode in this show folder.
+DIR="$(cd "$(dirname "$0")" && pwd)"
+T="$DIR/_NEW EPISODE - TEMPLATE"
+if [ ! -d "$T" ]; then
+  osascript -e 'display dialog "Can'"'"'t find the _NEW EPISODE - TEMPLATE folder. Keep this button in the show folder next to it." buttons {"OK"} with title "New Episode"'
+  exit 1
+fi
+TITLE=$(osascript -e 'text returned of (display dialog "New episode title:" default answer "" with title "New Episode")' 2>/dev/null) || exit 0
+[ -z "$TITLE" ] && exit 0
+TODAY=$(date +%Y-%m-%d)
+DATE=$(osascript -e "text returned of (display dialog \"Publish date (YYYY-MM-DD):\" default answer \"$TODAY\" with title \"New Episode\")" 2>/dev/null) || exit 0
+[ -z "$DATE" ] && exit 0
+SAFE=$(printf '%s' "$TITLE" | sed 's#[/:]#-#g')
+DEST="$DIR/$DATE - $SAFE"
+if [ -e "$DEST" ]; then
+  osascript -e "display dialog \"That episode folder already exists:\n\n$DATE - $SAFE\" buttons {\"OK\"} with title \"New Episode\""
+  open "$DEST"; exit 0
+fi
+cp -R "$T" "$DEST" || { osascript -e 'display dialog "Something went wrong creating the folder." buttons {"OK"} with title "New Episode"'; exit 1; }
+open "$DEST"
+osascript -e "display notification \"$DATE - $SAFE\" with title \"New episode folder ready\""
+LAUNCHER
+chmod +x "$LAUNCH"
+echo "  + one-click 'New Episode.command' created"
+fi
+
 echo "---------------------------------------------------------------"
 echo "Done. \"$SHOW\" home base is set up. Open it here:"
 echo "  $BASE"
+echo "Double-click 'New Episode.command' inside it to start an episode."
