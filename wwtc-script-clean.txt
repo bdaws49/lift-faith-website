@@ -92,7 +92,63 @@ Rules:
 """
 
 
-SCRIPT_BUILD = "v4 — scripture aloud + additive length (grows to full teaching size)"
+SCRIPT_BUILD = "v5 — scripture aloud + additive length + per-episode sources sheet"
+
+
+SOURCES_SYSTEM = """You are a careful research assistant for the history podcast "Where Was the Church." From an episode script, produce a SOURCES & FURTHER READING sheet the host can hand to anyone who asks what the material was based on.
+
+ACCURACY OVER COMPLETENESS — a fabricated citation is worse than none:
+- First, list the specific PEOPLE, EVENTS, DATES, DOCUMENTS, and PLACES the episode actually names. Draw these ONLY from the script text you are given.
+- Then suggest references, PREFERRING things you are certain are real: primary documents named in the episode (declarations, encyclicals, laws, letters, speeches) and major institutions/archives (for modern topics, e.g. the United States Holocaust Memorial Museum, Yad Vashem; national archives; major museums).
+- Only name a specific book or author if you are HIGHLY confident it genuinely exists. If unsure, describe the TYPE of source instead ("a standard academic history of X") rather than inventing a title.
+- NEVER invent titles, authors, dates, page numbers, ISBNs, or URLs.
+- Be concise and factual. No commentary, no preamble.
+
+Return Markdown with exactly these H2 sections and NOTHING above the first one:
+## Key people, events & documents in this episode
+## Primary sources
+## Suggested further reading (verify before citing)
+Then end with this exact italic line:
+_Reference starting points — confirm each source directly before citing it publicly._"""
+
+
+def _write_sources(project, client, cfg, episode) -> None:
+    """Write a per-episode sources.md next to the episode, so a request for the
+    show's source material always has a grounded answer on file."""
+    title = episode.get("title", "")
+    sc = episode.get("scripture") or {}
+    body = (f"TITLE: {title}\n"
+            f"SCRIPTURE: {sc.get('ref', '')}\n"
+            f"SUMMARY: {episode.get('summary', '')}\n\n"
+            f"PART 1:\n{episode['segments'].get('part1', '')}\n\n"
+            f"PART 2:\n{episode['segments'].get('part2', '')}")
+    try:
+        resp = client.chat.completions.create(
+            model=cfg.openai_model,
+            temperature=0.2,
+            max_tokens=1600,
+            messages=[{"role": "system", "content": SOURCES_SYSTEM},
+                      {"role": "user", "content":
+                       "Build the sources sheet for this episode:\n\n" + body}],
+        )
+        md = (resp.choices[0].message.content or "").strip()
+    except Exception as exc:
+        log("script", f"sources sheet skipped ({exc}).")
+        return
+    if len(md) < 80:
+        return
+    header = (f"# Where Was the Church — {title}\n"
+             if title else "# Where Was the Church\n") + \
+        ("## Source Material & Further Reading\n\n"
+         "*A reference for the topics covered in this episode. "
+         "Confirm any source directly before citing it publicly.*\n\n")
+    md_full = header + md + "\n"
+    episode["sources_md"] = md_full
+    try:
+        (project.root / "sources.md").write_text(md_full)
+        log("script", "sources sheet -> sources.md")
+    except OSError as exc:
+        log("script", f"couldn't write sources.md ({exc}).")
 
 
 def run(project: Project, cfg: Config) -> None:
@@ -171,6 +227,11 @@ def run(project: Project, cfg: Config) -> None:
         scrubbed += hits
     if scrubbed:
         log("script", f"cleaned {scrubbed} spoken link(s) out of the script.")
+
+    # Sources sheet — a per-episode reference of what the episode covers plus real
+    # starting-point references, so "what was your source material?" always has an
+    # answer on file. Grounded in the script; guarded against invented citations.
+    _write_sources(project, client, cfg, episode)
 
     # Measure each segment (word count + estimated spoken time) so you can see
     # how big ChatGPT made Part 1 and Part 2 before you voice them.
