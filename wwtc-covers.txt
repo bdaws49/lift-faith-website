@@ -134,9 +134,10 @@ def finished_cover(bg_path, title, show_name, out: Path):
     d.text((tx + 4, ty + 4), title, font=tf, fill=(0, 0, 0, 190))
     d.text((tx, ty), title, font=tf, fill=(255, 255, 255, 255))
 
-    lg = _logo(460)
+    # Logo top-right, out of the way — the title and eyebrow live at the bottom.
+    lg = _logo(340)
     if lg:
-        cover.alpha_composite(lg, (w - lg.width - 55, h - lg.height - 45))
+        cover.alpha_composite(lg, (w - lg.width - 45, 40))
     out.parent.mkdir(parents=True, exist_ok=True)
     cover.convert("RGB").save(out, quality=92)
 
@@ -171,11 +172,11 @@ def reel_background(bg_path, out: Path, title: str = ""):
     frame = _framed(bg_path, w, h)
     dark = Image.new("RGBA", (w, h), (8, 3, 6, 110))
     frame = Image.alpha_composite(frame, dark)
-    lg = _logo(620)   # large, prominent logo across the top of the reel
-    logo_bottom = 70
+    lg = _logo(420)   # top logo, sized to leave the title and lower-third captions clear
+    logo_bottom = 60
     if lg:
-        frame.alpha_composite(lg, ((w - lg.width) // 2, 70))
-        logo_bottom = 70 + lg.height
+        frame.alpha_composite(lg, ((w - lg.width) // 2, 60))
+        logo_bottom = 60 + lg.height
 
     if title:
         d = ImageDraw.Draw(frame)
