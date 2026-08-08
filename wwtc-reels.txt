@@ -20,7 +20,7 @@ from ..project import Project
 
 BG_COLOR = "0x5C0F28"
 ACCENT = "0xC98BA0"
-PAD_BEFORE = 0.3
+PAD_BEFORE = 0.4
 PAD_AFTER = 0.8
 REEL_TARGET_SECONDS = 30   # aim for ~30s reels (overridable via show.json reel_seconds)
 MAX_REEL_SECONDS = 60
@@ -208,7 +208,9 @@ def _window_snap(cues, words, qs, qe, target, ep_sec) -> tuple[float, float]:
         if not grew:
             break
 
-    s = max(0.0, usable[lo]["start"] - 0.15)
+    # Generous lead-in: Whisper's word-start times run a little late, so a tight
+    # pad clips the first word's attack. 0.35s reliably catches the full onset.
+    s = max(0.0, usable[lo]["start"] - 0.35)
     e = usable[hi]["end"] + 0.35
     if ep_sec:
         e = min(e, ep_sec)
