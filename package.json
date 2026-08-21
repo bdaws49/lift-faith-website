@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "convex": "^1.29.1"
+    "convex": "^1.29.1",
+    "node-ical": "^0.20.1"
   }
 }

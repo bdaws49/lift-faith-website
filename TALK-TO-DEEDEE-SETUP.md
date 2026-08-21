@@ -50,6 +50,44 @@ day?"*
 
 ---
 
+## Show your real Google Calendar (the Secret iCal URL)
+
+This lets DeeDee read your **actual Google Calendar** — trips, dinners, meetings —
+so `/deedee` shows a *"Your calendar"* panel and she answers *"what's on my
+calendar today/tomorrow?"* from your real schedule. It's server-side and
+**read-only**; DeeDee never changes your calendar.
+
+Why this way? It needs **one secret URL**, not a Google Cloud OAuth project — much
+simpler, and because the server holds it, it also works for hands-off jobs (a
+future daily email brief) that a phone connector can't.
+
+**A. Copy your calendar's Secret iCal address**
+1. On a computer, open **Google Calendar → Settings** (gear → Settings).
+2. Left side, under **Settings for my calendars**, click **your calendar**.
+3. Scroll to **Integrate calendar** → copy the **Secret address in iCal format**
+   (it ends in `/basic.ics`). Treat it like a password — anyone with it can read
+   this calendar.
+
+**B. Give it to the website**
+1. In **Vercel → your project → Settings → Environment Variables**, add
+   `GCAL_ICS_URL = <the secret ics url you copied>`.
+2. Optional: `MINISTRY_TZ = America/New_York` (your time zone, for deciding where
+   "today"/"tomorrow" begin — defaults to Eastern).
+3. Redeploy.
+
+Open `/deedee` — you should see the **📅 Your calendar** panel with today and
+tomorrow, and DeeDee will answer calendar questions from it. The same panel shows
+on the operations board at `/operations`.
+
+Notes:
+- Recurring events, all-day multi-day trips, and time zones are handled for you.
+- To include more than one calendar, repeat with each calendar's secret ICS —
+  for now the site reads the single `GCAL_ICS_URL`; say the word to support a list.
+- Not set up yet? DeeDee simply says your calendar isn't linked (she will **not**
+  pretend it's empty).
+
+---
+
 ## DeeDee's real voice (Emily, optional)
 
 DeeDee speaks in the ElevenLabs **Emily** voice when text-to-speech is turned on.
