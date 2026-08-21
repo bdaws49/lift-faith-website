@@ -49,7 +49,11 @@ Lift is a faith-based subscription service that provides daily biblical encourag
   **Talk to DeeDee** (mic + chat, ElevenLabs *Emily* voice) at `/talk-to-deedee`
   (a.k.a. `/deedee`) — which can *edit* the board once unlocked with a passcode.
   The board lives in Convex (`convex/ops.ts`, live source of truth) seeded from
-  `deedee/ops.json` (mirrored to `deedee/dashboard.md`). Setup:
+  `deedee/ops.json` (mirrored to `deedee/dashboard.md`). DeeDee also reads your
+  **real Google Calendar** (server-side, read-only, via the calendar's Secret
+  iCal URL in `GCAL_ICS_URL`) — `api/_gcal.js` + `api/calendar.js` — so `/deedee`
+  and `/operations` show a live *"Your calendar"* panel (today + tomorrow) and she
+  answers "what's on my calendar?" from your actual schedule. Setup:
   `TALK-TO-DEEDEE-SETUP.md`.
 
 ### Planned Features 🚧

@@ -70,6 +70,22 @@
   .next li { margin: 6px 0; line-height: 1.5; }
   .next .none { color: var(--muted); }
 
+  /* Google Calendar card */
+  .calc { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    margin-bottom: 22px; box-shadow: 0 2px 10px rgba(0,0,0,.06); overflow: hidden; }
+  .calc h2 { margin: 0; background: linear-gradient(135deg, var(--burgundy), var(--burgundy-deep));
+    color: #fff; padding: 12px 18px; font-size: 1.05rem; display: flex; justify-content: space-between; align-items: baseline; }
+  .calc h2 .src { font-size: .72rem; opacity: .82; font-style: italic; font-weight: normal; }
+  .calc .cday { padding: 12px 18px; border-top: 1px solid #f0e6da; }
+  .calc .cday .d { font-family: -apple-system, Arial, sans-serif; font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .6px; color: var(--burgundy); font-weight: 700; margin-bottom: 7px; }
+  .calc .cday .d .tag { color: var(--muted); font-weight: 500; text-transform: none; letter-spacing: 0; }
+  .calc .ce { display: flex; gap: 12px; padding: 3px 0; font-size: .95rem; }
+  .calc .ce .w { flex: 0 0 90px; color: var(--burgundy-deep); font-weight: 600; font-size: .86rem; }
+  .calc .ce.ad .w { color: var(--ok); }
+  .calc .ce .loc { color: var(--muted); font-size: .86rem; }
+  .calc .none { color: var(--muted); font-style: italic; font-size: .9rem; }
+
   .card {
     background: var(--card); border: 1px solid var(--line); border-radius: 16px;
     padding: 18px 22px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06);
@@ -147,6 +163,7 @@
 </header>
 
 <main>
+  <div id="calCard" hidden></div>
   <div id="next"></div>
   <div class="summary" id="summary"></div>
   <div id="board"><div class="empty">Loading the board…</div></div>
@@ -418,6 +435,32 @@ gateBtn.addEventListener("click", async function(){
 gatePass.addEventListener("keydown", function(e){ if (e.key === "Enter") gateBtn.click(); });
 
 loadBoard();
+
+// ---- Google Calendar card (today + tomorrow), independent of the board ----
+(function loadCalendar(){
+  var el = document.getElementById("calCard");
+  fetch("/api/calendar?days=2", { cache: "no-store" })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(win){
+      if (!win || !win.configured || !win.days || !win.days.length) return;
+      var html = '<div class="calc"><h2>📅 Your calendar <span class="src">from Google Calendar</span></h2>';
+      win.days.forEach(function(day){
+        html += '<div class="cday"><div class="d">' + (day.isToday ? "Today" : "Tomorrow") +
+          ' <span class="tag">· ' + esc(day.label) + '</span></div>';
+        if (!day.events.length) { html += '<div class="none">Nothing scheduled.</div>'; }
+        else day.events.forEach(function(e){
+          var loc = e.location ? ' <span class="loc">· ' + esc(e.location) + '</span>' : '';
+          html += '<div class="ce' + (e.allDay ? ' ad' : '') + '"><span class="w">' + esc(e.timeLabel) +
+            '</span><span class="t">' + esc(e.summary) + loc + '</span></div>';
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+      el.innerHTML = html;
+      el.hidden = false;
+    })
+    .catch(function(){ /* calendar not linked — leave hidden */ });
+})();
 </script>
 </body>
 </html>

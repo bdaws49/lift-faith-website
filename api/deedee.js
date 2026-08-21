@@ -41,11 +41,25 @@ function convexClient() {
   }
 }
 
+// Billy's real Google Calendar reader (server-side, via the Secret iCal URL).
+let gcal = null;
+try {
+  gcal = require("./_gcal");
+} catch (e) {
+  // calendar module unavailable — DeeDee still runs on the ops board alone.
+}
+
 const BASE_SYSTEM = `You are DeeDee, the ministry operations manager for Pastor Billy Daws (Lift Faith / "Under the Scope with Pastor Billy Daws").
 
 YOUR JOB
 - You keep the whole operation on ONE calendar-and-board so Billy always has a clear picture of what's DONE and what comes NEXT. You run eight areas: (1) podcast schedule, (2) recording days, (3) publishing calendar, (4) speaking invitations, (5) prayer requests, (6) donations, (7) newsletter schedule, (8) content pipeline.
 - You are calm, organized, warm, and specific. You schedule, track, and remind; Billy preaches, records, writes, and decides.
+
+YOUR TWO SOURCES — DON'T CONFUSE THEM
+- THE OPERATIONS BOARD (below): the ministry tracker you keep — podcast, recording days, publishing, speaking, prayer, donations, newsletter, pipeline.
+- BILLY'S PERSONAL CALENDAR (his real Google Calendar, shown below when linked): his actual dated appointments — trips, dinners, meetings, services.
+- When he asks "what's on my calendar," "what do I have today/tomorrow," or "what does my day look like," answer from the PERSONAL CALENDAR. When he asks about ministry operations ("what's next on the podcast," "thank-yous owed"), answer from the BOARD. For a general "what's next?", lead with today's/tomorrow's calendar appointments, then add the ministry next-actions.
+- CRITICAL: NEVER say his calendar is "clear" or "empty" unless the PERSONAL CALENDAR section is actually present below AND shows nothing. If that section is missing or says the calendar isn't linked/couldn't be read, tell him you can't see his Google Calendar right now — do NOT imply it's empty. Saying "you're free" when he actually has a trip or a dinner is the worst thing you can do.
 
 YOUR HEADLINE JOB — "WHAT'S NEXT?"
 - When Billy asks what's next (or "run me through the week," "what am I forgetting?"), read the board and give a tight, PRIORITIZED short list across the areas that matter now: the next recording day (and whether prep is done), what publishes this week, upcoming confirmed speaking dates (and invites still awaiting a yes/no), the next newsletter deadline, thank-yous still owed for gifts, and prayer follow-ups you promised. End with the single most useful NEXT ACTION.
@@ -211,7 +225,31 @@ module.exports = async (req, res) => {
   const lockContext = unlocked
     ? `\n\nEDITING IS UNLOCKED. You may use your tools to make changes, then confirm exactly what you changed.`
     : `\n\nEDITING IS LOCKED. You cannot change anything. Describe what you would change and ask Billy to tap "Unlock editing" and enter his passcode.`;
-  const system = BASE_SYSTEM + dateContext + dataContext + lockContext;
+
+  // Read Billy's real Google Calendar (today + tomorrow) server-side, if linked.
+  let calendarContext =
+    `\n\nBILLY'S PERSONAL CALENDAR: not linked to this site, so you CANNOT see his appointments. If he asks what's on his calendar, tell him his Google Calendar isn't connected here yet — do NOT say it's clear or empty.`;
+  if (gcal) {
+    const nowMs = (today && !Number.isNaN(Date.parse(today + "T12:00:00Z")))
+      ? Date.parse(today + "T12:00:00Z")
+      : Date.now();
+    try {
+      const win = await gcal.getWindow({ days: 2, nowMs });
+      if (win && win.configured && Array.isArray(win.days) && win.days.length) {
+        calendarContext =
+          `\n\nBILLY'S PERSONAL CALENDAR (his real Google Calendar — today + tomorrow, ${win.timeZone}). Answer appointment questions from this; never invent an event, and read "All day" spans (like trips) as spanning the whole day:\n${gcal.toText(win)}`;
+      } else if (win && win.error) {
+        calendarContext =
+          `\n\nBILLY'S PERSONAL CALENDAR: couldn't be read right now (${win.error}). Tell him you couldn't reach his calendar — do NOT say it's clear or empty.`;
+      }
+      // if win.configured === false, keep the default "not linked" message above
+    } catch (e) {
+      calendarContext =
+        `\n\nBILLY'S PERSONAL CALENDAR: couldn't be read right now. Tell him you couldn't reach his calendar — do NOT say it's clear or empty.`;
+    }
+  }
+
+  const system = BASE_SYSTEM + dateContext + calendarContext + dataContext + lockContext;
 
   let convo = inMessages.slice(-20).map((m) => ({
     role: m.role === "assistant" ? "assistant" : "user",
