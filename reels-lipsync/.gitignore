@@ -1,0 +1,14 @@
+# Local, machine-specific artifacts — never commit these.
+.venv/
+.venv-voice/
+Wav2Lip/
+OpenVoice/
+checkpoints_v2/
+*.pth
+*.mp4
+*.wav
+*.mp3
+.wav2lip_raw.mp4
+
+# Personal test assets (voice/likeness) — keep local, never commit.
+test-assets/
