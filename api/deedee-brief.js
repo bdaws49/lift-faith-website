@@ -15,7 +15,9 @@
 //
 // SETUP (Vercel → Settings → Environment Variables, then redeploy):
 //   GCAL_ICS_URL     the calendar's Secret iCal address (REQUIRED to see events)
-//   RESEND_API_KEY   your Resend key (REQUIRED to send the email)
+//   RESEND_API_KEY   your Resend key (REQUIRED to send the email). Also accepted
+//                    under the casings the project already uses: Resend_api_key,
+//                    RESEND_APIKEY, resend_api_key.
 // Optional:
 //   BRIEF_RECIPIENT  who gets it (default billydaws@gmail.com)
 //   BRIEF_FROM       from address (default "DeeDee <onboarding@resend.dev>",
@@ -185,8 +187,15 @@ function buildEmail(slot, win) {
 }
 
 async function sendEmail(to, subject, html) {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) throw new Error("RESEND_API_KEY not configured");
+  // Accept the Resend key under any of the casings the project may already use
+  // in Vercel (env var names are case-sensitive). The site already stores one
+  // as `Resend_api_key`, so no new variable is needed.
+  const key =
+    process.env.RESEND_API_KEY ||
+    process.env.Resend_api_key ||
+    process.env.RESEND_APIKEY ||
+    process.env.resend_api_key;
+  if (!key) throw new Error("Resend API key not configured");
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
