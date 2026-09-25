@@ -12,5 +12,9 @@
     { "source": "/operations", "destination": "/operations-dashboard.html" },
     { "source": "/where-was-the-church", "destination": "/where-was-the-church-dashboard.html" },
     { "source": "/under-the-scope", "destination": "/under-the-scope-dashboard.html" }
+  ],
+  "crons": [
+    { "path": "/api/deedee-brief?slot=morning", "schedule": "0 9 * * *" },
+    { "path": "/api/deedee-brief?slot=evening", "schedule": "0 22 * * *" }
   ]
 }
