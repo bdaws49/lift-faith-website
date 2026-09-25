@@ -88,6 +88,56 @@ Notes:
 
 ---
 
+## DeeDee's daily brief (she emails YOU — advance warning, hands-off)
+
+This is the part that makes DeeDee reach out to *you* instead of waiting to be
+asked. Twice a day she emails a short, phone-friendly rundown of your calendar so
+nothing sneaks up on you:
+
+- **🌙 Evening preview** (~5–6 PM Eastern): a look at **tomorrow** (plus the day
+  after) — your advance warning.
+- **☀️ Morning brief** (by **6:00 AM Eastern**): **today's** plan, plus tomorrow.
+
+Each one lists time · title · location, says *"Clear — nothing scheduled"* on an
+empty day, and flags **back-to-back** appointments. It reads your real Google
+Calendar **read-only** (via the same `GCAL_ICS_URL` above) and sends through the
+same email pipe as the daily verses. It **never changes your calendar.**
+
+**What it needs (all things you've likely already set):**
+1. `GCAL_ICS_URL` in **Vercel** — so DeeDee can see your calendar (section above).
+2. `RESEND_API_KEY` in **Convex** — the email sender (already set if daily verses
+   go out). Emails are sent from `daily@liftfaith.com` to you.
+3. Deploy the new schedule to Convex:
+   ```
+   npx convex deploy
+   ```
+   This registers two daily jobs (`deedee morning brief`, `deedee evening
+   preview`) defined in `convex/crons.ts` + `convex/deedeeBrief.ts`.
+
+**Optional Convex env vars:**
+- `BRIEF_RECIPIENT` — who gets the brief. Defaults to `billydaws@gmail.com`.
+- `SITE_URL` — where the site's `/api/calendar` lives. Defaults to
+  `https://liftfaith.com`. Set it if your domain differs.
+  ```
+  npx convex env set BRIEF_RECIPIENT "you@example.com"
+  npx convex env set SITE_URL "https://your-domain.com"
+  ```
+
+**Test it now (no waiting for the alarm clock):**
+```
+npx convex run deedeeBrief:sendCalendarBrief '{"slot":"morning"}'
+npx convex run deedeeBrief:sendCalendarBrief '{"slot":"evening"}'
+```
+Check your inbox — you should get the two briefs. If the calendar isn't linked
+yet, DeeDee tells you so plainly instead of claiming your day is clear.
+
+**Timing & daylight saving:** the morning job runs at 10:00 UTC, which is 6 AM
+Eastern in summer and 5 AM in winter — so it's always *at or before* 6 AM your
+time, no seasonal fix needed. Prefer exactly 7 AM, one email only, or a different
+schedule? Say the word and I'll adjust `convex/crons.ts`.
+
+---
+
 ## DeeDee's real voice (Emily, optional)
 
 DeeDee speaks in the ElevenLabs **Emily** voice when text-to-speech is turned on.
