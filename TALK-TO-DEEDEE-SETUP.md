@@ -88,6 +88,80 @@ Notes:
 
 ---
 
+## DeeDee's daily brief (she emails YOU — advance warning, hands-off)
+
+This is the part that makes DeeDee reach out to *you* instead of waiting to be
+asked. Twice a day she emails a short, phone-friendly rundown of your calendar so
+nothing sneaks up on you:
+
+- **🌙 Evening preview** (early evening Eastern): a look at **tomorrow** (plus the
+  day after) — your advance warning the day before.
+- **☀️ Morning brief** (by **6:00 AM Eastern**): **today's** plan, plus tomorrow.
+
+Each one lists time · title · location, says *"Clear — nothing scheduled"* on an
+empty day, and flags **back-to-back** appointments. It reads your real Google
+Calendar **read-only** (via the same `GCAL_ICS_URL` above). It **never changes
+your calendar.**
+
+This runs on a **Vercel Cron** (`api/deedee-brief.js` + the `crons` block in
+`vercel.json`), so it **goes live automatically when you merge** — no terminal or
+`convex` command needed. That's deliberate: you can manage the whole thing from
+the browser.
+
+**What it needs (two Vercel environment variables — Vercel → your project →
+Settings → Environment Variables, then Redeploy):**
+
+1. **`GCAL_ICS_URL`** — your calendar's Secret iCal address, so DeeDee can see
+   your appointments. Get it from Google Calendar → Settings → your calendar →
+   Integrate calendar → *Secret address in iCal format* (see "Show your real
+   Google Calendar" above). **This is the piece that's currently missing** —
+   without it, DeeDee (and the brief) can't see your calendar and will say so
+   honestly rather than pretend your day is clear.
+2. **`RESEND_API_KEY`** — your Resend key, so DeeDee can send the email.
+   - Sign up free at https://resend.com **using `billydaws@gmail.com`**. (On the
+     free tier, before you verify a domain, Resend can send from its built-in
+     `onboarding@resend.dev` address to the email you signed up with — which is
+     exactly who the brief goes to, so **no DNS or domain setup is needed to
+     start**.)
+   - **API Keys → Create API Key**, copy it, and paste it as `RESEND_API_KEY`.
+   - The brief defaults to sending **from** `onboarding@resend.dev` so it works
+     immediately. Later, if you verify the `liftfaith.com` domain in Resend, set
+     `BRIEF_FROM` to `DeeDee <daily@liftfaith.com>` for a branded sender.
+
+**Optional Vercel environment variables:**
+- `BRIEF_RECIPIENT` — who receives the brief. Defaults to `billydaws@gmail.com`.
+- `BRIEF_FROM` — the from address. Defaults to `DeeDee <onboarding@resend.dev>`
+  (Resend's no-setup test sender); switch to your verified domain once ready.
+- `CRON_SECRET` — recommended. If set, only Vercel's scheduler (which sends it
+   automatically) can trigger a send. To test by hand while it's set, visit
+   `/api/deedee-brief?slot=morning&key=YOUR_SECRET`.
+
+**Turn it on:** merge this branch to your live site. Vercel deploys the two cron
+jobs automatically. Done.
+
+**Test it now (from a browser — no terminal):** once merged and the two env vars
+are set, open:
+- `https://liftfaith.com/api/deedee-brief?slot=morning`
+- `https://liftfaith.com/api/deedee-brief?slot=evening`
+
+Each visit sends that email to you immediately, so you don't have to wait for the
+alarm clock. (If you set `CRON_SECRET`, add `&key=YOUR_SECRET` to the URL.) If
+your calendar isn't linked yet, the email says so plainly instead of claiming
+your day is clear.
+
+**Timing & daylight saving:** the morning job is scheduled at 09:00 UTC, which is
+5 AM Eastern in summer / 4 AM in winter — comfortably *before* 6 AM year-round
+even allowing for the scheduler's small delay, with no seasonal fix needed. The
+evening job runs at 22:00 UTC (early evening Eastern). Prefer exactly 7 AM, one
+email a day instead of two, or a different schedule? It's the `crons` block in
+`vercel.json` — say the word and I'll adjust it.
+
+> Note: Vercel's Hobby plan allows exactly **two** cron jobs, run once daily —
+> which is what this uses. On Pro, the timing is more precise. If your plan
+> rejects the crons, tell me and I'll switch the schedule to fit.
+
+---
+
 ## DeeDee's real voice (Emily, optional)
 
 DeeDee speaks in the ElevenLabs **Emily** voice when text-to-speech is turned on.
