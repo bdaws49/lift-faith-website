@@ -18,7 +18,8 @@
 //   RESEND_API_KEY   your Resend key (REQUIRED to send the email)
 // Optional:
 //   BRIEF_RECIPIENT  who gets it (default billydaws@gmail.com)
-//   BRIEF_FROM       from address (default "DeeDee <daily@liftfaith.com>")
+//   BRIEF_FROM       from address (default "DeeDee <onboarding@resend.dev>",
+//                    Resend's no-setup test sender; set to your verified domain later)
 //   SITE_URL         site origin used in the footer link (default liftfaith.com)
 //   CRON_SECRET      if set, the endpoint requires it (Vercel Cron sends it
 //                    automatically; for a manual browser test add ?key=THE_SECRET)
@@ -32,7 +33,12 @@ try {
 }
 
 const RECIPIENT = () => process.env.BRIEF_RECIPIENT || "billydaws@gmail.com";
-const FROM = () => process.env.BRIEF_FROM || "DeeDee <daily@liftfaith.com>";
+// Default sender is Resend's built-in test address so this works with ZERO domain
+// setup: a fresh Resend account can send from onboarding@resend.dev to the email
+// you signed up with (billydaws@gmail.com) — no DNS/verification needed. Once the
+// liftfaith.com domain is verified in Resend, set BRIEF_FROM in Vercel, e.g.
+// "DeeDee <daily@liftfaith.com>", for a branded sender to any recipient.
+const FROM = () => process.env.BRIEF_FROM || "DeeDee <onboarding@resend.dev>";
 const SITE = () => (process.env.SITE_URL || "https://liftfaith.com").replace(/\/+$/, "");
 
 function esc(s) {

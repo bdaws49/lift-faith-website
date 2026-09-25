@@ -117,13 +117,21 @@ Settings → Environment Variables, then Redeploy):**
    Google Calendar" above). **This is the piece that's currently missing** —
    without it, DeeDee (and the brief) can't see your calendar and will say so
    honestly rather than pretend your day is clear.
-2. **`RESEND_API_KEY`** — your Resend key, so DeeDee can send the email. Get it
-   at https://resend.com (or copy the same key the site already uses). The brief
-   is sent from `daily@liftfaith.com` to you.
+2. **`RESEND_API_KEY`** — your Resend key, so DeeDee can send the email.
+   - Sign up free at https://resend.com **using `billydaws@gmail.com`**. (On the
+     free tier, before you verify a domain, Resend can send from its built-in
+     `onboarding@resend.dev` address to the email you signed up with — which is
+     exactly who the brief goes to, so **no DNS or domain setup is needed to
+     start**.)
+   - **API Keys → Create API Key**, copy it, and paste it as `RESEND_API_KEY`.
+   - The brief defaults to sending **from** `onboarding@resend.dev` so it works
+     immediately. Later, if you verify the `liftfaith.com` domain in Resend, set
+     `BRIEF_FROM` to `DeeDee <daily@liftfaith.com>` for a branded sender.
 
 **Optional Vercel environment variables:**
 - `BRIEF_RECIPIENT` — who receives the brief. Defaults to `billydaws@gmail.com`.
-- `BRIEF_FROM` — the from address. Defaults to `DeeDee <daily@liftfaith.com>`.
+- `BRIEF_FROM` — the from address. Defaults to `DeeDee <onboarding@resend.dev>`
+  (Resend's no-setup test sender); switch to your verified domain once ready.
 - `CRON_SECRET` — recommended. If set, only Vercel's scheduler (which sends it
    automatically) can trigger a send. To test by hand while it's set, visit
    `/api/deedee-brief?slot=morning&key=YOUR_SECRET`.
